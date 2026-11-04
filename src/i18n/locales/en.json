@@ -1,0 +1,20 @@
+{
+  "nav": {
+    "label": "Tools"
+  },
+  "categories": {
+    "development": "Development",
+    "generators": "Generators",
+    "converters": "Converters",
+    "network": "Network",
+    "time-date": "Time & Date",
+    "media": "Media",
+    "text": "Text",
+    "ai": "AI",
+    "utilities": "Utilities"
+  },
+  "empty": {
+    "title": "Pick a Tool from the sidebar",
+    "body": "Everything runs on this machine. Nothing you paste leaves it, and nothing is saved to disk."
+  }
+}
