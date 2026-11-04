@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Graphite neutral ramp, teal accent. System fonts only: the app never loads remote resources (ADR-0001). */
+/* Graphite neutral ramp, teal accent. Fonts are bundled (see main.tsx): the app never loads remote resources (ADR-0001). */
 :root {
   --background: #fafafa;
   --foreground: #171717;
@@ -56,8 +56,8 @@
 }
 
 @theme inline {
-  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
-  --font-mono: "Cascadia Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
