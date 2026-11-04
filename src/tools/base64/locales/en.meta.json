@@ -1,0 +1,4 @@
+{
+  "name": "Base64",
+  "description": "Encode and decode text as Base64, URL-safe Base64 or Base32"
+}

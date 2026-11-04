@@ -1,0 +1,21 @@
+{
+  "direction": {
+    "label": "Chiều chuyển đổi",
+    "encode": "Mã hoá",
+    "decode": "Giải mã"
+  },
+  "variant": {
+    "label": "Bảng ký tự",
+    "standard": "Chuẩn",
+    "url-safe": "URL-safe",
+    "base32": "Base32"
+  },
+  "input": "Dữ liệu nhập",
+  "output": "Kết quả",
+  "count": "{{chars}} ký tự · {{bytes}} byte",
+  "errors": {
+    "invalid-character": "Dữ liệu nhập không phải {{variant}} hợp lệ: có ký tự nằm ngoài bảng ký tự",
+    "invalid-length": "Dữ liệu nhập không phải {{variant}} hợp lệ: độ dài hoặc padding bị sai",
+    "not-utf8": "Dữ liệu nhập không phải văn bản {{variant}} hợp lệ: giải mã ra byte không phải UTF-8"
+  }
+}

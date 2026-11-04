@@ -1,0 +1,21 @@
+{
+  "direction": {
+    "label": "Direction",
+    "encode": "Encode",
+    "decode": "Decode"
+  },
+  "variant": {
+    "label": "Alphabet",
+    "standard": "Standard",
+    "url-safe": "URL-safe",
+    "base32": "Base32"
+  },
+  "input": "Input",
+  "output": "Output",
+  "count": "{{chars}} chars · {{bytes}} bytes",
+  "errors": {
+    "invalid-character": "Input is not valid {{variant}}: it contains a character outside the alphabet",
+    "invalid-length": "Input is not valid {{variant}}: its length or padding is wrong",
+    "not-utf8": "Input is not valid {{variant}} text: it decodes to bytes that are not UTF-8"
+  }
+}

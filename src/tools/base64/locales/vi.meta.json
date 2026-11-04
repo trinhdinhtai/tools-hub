@@ -1,0 +1,4 @@
+{
+  "name": "Base64",
+  "description": "Mã hoá và giải mã văn bản dạng Base64, Base64 URL-safe hoặc Base32"
+}
