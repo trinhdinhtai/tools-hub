@@ -1,7 +1,7 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePreference } from "@/lib/preferences";
 import { usePreferences } from "@/lib/preferences-context";
@@ -32,25 +32,43 @@ export function SettingsDialog({
         aria-describedby={undefined}
         className="flex max-h-[min(720px,calc(100vh-4rem))] flex-col gap-6 sm:max-w-2xl"
       >
-        {/* Header stays put; only the body scrolls (shadcn "Scrollable Content"). */}
-        <DialogHeader>
-          <DialogTitle className="text-xl font-medium">{t("settings.title")}</DialogTitle>
-        </DialogHeader>
-        <div className="no-scrollbar -mx-6 min-h-0 flex-1 overflow-y-auto px-6">
-          <SettingsBody {...props} />
-        </div>
+        <SettingsPanel {...props} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function SettingsBody({ platform }: SettingsProps) {
+/** Lives inside the dialog content, so its state (the last confirmation) is fresh each time the dialog opens. */
+function SettingsPanel(props: SettingsProps) {
+  const { t } = useTranslation();
+  const [done, setDone] = useState<Done>(null);
+  return (
+    <>
+      {/* Header and footer stay put; only the body scrolls (shadcn "Scrollable Content", "Sticky Footer"). */}
+      <DialogHeader>
+        <DialogTitle className="text-xl font-medium">{t("settings.title")}</DialogTitle>
+      </DialogHeader>
+      <div className="no-scrollbar -mx-6 min-h-0 flex-1 overflow-y-auto px-6">
+        <SettingsBody {...props} onDone={setDone} />
+      </div>
+      <footer className="flex items-center justify-between gap-4">
+        <p role="status" className="text-[13px] text-subtle-foreground">
+          {done && t(`settings.done.${done}`)}
+        </p>
+        <DialogClose asChild>
+          <Button size="sm">{t("settings.finish")}</Button>
+        </DialogClose>
+      </footer>
+    </>
+  );
+}
+
+function SettingsBody({ platform, onDone: setDone }: SettingsProps & { onDone: (done: Done) => void }) {
   const { t } = useTranslation();
   const preferences = usePreferences();
   const [language, setLanguage] = usePreference<Language>("language");
   const [theme, setTheme] = usePreference<Theme>("theme");
   const [storePath, setStorePath] = useState<string | null>(null);
-  const [done, setDone] = useState<Done>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -125,10 +143,6 @@ function SettingsBody({ platform }: SettingsProps) {
           )}
         </Row>
       </Section>
-
-      <p role="status" className="min-h-5 text-[13px] text-subtle-foreground">
-        {done && t(`settings.done.${done}`)}
-      </p>
     </div>
   );
 }

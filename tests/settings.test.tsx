@@ -52,6 +52,18 @@ describe("Settings", () => {
     expect(await screen.findByRole("navigation", { name: "Công cụ" })).toBeInTheDocument();
   });
 
+  it("closes with Done, which stays in a footer outside the scrolling body", async () => {
+    const { user } = renderApp(createMemoryPlatform({ osLocale: "vi-VN" }));
+    const dialog = await openSettings(user, "Cài đặt");
+
+    const done = within(dialog).getByRole("button", { name: "Xong" });
+    expect(done.closest("footer")).not.toBeNull();
+    expect(done.closest(".overflow-y-auto")).toBeNull();
+
+    await user.click(done);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("follows the OS theme when the theme is System, and a fixed theme otherwise", async () => {
     const platform = createMemoryPlatform({ osLocale: "en-US", systemTheme: "dark" });
     const { user } = renderApp(platform);

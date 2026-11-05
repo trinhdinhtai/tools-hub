@@ -20,6 +20,7 @@
   "settings": {
     "title": "Settings",
     "close": "Close",
+    "finish": "Done",
     "appearance": "Appearance",
     "data": "Storage",
     "language": {
