@@ -84,8 +84,11 @@ describe("Paste Detection", () => {
     await user.type(await screen.findByLabelText("Note"), "old");
 
     await pasteOnApp(user, "new words");
+    // Enter picks the first suggestion only once the dialog is up.
+    await screen.findByRole("dialog", { name: "Open with" });
     await user.keyboard("{Enter}");
 
+    await waitFor(() => expect(suggestions()).not.toBeInTheDocument());
     expect(screen.getAllByRole("tab")).toHaveLength(1);
     expect(screen.getByLabelText("Note")).toHaveValue("new words");
   });
