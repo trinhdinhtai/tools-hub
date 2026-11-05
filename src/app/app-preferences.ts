@@ -10,9 +10,20 @@ export type Language = (typeof LANGUAGES)[number];
 export const THEMES = ["light", "dark", "system"] as const;
 export type Theme = (typeof THEMES)[number];
 
-/** The app's own Preferences: "system" means follow the OS. */
+/**
+ * The app's own Preferences: "system" means follow the OS. `openTools` is the tab order of the Open Tools and
+ * `activeTool` the one on screen ("" for none): only their ids, never their Input (ADR-0004).
+ */
 export const APP_SCHEMA = {
-  preferences: { version: 1, defaults: { language: "system" satisfies Language, theme: "system" satisfies Theme } },
+  preferences: {
+    version: 1,
+    defaults: {
+      language: "system" satisfies Language,
+      theme: "system" satisfies Theme,
+      openTools: [] as string[],
+      activeTool: "",
+    },
+  },
 };
 
 /** The app's namespace plus `tool/<id>` for every Tool that declares a Preference or Recent schema. */

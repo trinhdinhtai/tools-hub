@@ -2,6 +2,16 @@
   "nav": {
     "label": "Tools"
   },
+  "tabs": {
+    "label": "Open Tools",
+    "close": "Close {{name}}",
+    "menu": {
+      "close": "Close",
+      "closeOthers": "Close other tabs",
+      "closeRight": "Close tabs to the right",
+      "closeAll": "Close all tabs"
+    }
+  },
   "categories": {
     "development": "Development",
     "generators": "Generators",
