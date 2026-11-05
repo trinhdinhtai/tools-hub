@@ -1,8 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <!-- Square app icon from toolshub-logo-dark.svg: the orange "hub" box on the logo's dark ground. -->
+  <!-- App icon: an orange hammer set on the diagonal, on the logo's black ground. -->
   <rect width="1024" height="1024" rx="224" fill="#111111"/>
-  <rect x="152" y="312" width="720" height="420" rx="48" fill="#ff9900"/>
-  <text x="512" y="652" text-anchor="middle" transform="translate(51.2 0) scale(0.9 1)"
-        font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="376"
-        fill="#111111" stroke="#111111" stroke-width="10" stroke-linejoin="round" letter-spacing="-4">hub</text>
+  <!-- Drawn upright, turned 45°, then shifted so the turned shape is optically centred. -->
+  <g fill="#ff9900" transform="translate(440 577) rotate(45) translate(-512 -512)">
+    <!-- Head: tapered peen on the left, flat striking face on the right -->
+    <path d="M 272 236 L 392 192 L 716 192 Q 752 192 752 228 L 752 332 Q 752 368 716 368 L 392 368 L 272 324 Z"/>
+    <!-- Handle, running up into the head -->
+    <rect x="474" y="340" width="76" height="492" rx="38"/>
+  </g>
 </svg>
