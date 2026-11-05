@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- App icon: an orange hammer set on the diagonal, on the logo's black ground. -->
+  <rect width="1024" height="1024" rx="224" fill="#111111"/>
+  <!-- Drawn upright, turned 45°, then shifted so the turned shape is optically centred. -->
+  <g fill="#ff9900" transform="translate(440 577) rotate(45) translate(-512 -512)">
+    <!-- Head: tapered peen on the left, flat striking face on the right -->
+    <path d="M 272 236 L 392 192 L 716 192 Q 752 192 752 228 L 752 332 Q 752 368 716 368 L 392 368 L 272 324 Z"/>
+    <!-- Handle, running up into the head -->
+    <rect x="474" y="340" width="76" height="492" rx="38"/>
+  </g>
+</svg>

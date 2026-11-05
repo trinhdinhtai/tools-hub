@@ -1,0 +1,102 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Graphite neutral ramp, brand orange #ff9900 as primary (dark text on it: white fails contrast). Fonts are bundled (see main.tsx): the app never loads remote resources (ADR-0001). */
+:root {
+  --background: #fafafa;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #ff9900;
+  --primary-foreground: #111111;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #171717;
+  --muted: #f4f4f5;
+  --muted-foreground: #737373;
+  --subtle-foreground: #525252;
+  --accent: #f4f4f5;
+  --accent-foreground: #171717;
+  --destructive: #dc2626;
+  --border: rgb(23 23 23 / 0.08);
+  --input: rgb(23 23 23 / 0.12);
+  --ring: #ff9900;
+  --sidebar: #f4f4f5;
+  --radius: 0.625rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #141415;
+    --foreground: #ededed;
+    --card: #19191b;
+    --card-foreground: #ededed;
+    --popover: #19191b;
+    --popover-foreground: #ededed;
+    --primary: #ff9900;
+    --primary-foreground: #111111;
+    --secondary: #232325;
+    --secondary-foreground: #ededed;
+    --muted: #232325;
+    --muted-foreground: #85858b;
+    --subtle-foreground: #a1a1a6;
+    --accent: #232325;
+    --accent-foreground: #ededed;
+    --destructive: #e5484d;
+    --border: rgb(237 237 237 / 0.08);
+    --input: rgb(237 237 237 / 0.12);
+    --ring: #ff9900;
+    --sidebar: #0f0f10;
+  }
+}
+
+@theme inline {
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-size: 14px;
+  }
+  ::selection {
+    background-color: rgb(255 153 0 / 0.3);
+  }
+}

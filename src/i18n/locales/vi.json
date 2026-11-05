@@ -1,0 +1,20 @@
+{
+  "nav": {
+    "label": "Công cụ"
+  },
+  "categories": {
+    "development": "Phát triển",
+    "generators": "Tạo dữ liệu",
+    "converters": "Chuyển đổi",
+    "network": "Mạng",
+    "time-date": "Thời gian",
+    "media": "Đa phương tiện",
+    "text": "Văn bản",
+    "ai": "AI",
+    "utilities": "Tiện dụng"
+  },
+  "empty": {
+    "title": "Chọn một Công cụ ở thanh bên",
+    "body": "Mọi thứ chạy trên máy này. Dữ liệu bạn dán vào không rời khỏi máy và không bao giờ được ghi xuống đĩa."
+  }
+}
