@@ -2,6 +2,7 @@ import { Fragment, useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePreference } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,7 @@ function SettingsBody({ platform, onDone: setDone }: SettingsProps & { onDone: (
   const preferences = usePreferences();
   const [language, setLanguage] = usePreference<Language>("language");
   const [theme, setTheme] = usePreference<Theme>("theme");
+  const [pasteDetection, setPasteDetection] = usePreference<boolean>("pasteDetection");
   const [storePath, setStorePath] = useState<string | null>(null);
 
   useEffect(() => {
@@ -101,6 +103,12 @@ function SettingsBody({ platform, onDone: setDone }: SettingsProps & { onDone: (
           {(labelId) => (
             <Choice labelId={labelId} value={theme} options={THEMES} onChange={setTheme} label={(option) => t(`settings.theme.${option}`)} />
           )}
+        </Row>
+      </Section>
+
+      <Section title={t("settings.behavior")}>
+        <Row label={t("settings.pasteDetection.label")} description={t("settings.pasteDetection.description")}>
+          {(labelId) => <Switch aria-labelledby={labelId} checked={pasteDetection} onCheckedChange={setPasteDetection} />}
         </Row>
       </Section>
 

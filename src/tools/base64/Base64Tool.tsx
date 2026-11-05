@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { usePaste } from "@/lib/paste";
 import { usePreference } from "@/lib/preferences";
 import { DecodeError, decode, encode, type Variant } from "./logic";
 
@@ -40,6 +41,11 @@ export default function Base64Tool() {
   const [storedVariant, setVariant] = usePreference<Variant>("variant");
   const variant = VARIANTS.includes(storedVariant) ? storedVariant : "standard";
   const [input, setInput] = useState("");
+  // Pasted Base64 is there to be decoded.
+  usePaste((text) => {
+    setInput(text);
+    setDirection("decode");
+  });
 
   const { output, error } = convert(input, direction, variant);
 

@@ -48,7 +48,10 @@ export interface ToolMeta {
   preferences?: PreferenceSchema;
   /** Recent schema, for Tools that keep a short non-sensitive history. */
   recent?: RecentSchema;
-  /** Paste Detection score for a pasted text: 0 (no match) to 1 (certain). */
+  /**
+   * Paste Detection score for a pasted text: 0 (no match) to 1 (certain). A Tool that declares it takes the pasted
+   * text as its Input with `usePaste` from `@/lib/paste`.
+   */
   detectPaste?: (text: string) => number;
   component: LazyExoticComponent<ComponentType>;
 }

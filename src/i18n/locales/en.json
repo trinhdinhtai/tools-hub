@@ -15,6 +15,9 @@
       "close": "close"
     }
   },
+  "paste": {
+    "title": "Open with"
+  },
   "favorites": {
     "label": "Favorites",
     "add": "Add to Favorites",
@@ -51,6 +54,7 @@
     "close": "Close",
     "finish": "Done",
     "appearance": "Appearance",
+    "behavior": "Behavior",
     "data": "Storage",
     "language": {
       "label": "Language",
@@ -62,6 +66,10 @@
       "light": "Light",
       "dark": "Dark",
       "system": "System"
+    },
+    "pasteDetection": {
+      "label": "Paste Detection",
+      "description": "Paste outside a text box and the app suggests Tools for what you pasted. It never reads the clipboard on its own."
     },
     "storage": {
       "label": "Preferences file",
