@@ -10,6 +10,29 @@ export interface Platform {
   systemTheme: SystemTheme;
   /** Whether the OS is macOS, where shortcuts use Cmd rather than Ctrl. */
   isMac: boolean;
+  /** The window, the tray, the global hotkey and launching with the OS. */
+  desktop: Desktop;
+}
+
+/** What the app asks of the desktop. The tray, single instance and hiding on close live in the Tauri shell. */
+export interface Desktop {
+  /**
+   * Makes `accelerator` (e.g. "Ctrl+Alt+Space") the global hotkey, replacing the current one. A press brings the
+   * window to the front, then calls `onPressed`. Rejects, keeping the current hotkey, if the OS refuses the
+   * combination (another app has it, or it cannot be a hotkey).
+   */
+  setGlobalHotkey(accelerator: string, onPressed: () => void): Promise<void>;
+  /** Whether the window's close button quits the app, rather than hiding it to the tray. */
+  setQuitOnClose(quit: boolean): Promise<void>;
+  /** Whether the app starts, hidden in the tray, when the user logs in to the OS. */
+  setAutostart(enabled: boolean): Promise<void>;
+  /** The tray menu's labels, in the interface language. */
+  setTrayLabels(labels: TrayLabels): Promise<void>;
+}
+
+export interface TrayLabels {
+  open: string;
+  quit: string;
 }
 
 /** Persistent key-value store for Preference and Recent data. Never Input. */

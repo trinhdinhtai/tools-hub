@@ -55,6 +55,7 @@
     "finish": "Xong",
     "appearance": "Giao diện",
     "behavior": "Hành vi",
+    "system": "Hệ thống",
     "data": "Lưu trữ",
     "language": {
       "label": "Ngôn ngữ",
@@ -70,6 +71,20 @@
     "pasteDetection": {
       "label": "Nhận diện khi dán",
       "description": "Dán ra ngoài ô nhập liệu thì app gợi ý Công cụ hợp với dữ liệu vừa dán. App không bao giờ tự đọc clipboard."
+    },
+    "hotkey": {
+      "label": "Hotkey toàn cục",
+      "description": "Đưa Tools Hub lên trước và mở sẵn ô tìm Công cụ, từ bất kỳ app nào.",
+      "recording": "Bấm tổ hợp phím…",
+      "taken": "Không dùng được {{hotkey}}: có thể app khác đang giữ tổ hợp này. Hãy chọn tổ hợp khác."
+    },
+    "quitOnClose": {
+      "label": "Thoát khi đóng cửa sổ",
+      "description": "Khi tắt, đóng cửa sổ thì Tools Hub thu xuống tray và hotkey vẫn hoạt động."
+    },
+    "autostart": {
+      "label": "Khởi động cùng hệ điều hành",
+      "description": "Tools Hub chạy sẵn trong tray khi bạn đăng nhập máy."
     },
     "storage": {
       "label": "File lưu Tuỳ chỉnh",
@@ -90,5 +105,9 @@
       "reset": "Mọi Tuỳ chỉnh đã về giá trị mặc định.",
       "cleared": "Đã xoá danh sách Gần đây."
     }
+  },
+  "tray": {
+    "open": "Mở Tools Hub",
+    "quit": "Thoát"
   }
 }

@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { Kbd } from "@/components/kbd";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -10,6 +11,8 @@ import { usePreferences } from "@/lib/preferences-context";
 import type { Locale } from "@/lib/tool";
 import type { Platform } from "@/platform/types";
 import { LANGUAGES, THEMES, type Language, type Theme } from "./app-preferences";
+import type { GlobalHotkey } from "./desktop";
+import { acceleratorFromEvent, hotkeyKeys } from "./hotkey";
 
 /** Language names are written in their own language, so they read the same whatever the UI language is. */
 const LANGUAGE_NAMES: Record<Locale, string> = { en: "English", vi: "Tiếng Việt" };
@@ -18,7 +21,9 @@ type Done = "reset" | "cleared" | null;
 
 interface SettingsProps {
   platform: Platform;
+  globalHotkey: GlobalHotkey;
 }
+
 
 /** Settings open over whatever is on screen, so the open Tool and its Input stay as they are. */
 export function SettingsDialog({
@@ -62,12 +67,14 @@ function SettingsPanel(props: SettingsProps) {
   );
 }
 
-function SettingsBody({ platform, onDone: setDone }: SettingsProps & { onDone: (done: Done) => void }) {
+function SettingsBody({ platform, globalHotkey, onDone: setDone }: SettingsProps & { onDone: (done: Done) => void }) {
   const { t } = useTranslation();
   const preferences = usePreferences();
   const [language, setLanguage] = usePreference<Language>("language");
   const [theme, setTheme] = usePreference<Theme>("theme");
   const [pasteDetection, setPasteDetection] = usePreference<boolean>("pasteDetection");
+  const [quitOnClose, setQuitOnClose] = usePreference<boolean>("quitOnClose");
+  const [autostart, setAutostart] = usePreference<boolean>("autostart");
   const [storePath, setStorePath] = useState<string | null>(null);
 
   useEffect(() => {
@@ -109,6 +116,24 @@ function SettingsBody({ platform, onDone: setDone }: SettingsProps & { onDone: (
       <Section title={t("settings.behavior")}>
         <Row label={t("settings.pasteDetection.label")} description={t("settings.pasteDetection.description")}>
           {(labelId) => <Switch aria-labelledby={labelId} checked={pasteDetection} onCheckedChange={setPasteDetection} />}
+        </Row>
+      </Section>
+
+      <Section title={t("settings.system")}>
+        <Row
+          label={t("settings.hotkey.label")}
+          description={t("settings.hotkey.description")}
+          error={globalHotkey.failed && t("settings.hotkey.taken", { hotkey: globalHotkey.failed })}
+        >
+          {(labelId) => (
+            <HotkeyRecorder labelId={labelId} value={globalHotkey.hotkey} isMac={platform.isMac} onChange={globalHotkey.change} />
+          )}
+        </Row>
+        <Row label={t("settings.quitOnClose.label")} description={t("settings.quitOnClose.description")}>
+          {(labelId) => <Switch aria-labelledby={labelId} checked={quitOnClose} onCheckedChange={setQuitOnClose} />}
+        </Row>
+        <Row label={t("settings.autostart.label")} description={t("settings.autostart.description")}>
+          {(labelId) => <Switch aria-labelledby={labelId} checked={autostart} onCheckedChange={setAutostart} />}
         </Row>
       </Section>
 
@@ -175,11 +200,14 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 function Row({
   label,
   description,
+  error,
   stacked = false,
   children,
 }: {
   label: string;
   description?: string;
+  /** Shown under the description and announced, e.g. a combination the OS refused. */
+  error?: string | null;
   stacked?: boolean;
   children: (labelId: string) => ReactNode;
 }) {
@@ -196,9 +224,61 @@ function Row({
           {label}
         </span>
         {description && <span className="text-[13px] text-subtle-foreground">{description}</span>}
+        {error !== undefined && (
+          <span role="alert" className="text-[13px] text-destructive empty:hidden">
+            {error}
+          </span>
+        )}
       </div>
       <div className={cn("min-w-0", !stacked && "sm:justify-self-end")}>{children(id)}</div>
     </div>
+  );
+}
+
+/**
+ * Shows the global hotkey; click it, then press a new combination. Esc cancels. While recording, keys go nowhere
+ * else, so Ctrl+K or Esc do not also open the palette or close Settings.
+ */
+function HotkeyRecorder({
+  labelId,
+  value,
+  isMac,
+  onChange,
+}: {
+  labelId: string;
+  value: string;
+  isMac: boolean;
+  onChange: (accelerator: string) => void;
+}) {
+  const { t } = useTranslation();
+  const id = useId();
+  const [recording, setRecording] = useState(false);
+  return (
+    <Button
+      id={id}
+      variant="outline"
+      size="sm"
+      aria-labelledby={`${labelId} ${id}`}
+      className="min-w-48 gap-1"
+      onClick={() => setRecording(true)}
+      onBlur={() => setRecording(false)}
+      onKeyDown={(event) => {
+        if (!recording) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.key === "Escape") return setRecording(false);
+        const accelerator = acceleratorFromEvent(event.nativeEvent);
+        if (!accelerator) return;
+        setRecording(false);
+        onChange(accelerator);
+      }}
+    >
+      {recording ? (
+        <span className="text-muted-foreground">{t("settings.hotkey.recording")}</span>
+      ) : (
+        hotkeyKeys(value, isMac).map((key, index) => <Kbd key={index}>{key}</Kbd>)
+      )}
+    </Button>
   );
 }
 

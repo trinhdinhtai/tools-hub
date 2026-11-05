@@ -7,6 +7,8 @@ import type { Schemas } from "./preferences";
 export const LANGUAGES = ["system", "en", "vi"] as const;
 export type Language = (typeof LANGUAGES)[number];
 
+export const DEFAULT_GLOBAL_HOTKEY = "Ctrl+Alt+Space";
+
 export const THEMES = ["light", "dark", "system"] as const;
 export type Theme = (typeof THEMES)[number];
 
@@ -14,7 +16,9 @@ export type Theme = (typeof THEMES)[number];
  * The app's own Preferences: "system" means follow the OS. `openTools` is the tab order of the Open Tools and
  * `activeTool` the one on screen ("" for none): only their ids, never their Input (ADR-0004). `favorites` are the
  * ids of the Tools pinned to the top of the sidebar, in pinning order. `pasteDetection` turns Paste Detection on or
- * off. The app's Recent is the Tools opened lately.
+ * off. `globalHotkey` brings the app forward with the palette open from anywhere; `quitOnClose` makes the close button
+ * quit rather than hide to the tray; `autostart` launches the app with the OS. The app's Recent is the Tools opened
+ * lately.
  */
 export const APP_SCHEMA = {
   preferences: {
@@ -26,6 +30,9 @@ export const APP_SCHEMA = {
       activeTool: "",
       favorites: [] as string[],
       pasteDetection: true,
+      globalHotkey: DEFAULT_GLOBAL_HOTKEY,
+      quitOnClose: false,
+      autostart: false,
     },
   },
   recent: { version: 1, maxItems: 8 },

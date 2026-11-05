@@ -55,6 +55,7 @@
     "finish": "Done",
     "appearance": "Appearance",
     "behavior": "Behavior",
+    "system": "System",
     "data": "Storage",
     "language": {
       "label": "Language",
@@ -70,6 +71,20 @@
     "pasteDetection": {
       "label": "Paste Detection",
       "description": "Paste outside a text box and the app suggests Tools for what you pasted. It never reads the clipboard on its own."
+    },
+    "hotkey": {
+      "label": "Global hotkey",
+      "description": "Brings Tools Hub to the front with the palette open, from any app.",
+      "recording": "Press a combination…",
+      "taken": "{{hotkey}} can’t be used: another app may hold it. Pick another combination."
+    },
+    "quitOnClose": {
+      "label": "Quit when the window closes",
+      "description": "When off, closing the window keeps Tools Hub in the tray, so the hotkey still works."
+    },
+    "autostart": {
+      "label": "Launch at login",
+      "description": "Starts Tools Hub in the tray when you log in."
     },
     "storage": {
       "label": "Preferences file",
@@ -90,5 +105,9 @@
       "reset": "Every Preference is back to its default.",
       "cleared": "Recent is cleared."
     }
+  },
+  "tray": {
+    "open": "Open Tools Hub",
+    "quit": "Quit"
   }
 }
