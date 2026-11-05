@@ -32,12 +32,15 @@ export function SettingsDialog({
       <DialogContent
         closeLabel={t("settings.close")}
         aria-describedby={undefined}
-        className="flex max-h-[min(720px,calc(100vh-4rem))] flex-col gap-6 overflow-y-auto sm:max-w-2xl"
+        className="flex max-h-[min(720px,calc(100vh-4rem))] flex-col gap-6 sm:max-w-2xl"
       >
+        {/* Header stays put; only the body scrolls (shadcn "Scrollable Content"). */}
         <DialogHeader>
           <DialogTitle className="text-xl font-medium">{t("settings.title")}</DialogTitle>
         </DialogHeader>
-        <SettingsBody {...props} />
+        <div className="-mx-6 min-h-0 flex-1 overflow-y-auto px-6">
+          <SettingsBody {...props} />
+        </div>
       </DialogContent>
     </Dialog>
   );
