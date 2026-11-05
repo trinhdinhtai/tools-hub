@@ -113,7 +113,7 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
       <main className="min-w-0 flex-1 overflow-y-auto">
         {activeTool ? <ToolView key={activeTool.id} tool={activeTool} /> : <EmptyState />}
       </main>
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} platform={platform} osLocale={osLocale} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} platform={platform} />
     </div>
   );
 }

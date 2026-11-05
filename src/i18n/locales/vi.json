@@ -25,7 +25,7 @@
     "language": {
       "label": "Ngôn ngữ",
       "description": "Giao diện đổi ngay, không cần khởi động lại.",
-      "system": "Theo hệ thống ({{language}})"
+      "system": "Theo hệ thống"
     },
     "theme": {
       "label": "Theme",

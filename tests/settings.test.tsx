@@ -16,6 +16,12 @@ async function openSettings(user: ReturnType<typeof userEvent.setup>, name = "Se
   return screen.findByRole("dialog", { name });
 }
 
+/** Picks an option from one of the Settings selects (Language, Theme). */
+async function choose(user: ReturnType<typeof userEvent.setup>, select: string, option: string) {
+  await user.click(screen.getByRole("combobox", { name: select }));
+  await user.click(await screen.findByRole("option", { name: option }));
+}
+
 const isDark = () => document.documentElement.classList.contains("dark");
 
 afterEach(() => {
@@ -30,7 +36,8 @@ describe("Settings", () => {
     await user.type(await screen.findByLabelText("Input"), "foo");
     const dialog = await openSettings(user);
 
-    await user.click(within(dialog).getByRole("radio", { name: "Tiếng Việt" }));
+    expect(within(dialog).getByRole("combobox", { name: "Language" })).toHaveTextContent(/^System$/);
+    await choose(user, "Language", "Tiếng Việt");
 
     expect(await screen.findByRole("dialog", { name: "Cài đặt" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Đóng" }));
@@ -49,14 +56,15 @@ describe("Settings", () => {
     const platform = createMemoryPlatform({ osLocale: "en-US", systemTheme: "dark" });
     const { user } = renderApp(platform);
     await openSettings(user);
-    expect(screen.getByRole("radio", { name: "System" })).toBeChecked();
+    expect(screen.getByRole("combobox", { name: "Theme" })).toHaveTextContent(/^System$/);
     expect(isDark()).toBe(true);
 
     platform.setSystemTheme("light");
-    expect(await screen.findByRole("radio", { name: "System" })).toBeChecked();
+    expect(await screen.findByRole("combobox", { name: "Theme" })).toHaveTextContent(/^System$/);
     expect(isDark()).toBe(false);
 
-    await user.click(screen.getByRole("radio", { name: "Dark" }));
+    await choose(user, "Theme", "Dark");
+    expect(screen.getByRole("combobox", { name: "Theme" })).toHaveTextContent("Dark");
     expect(isDark()).toBe(true);
     platform.setSystemTheme("light");
     expect(isDark()).toBe(true);
@@ -68,14 +76,15 @@ describe("Settings", () => {
     await user.click(await screen.findByRole("button", { name: "Base64" }));
     await user.click(await screen.findByRole("radio", { name: "Base32" }));
     await openSettings(user);
-    await user.click(screen.getByRole("radio", { name: "Dark" }));
-    await user.click(screen.getByRole("radio", { name: "Tiếng Việt" }));
+    await choose(user, "Theme", "Dark");
+    await choose(user, "Language", "Tiếng Việt");
 
     await user.click(await screen.findByRole("button", { name: "Khôi phục mặc định" }));
 
     const dialog = await screen.findByRole("dialog", { name: "Settings" });
     expect(within(dialog).getByRole("status")).toHaveTextContent(/default/);
-    expect(within(dialog).getByRole("radio", { name: "System (English)" })).toBeChecked();
+    expect(within(dialog).getByRole("combobox", { name: "Language" })).toHaveTextContent(/^System$/);
+    expect(within(dialog).getByRole("combobox", { name: "Theme" })).toHaveTextContent(/^System$/);
     expect(isDark()).toBe(false);
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();

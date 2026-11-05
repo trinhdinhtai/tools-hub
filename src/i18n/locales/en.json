@@ -25,7 +25,7 @@
     "language": {
       "label": "Language",
       "description": "Changes the interface right away.",
-      "system": "System ({{language}})"
+      "system": "System"
     },
     "theme": {
       "label": "Theme",

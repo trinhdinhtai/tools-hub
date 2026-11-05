@@ -2,12 +2,11 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePreference } from "@/lib/preferences";
 import { usePreferences } from "@/lib/preferences-context";
 import type { Locale } from "@/lib/tool";
 import type { Platform } from "@/platform/types";
-import { resolveLocale } from "@/i18n";
 import { LANGUAGES, THEMES, type Language, type Theme } from "./app-preferences";
 
 /** Language names are written in their own language, so they read the same whatever the UI language is. */
@@ -17,7 +16,6 @@ type Done = "reset" | "cleared" | null;
 
 interface SettingsProps {
   platform: Platform;
-  osLocale: string | null;
 }
 
 /** Settings open over whatever is on screen, so the open Tool and its Input stay as they are. */
@@ -46,7 +44,7 @@ export function SettingsDialog({
   );
 }
 
-function SettingsBody({ platform, osLocale }: SettingsProps) {
+function SettingsBody({ platform }: SettingsProps) {
   const { t } = useTranslation();
   const preferences = usePreferences();
   const [language, setLanguage] = usePreference<Language>("language");
@@ -77,7 +75,7 @@ function SettingsBody({ platform, osLocale }: SettingsProps) {
               onChange={setLanguage}
               label={(option) =>
                 option === "system"
-                  ? t("settings.language.system", { language: LANGUAGE_NAMES[resolveLocale(osLocale)] })
+                  ? t("settings.language.system")
                   : LANGUAGE_NAMES[option]
               }
             />
@@ -162,6 +160,7 @@ function Row({ label, description, children }: { label: string; description?: st
   );
 }
 
+/** A single choice among a few fixed options, shown as a select labelled by its row. */
 function Choice<T extends string>({
   labelId,
   value,
@@ -176,19 +175,17 @@ function Choice<T extends string>({
   label: (option: T) => string;
 }) {
   return (
-    <ToggleGroup
-      type="single"
-      variant="outline"
-      size="sm"
-      aria-labelledby={labelId}
-      value={value}
-      onValueChange={(next) => next && onChange(next as T)}
-    >
-      {options.map((option) => (
-        <ToggleGroupItem key={option} value={option} className="px-3 text-subtle-foreground data-[state=on]:text-foreground">
-          {label(option)}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
+    <Select value={value} onValueChange={(next) => onChange(next as T)}>
+      <SelectTrigger size="sm" aria-labelledby={labelId} className="w-48">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option} value={option}>
+            {label(option)}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
