@@ -3,35 +3,43 @@ import { I18nextProvider, useTranslation } from "react-i18next";
 import type { i18n } from "i18next";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
+import { NamespaceContext, PreferencesContext, toolNamespace } from "@/lib/preferences-context";
 import type { ToolMeta } from "@/lib/tool";
 import type { Platform } from "@/platform/types";
 import { TOOLS_NS, createI18n, resolveLocale } from "@/i18n";
-import { toolsByCategory } from "./registry";
+import { schemasFor } from "./app-preferences";
+import { loadPreferences, type Preferences } from "./preferences";
+import { tools, toolsByCategory } from "./registry";
+
+interface Loaded {
+  i18n: i18n;
+  preferences: Preferences;
+}
 
 export function App({ platform }: { platform: Platform }) {
-  const [i18n, setI18n] = useState<i18n | null>(null);
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    platform
-      .getOsLocale()
-      .catch(() => null)
-      .then((osLocale) => createI18n(resolveLocale(osLocale)))
-      .then((instance) => {
+    Promise.all([platform.getOsLocale().catch(() => null), loadPreferences(platform.store, schemasFor(tools))])
+      .then(async ([osLocale, preferences]) => ({ i18n: await createI18n(resolveLocale(osLocale)), preferences }))
+      .then((next) => {
         if (cancelled) return;
-        document.documentElement.lang = instance.language;
-        setI18n(instance);
+        document.documentElement.lang = next.i18n.language;
+        setLoaded(next);
       });
     return () => {
       cancelled = true;
     };
   }, [platform]);
 
-  if (!i18n) return null;
+  if (!loaded) return null;
   return (
-    <I18nextProvider i18n={i18n}>
-      <Shell />
-    </I18nextProvider>
+    <PreferencesContext.Provider value={loaded.preferences}>
+      <I18nextProvider i18n={loaded.i18n}>
+        <Shell />
+      </I18nextProvider>
+    </PreferencesContext.Provider>
   );
 }
 
@@ -96,9 +104,11 @@ function ToolView({ tool }: { tool: ToolMeta }) {
         <h1 className="text-2xl font-medium">{t(`${tool.id}.name`)}</h1>
         <p className="text-subtle-foreground">{t(`${tool.id}.description`)}</p>
       </header>
-      <Suspense fallback={null}>
-        <Component />
-      </Suspense>
+      <NamespaceContext.Provider value={toolNamespace(tool.id)}>
+        <Suspense fallback={null}>
+          <Component />
+        </Suspense>
+      </NamespaceContext.Provider>
     </div>
   );
 }
