@@ -24,14 +24,14 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       >
         ools
       </text>
-      <rect x={808} y={285} width={358} height={198} rx={22} className="fill-black dark:fill-primary" />
+      <rect x={808} y={285} width={358} height={198} rx={22} className="fill-black dark:fill-brand" />
       <text
         transform="translate(987 446) scale(0.9 1)"
         textAnchor="middle"
         fontFamily="Helvetica Neue, Helvetica, Arial, sans-serif"
         fontWeight={700}
         fontSize={178}
-        className="fill-primary stroke-primary dark:fill-[#111111] dark:stroke-[#111111]"
+        className="fill-brand stroke-brand dark:fill-[#111111] dark:stroke-[#111111]"
         strokeWidth={4}
         strokeLinejoin="round"
         letterSpacing={-2}
