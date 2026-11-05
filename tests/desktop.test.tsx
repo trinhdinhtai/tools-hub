@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { App } from "@/app/App";
@@ -21,7 +21,8 @@ describe("Global hotkey", () => {
   it("registers Ctrl+Alt+Space by default and opens the palette when pressed from anywhere", async () => {
     const { platform } = renderApp();
     await screen.findByRole("navigation");
-    expect(platform.desktopState().globalHotkey).toBe("Ctrl+Alt+Space");
+    // Registering is async: it can land after the shell is on screen.
+    await waitFor(() => expect(platform.desktopState().globalHotkey).toBe("Ctrl+Alt+Space"));
 
     act(() => platform.pressGlobalHotkey());
     expect(await screen.findByRole("dialog", { name: "Search Tools" })).toBeInTheDocument();

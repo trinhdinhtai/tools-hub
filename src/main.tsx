@@ -15,6 +15,14 @@ import "./index.css";
 // Outside Tauri (plain `vite` in a browser) the in-memory Platform stands in.
 const platform = "__TAURI_INTERNALS__" in window ? createTauriPlatform() : createMemoryPlatform();
 
+// A file dropped outside a drop zone would make the webview navigate to it, losing every Open Tool's Input.
+// Text drags are left alone, so dropping text into a field still works.
+for (const type of ["dragover", "drop"]) {
+  window.addEventListener(type, (event) => {
+    if ((event as DragEvent).dataTransfer?.types.includes("Files")) event.preventDefault();
+  });
+}
+
 // Paint the OS theme until the theme Preference has loaded, so a dark OS never flashes light.
 document.documentElement.classList.toggle("dark", platform.systemTheme.get() === "dark");
 

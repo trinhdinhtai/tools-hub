@@ -17,5 +17,23 @@
     "invalid-character": "Dữ liệu nhập không phải {{variant}} hợp lệ: có ký tự nằm ngoài bảng ký tự",
     "invalid-length": "Dữ liệu nhập không phải {{variant}} hợp lệ: độ dài hoặc padding bị sai",
     "not-utf8": "Dữ liệu nhập không phải văn bản {{variant}} hợp lệ: giải mã ra byte không phải UTF-8"
+  },
+  "mode": "Chế độ",
+  "modes": {
+    "text": "Văn bản",
+    "file": "File"
+  },
+  "file": {
+    "zone": "File cần mã hoá",
+    "unknownType": "không rõ loại",
+    "dataUri": "Data URI",
+    "encoding": "Đang mã hoá…",
+    "decoding": "Đang giải mã…",
+    "chars": "{{count}} ký tự",
+    "preview": "Đang hiện {{shown}} trên {{total}} ký tự đầu. Sao chép hoặc lưu để lấy toàn bộ.",
+    "save": "Lưu thành file",
+    "saveFailed": "Không lưu được file: {{message}}",
+    "failed": "Không xử lý được file: {{message}}",
+    "tooBigToCopy": "Đang hiện {{shown}} trên {{total}} ký tự đầu. Quá lớn để sao chép: hãy lưu thành file."
   }
 }

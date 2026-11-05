@@ -17,5 +17,23 @@
     "invalid-character": "Input is not valid {{variant}}: it contains a character outside the alphabet",
     "invalid-length": "Input is not valid {{variant}}: its length or padding is wrong",
     "not-utf8": "Input is not valid {{variant}} text: it decodes to bytes that are not UTF-8"
+  },
+  "mode": "Mode",
+  "modes": {
+    "text": "Text",
+    "file": "File"
+  },
+  "file": {
+    "zone": "File to encode",
+    "unknownType": "unknown type",
+    "dataUri": "Data URI",
+    "encoding": "Encoding…",
+    "decoding": "Decoding…",
+    "chars": "{{count}} chars",
+    "preview": "Showing the first {{shown}} of {{total}} chars. Copy or save to get all of them.",
+    "save": "Save as file",
+    "saveFailed": "Couldn’t save the file: {{message}}",
+    "failed": "Couldn’t process the file: {{message}}",
+    "tooBigToCopy": "Showing the first {{shown}} of {{total}} chars. Too big to copy: save it as a file instead."
   }
 }

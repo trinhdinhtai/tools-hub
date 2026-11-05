@@ -1,5 +1,14 @@
 import { mediaQuerySystemTheme } from "./system-theme";
-import type { AvailableUpdate, ColorScheme, Desktop, Platform, SystemTheme, TrayLabels, Updater } from "./types";
+import type {
+  AvailableUpdate,
+  ColorScheme,
+  Desktop,
+  Platform,
+  PlatformFiles,
+  SystemTheme,
+  TrayLabels,
+  Updater,
+} from "./types";
 
 export interface MemoryPlatform extends Platform {
   /** Snapshot of everything written to the store, for assertions in tests. */
@@ -12,6 +21,29 @@ export interface MemoryPlatform extends Platform {
   pressGlobalHotkey(): void;
   /** How often the app asked for an update, and which version it installed. */
   updaterState(): UpdaterState;
+  /** The files the user saved, in order. */
+  savedFiles(): SavedFile[];
+  /** What the user does in the next save dialogs: pick a file (the default) or cancel. */
+  setSaveDialog(answer: "save" | "cancel"): void;
+}
+
+export interface SavedFile {
+  name: string;
+  bytes: Uint8Array;
+}
+
+/** A save dialog the user answers at once, picking the suggested name, with the files kept in memory. */
+function memoryFiles(): PlatformFiles & { saved: SavedFile[]; answer: "save" | "cancel" } {
+  const files = {
+    saved: [] as SavedFile[],
+    answer: "save" as "save" | "cancel",
+    async save(name: string, bytes: Uint8Array) {
+      if (files.answer === "cancel") return false;
+      files.saved.push({ name, bytes: bytes.slice() });
+      return true;
+    },
+  };
+  return files;
 }
 
 export interface UpdaterState {
@@ -105,7 +137,7 @@ function fixedSystemTheme(initial: ColorScheme): SystemTheme & { set(scheme: Col
  * In-memory Platform for tests and for running the app in a plain browser.
  * With `systemTheme` given, the OS theme is simulated; otherwise the browser's is used. `isMac` defaults to false.
  * The desktop (hotkey, tray, autostart) is simulated; `takenHotkeys` are combinations another app already holds.
- * The updater answers from the update options and never touches the network.
+ * The updater answers from the update options and never touches the network. Saved files are kept in memory.
  */
 export function createMemoryPlatform(
   options: {
@@ -117,6 +149,7 @@ export function createMemoryPlatform(
 ): MemoryPlatform {
   const desktop = memoryDesktop(options.takenHotkeys ?? []);
   const updater = memoryUpdater(options);
+  const files = memoryFiles();
   const data = new Map<string, unknown>();
   const simulated = fixedSystemTheme(options.systemTheme ?? "light");
   const useBrowserTheme = options.systemTheme === undefined && typeof window.matchMedia === "function";
@@ -148,6 +181,11 @@ export function createMemoryPlatform(
     pressGlobalHotkey: desktop.press,
     updater,
     updaterState: () => ({ ...updater.state }),
+    files,
+    savedFiles: () => [...files.saved],
+    setSaveDialog: (answer) => {
+      files.answer = answer;
+    },
     dump() {
       return Object.fromEntries(data);
     },

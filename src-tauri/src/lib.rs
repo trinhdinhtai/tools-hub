@@ -3,7 +3,9 @@ use std::sync::Mutex;
 
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
+use tauri::ipc::{InvokeBody, Request};
 use tauri::{AppHandle, Manager, State, WindowEvent, Wry};
+use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_updater::{Update, UpdaterExt};
 
 /// Passed by the OS when it launches the app at login: start in the tray, without showing the window.
@@ -72,6 +74,46 @@ async fn install_update(app: AppHandle, pending: State<'_, PendingUpdate>) -> Re
     app.restart()
 }
 
+/// Saves a Tool's result where the user picks: shows the save dialog, suggesting the `x-file-name` header (URI-encoded),
+/// then writes the raw request body there. Returns false, writing nothing, if the user cancels. The webview cannot name
+/// a path itself, so nothing is written anywhere the user did not choose (ADR-0004).
+#[tauri::command]
+async fn save_file(app: AppHandle, request: Request<'_>) -> Result<bool, String> {
+    let InvokeBody::Raw(bytes) = request.body() else {
+        return Err("save_file expects the file's bytes as the request body".into());
+    };
+    let name = request
+        .headers()
+        .get("x-file-name")
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| percent_decode(value))
+        .unwrap_or_else(|| "file".into());
+    let Some(path) = app.dialog().file().set_file_name(&name).blocking_save_file() else {
+        return Ok(false);
+    };
+    let path = path.into_path().map_err(|e| e.to_string())?;
+    std::fs::write(path, bytes).map_err(|e| e.to_string())?;
+    Ok(true)
+}
+
+/// Undoes `encodeURIComponent`, which keeps a non-ASCII file name valid as an HTTP header.
+fn percent_decode(value: &str) -> Option<String> {
+    let bytes = value.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' {
+            let hex = std::str::from_utf8(bytes.get(i + 1..i + 3)?).ok()?;
+            out.push(u8::from_str_radix(hex, 16).ok()?);
+            i += 3;
+        } else {
+            out.push(bytes[i]);
+            i += 1;
+        }
+    }
+    String::from_utf8(out).ok()
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -82,6 +124,7 @@ pub fn run() {
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             Some(vec![HIDDEN_ARG]),
         ))
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -130,7 +173,8 @@ pub fn run() {
             set_quit_on_close,
             set_tray_labels,
             check_update,
-            install_update
+            install_update,
+            save_file
         ])
         .run(tauri::generate_context!())
         .expect("error while running Tools Hub");

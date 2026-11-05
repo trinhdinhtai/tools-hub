@@ -22,6 +22,8 @@ export default defineConfig({
   build: {
     target: "es2022",
   },
+  // Workers are ES modules, served from the app's own origin (CSP `worker-src 'self'`).
+  worker: { format: "es" },
   test: {
     globals: true,
     environment: "jsdom",
