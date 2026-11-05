@@ -144,5 +144,18 @@
     "replacedMatches": "đã thay $ kết quả",
     "selectionDeleted": "Đã xoá vùng chọn",
     "controlCharacter": "Ký tự điều khiển"
+  },
+  "components": {
+    "copy": {
+      "label": "Sao chép",
+      "done": "Đã sao chép",
+      "failed": "Không sao chép được: clipboard từ chối"
+    },
+    "file": {
+      "drop": "Thả file vào đây",
+      "or": "hoặc",
+      "choose": "Chọn file",
+      "release": "Thả ra để mở file"
+    }
   }
 }

@@ -144,5 +144,18 @@
     "replacedMatches": "replaced $ matches",
     "selectionDeleted": "Selection deleted",
     "controlCharacter": "Control character"
+  },
+  "components": {
+    "copy": {
+      "label": "Copy",
+      "done": "Copied",
+      "failed": "Couldn’t copy: the clipboard refused it"
+    },
+    "file": {
+      "drop": "Drop a file here",
+      "or": "or",
+      "choose": "Choose a file",
+      "release": "Release to open it"
+    }
   }
 }
