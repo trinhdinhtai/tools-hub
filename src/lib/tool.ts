@@ -17,6 +17,18 @@ export type Category = (typeof CATEGORIES)[number];
 
 export type Locale = "en" | "vi";
 
+/** Versioned Preference schema; every key has a JSON default. A stored version that differs is discarded. */
+export interface PreferenceSchema {
+  version: number;
+  defaults: Record<string, unknown>;
+}
+
+/** Versioned Recent schema: a short, non-sensitive history capped at `maxItems`, newest first. */
+export interface RecentSchema {
+  version: number;
+  maxItems: number;
+}
+
 /**
  * The contract every Tool declares in `src/tools/<id>/meta.ts` as its default export.
  *
@@ -33,9 +45,9 @@ export interface ToolMeta {
   /** Mode ids, each translated under `modes.<id>` in the Tool namespace. */
   modes?: readonly string[];
   /** Preference schema: versioned, every key has a default. */
-  preferences?: { version: number; defaults: Record<string, unknown> };
+  preferences?: PreferenceSchema;
   /** Recent schema, for Tools that keep a short non-sensitive history. */
-  recent?: { version: number; maxItems: number };
+  recent?: RecentSchema;
   /** Paste Detection score for a pasted text: 0 (no match) to 1 (certain). */
   detectPaste?: (text: string) => number;
   component: LazyExoticComponent<ComponentType>;

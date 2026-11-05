@@ -15,6 +15,9 @@ import "./index.css";
 // Outside Tauri (plain `vite` in a browser) the in-memory Platform stands in.
 const platform = "__TAURI_INTERNALS__" in window ? createTauriPlatform() : createMemoryPlatform();
 
+// Paint the OS theme until the theme Preference has loaded, so a dark OS never flashes light.
+document.documentElement.classList.toggle("dark", platform.systemTheme.get() === "dark");
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App platform={platform} />

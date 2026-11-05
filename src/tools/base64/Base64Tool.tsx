@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { usePreference } from "@/lib/preferences";
 import { DecodeError, decode, encode, type Variant } from "./logic";
 
 type Direction = "encode" | "decode";
@@ -36,7 +37,8 @@ export default function Base64Tool() {
   const { t } = useTranslation("base64");
   const id = useId();
   const [direction, setDirection] = useState<Direction>("encode");
-  const [variant, setVariant] = useState<Variant>("standard");
+  const [storedVariant, setVariant] = usePreference<Variant>("variant");
+  const variant = VARIANTS.includes(storedVariant) ? storedVariant : "standard";
   const [input, setInput] = useState("");
 
   const { output, error } = convert(input, direction, variant);
@@ -44,34 +46,33 @@ export default function Base64Tool() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
+        {/* Single choice: Base UI ToggleGroup values are arrays; pressing the active item again keeps it. */}
         <ToggleGroup
-          type="single"
           variant="outline"
           size="sm"
           aria-label={t("direction.label")}
-          value={direction}
-          onValueChange={(value) => value && setDirection(value as Direction)}
+          value={[direction]}
+          onValueChange={([value]) => value && setDirection(value as Direction)}
         >
           {DIRECTIONS.map((d) => (
             <ToggleGroupItem
               key={d}
               value={d}
-              className="px-3 text-subtle-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              className="px-3 text-subtle-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground"
             >
               {t(`direction.${d}`)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
         <ToggleGroup
-          type="single"
           variant="outline"
           size="sm"
           aria-label={t("variant.label")}
-          value={variant}
-          onValueChange={(value) => value && setVariant(value as Variant)}
+          value={[variant]}
+          onValueChange={([value]) => value && setVariant(value as Variant)}
         >
           {VARIANTS.map((v) => (
-            <ToggleGroupItem key={v} value={v} className="px-3 text-subtle-foreground data-[state=on]:text-foreground">
+            <ToggleGroupItem key={v} value={v} className="px-3 text-subtle-foreground aria-pressed:text-foreground">
               {t(`variant.${v}`)}
             </ToggleGroupItem>
           ))}

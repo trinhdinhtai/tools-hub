@@ -1,9 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+/* shadcn utilities: scroll-fade, no-scrollbar, data-* variants. */
+@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
-/* Graphite neutral ramp, brand orange #ff9900 as primary (dark text on it: white fails contrast). Fonts are bundled (see main.tsx): the app never loads remote resources (ADR-0001). */
+/*
+ * Graphite neutral ramp. --brand is the Tools Hub orange #ff9900 (logo, identity), the same in both themes.
+ * --primary drives buttons, pressed toggles and the focus ring:
+ *   light: dark orange #b45309 with white text (5.02:1; the focus ring is 4.81:1 on the background),
+ *   dark:  the brand orange with dark text (8.82:1; white on #ff9900 would be only 2.14:1).
+ * Fonts are bundled (see main.tsx): the app never loads remote resources (ADR-0001).
+ */
 :root {
   --background: #fafafa;
   --foreground: #171717;
@@ -11,46 +19,46 @@
   --card-foreground: #171717;
   --popover: #ffffff;
   --popover-foreground: #171717;
-  --primary: #ff9900;
-  --primary-foreground: #111111;
+  --brand: #ff9900;
+  --primary: #b45309;
+  --primary-foreground: #ffffff;
   --secondary: #f4f4f5;
   --secondary-foreground: #171717;
   --muted: #f4f4f5;
-  --muted-foreground: #737373;
+  --muted-foreground: #6b6b6b;
   --subtle-foreground: #525252;
   --accent: #f4f4f5;
   --accent-foreground: #171717;
   --destructive: #dc2626;
   --border: rgb(23 23 23 / 0.08);
   --input: rgb(23 23 23 / 0.12);
-  --ring: #ff9900;
+  --ring: #b45309;
   --sidebar: #f4f4f5;
   --radius: 0.625rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #141415;
-    --foreground: #ededed;
-    --card: #19191b;
-    --card-foreground: #ededed;
-    --popover: #19191b;
-    --popover-foreground: #ededed;
-    --primary: #ff9900;
-    --primary-foreground: #111111;
-    --secondary: #232325;
-    --secondary-foreground: #ededed;
-    --muted: #232325;
-    --muted-foreground: #85858b;
-    --subtle-foreground: #a1a1a6;
-    --accent: #232325;
-    --accent-foreground: #ededed;
-    --destructive: #e5484d;
-    --border: rgb(237 237 237 / 0.08);
-    --input: rgb(237 237 237 / 0.12);
-    --ring: #ff9900;
-    --sidebar: #0f0f10;
-  }
+/* Dark is a class set by the theme Preference (Light, Dark, or System = the OS theme), see useTheme in App.tsx. */
+:root.dark {
+  --background: #141415;
+  --foreground: #ededed;
+  --card: #19191b;
+  --card-foreground: #ededed;
+  --popover: #19191b;
+  --popover-foreground: #ededed;
+  --primary: #ff9900;
+  --primary-foreground: #111111;
+  --secondary: #232325;
+  --secondary-foreground: #ededed;
+  --muted: #232325;
+  --muted-foreground: #85858b;
+  --subtle-foreground: #a1a1a6;
+  --accent: #232325;
+  --accent-foreground: #ededed;
+  --destructive: #e5484d;
+  --border: rgb(237 237 237 / 0.08);
+  --input: rgb(237 237 237 / 0.12);
+  --ring: #ff9900;
+  --sidebar: #0f0f10;
 }
 
 @theme inline {
@@ -64,6 +72,7 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-brand: var(--brand);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -81,6 +90,14 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Set for one frame while the theme switches (see applyColorScheme in App.tsx), so every colour changes at once. */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
 }
 
 @layer base {

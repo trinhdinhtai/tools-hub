@@ -74,6 +74,22 @@ describe("checkRegistry catches", () => {
       [entry({ meta: tool({ preferences: { version: 1, defaults: undefined as never } }) })],
       /default/i,
     ],
+    [
+      "Preference key without a default",
+      [entry({ meta: tool({ preferences: { version: 1, defaults: { indent: undefined } } }) })],
+      /"indent".*default/i,
+    ],
+    [
+      "Preference default that is not JSON",
+      [entry({ meta: tool({ preferences: { version: 1, defaults: { format: () => "x" } } }) })],
+      /"format".*JSON/i,
+    ],
+    [
+      "Preference schema without a version",
+      [entry({ meta: tool({ preferences: { version: 0, defaults: { indent: 2 } } }) })],
+      /version/i,
+    ],
+    ["Recent without a positive maxItems", [entry({ meta: tool({ recent: { version: 1, maxItems: 0 } }) })], /maxItems/],
   ])("%s", (_name, entries, problem) => {
     const problems = checkRegistry(entries, shell);
     expect(problems.some((p) => problem.test(p))).toBe(true);

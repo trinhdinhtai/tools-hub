@@ -27,6 +27,40 @@ function compareLocales(scope: string, locales: Record<Locale, Json>): string[] 
   ];
 }
 
+/** Plain JSON: what the store can hold and give back unchanged. */
+function isJson(value: unknown): boolean {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return true;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.every(isJson);
+  if (typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype) {
+    return Object.values(value as Json).every(isJson);
+  }
+  return false;
+}
+
+const isPositiveInteger = (n: unknown) => Number.isInteger(n) && (n as number) > 0;
+
+/** Every Preference key has a JSON default; Preference and Recent schemas are versioned. */
+function checkSchemas(scope: string, { preferences, recent }: ToolMeta): string[] {
+  const problems: string[] = [];
+  if (preferences) {
+    if (!isPositiveInteger(preferences.version)) problems.push(`${scope}: Preference schema needs a positive integer version`);
+    if (typeof preferences.defaults !== "object" || preferences.defaults === null) {
+      problems.push(`${scope}: Preference schema needs default values`);
+    } else {
+      for (const [key, value] of Object.entries(preferences.defaults)) {
+        if (value === undefined) problems.push(`${scope}: Preference "${key}" has no default value`);
+        else if (!isJson(value)) problems.push(`${scope}: Preference "${key}" default must be plain JSON`);
+      }
+    }
+  }
+  if (recent) {
+    if (!isPositiveInteger(recent.version)) problems.push(`${scope}: Recent schema needs a positive integer version`);
+    if (!isPositiveInteger(recent.maxItems)) problems.push(`${scope}: Recent schema needs a positive integer maxItems`);
+  }
+  return problems;
+}
+
 /** Returns one human-readable problem per violation; an empty list means the registry conforms. */
 export function checkRegistry(entries: ToolEntry[], shell: Record<Locale, Json>): string[] {
   const problems = compareLocales("app", shell);
@@ -44,9 +78,7 @@ export function checkRegistry(entries: ToolEntry[], shell: Record<Locale, Json>)
     for (const locale of LOCALES) {
       if (!meta.aliases[locale]?.length) problems.push(`${scope}: needs at least one ${locale} alias`);
     }
-    if (meta.preferences && (typeof meta.preferences.defaults !== "object" || meta.preferences.defaults === null)) {
-      problems.push(`${scope}: Preference schema needs default values`);
-    }
+    problems.push(...checkSchemas(scope, meta));
 
     const missing = LOCALES.filter((locale) => !locales[locale]);
     if (missing.length) {

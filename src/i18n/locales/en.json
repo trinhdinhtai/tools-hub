@@ -16,5 +16,42 @@
   "empty": {
     "title": "Pick a Tool from the sidebar",
     "body": "Everything runs on this machine. Nothing you paste leaves it, and nothing is saved to disk."
+  },
+  "settings": {
+    "title": "Settings",
+    "close": "Close",
+    "finish": "Done",
+    "appearance": "Appearance",
+    "data": "Storage",
+    "language": {
+      "label": "Language",
+      "description": "Changes the interface right away.",
+      "system": "System"
+    },
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "storage": {
+      "label": "Preferences file",
+      "description": "Preferences and Recent are saved here. Input never is.",
+      "unknown": "Unknown"
+    },
+    "recent": {
+      "label": "Recent",
+      "description": "Forget the recent items Tools remember.",
+      "clear": "Clear Recent"
+    },
+    "reset": {
+      "label": "Restore defaults",
+      "description": "Put every Preference, of the app and of every Tool, back to its default.",
+      "action": "Restore defaults"
+    },
+    "done": {
+      "reset": "Every Preference is back to its default.",
+      "cleared": "Recent is cleared."
+    }
   }
 }
