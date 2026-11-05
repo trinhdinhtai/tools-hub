@@ -3,6 +3,7 @@ import { locale, platform } from "@tauri-apps/plugin-os";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { mediaQuerySystemTheme } from "./system-theme";
 import { createTauriDesktop } from "./tauri-desktop";
+import { createTauriFiles } from "./tauri-files";
 import { createTauriUpdater } from "./tauri-updater";
 import type { Platform } from "./types";
 
@@ -30,5 +31,6 @@ export function createTauriPlatform(): Platform {
     isMac: platform() === "macos",
     desktop: createTauriDesktop(),
     updater: createTauriUpdater(),
+    files: createTauriFiles(),
   };
 }

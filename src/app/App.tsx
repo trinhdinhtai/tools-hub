@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { usePreference, useRecent } from "@/lib/preferences";
 import { PreferencesContext } from "@/lib/preferences-context";
 import type { ToolMeta } from "@/lib/tool";
+import { FilesContext } from "@/lib/files";
 import type { ColorScheme, Platform } from "@/platform/types";
 import { TOOLS_NS, createI18n } from "@/i18n";
 import { colorSchemeFor, localeFor, schemasFor, type Language, type Theme } from "./app-preferences";
@@ -187,14 +188,16 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
         </div>
       </aside>
       <main className="min-w-0 flex-1">
-        <WorkspaceView
-          tools={tools}
-          workspace={workspace}
-          onChange={setWorkspace}
-          favorites={favorites}
-          onToggleFavorite={toggleFavorite}
-          handoff={handoff}
-        />
+        <FilesContext.Provider value={platform.files}>
+          <WorkspaceView
+            tools={tools}
+            workspace={workspace}
+            onChange={setWorkspace}
+            favorites={favorites}
+            onToggleFavorite={toggleFavorite}
+            handoff={handoff}
+          />
+        </FilesContext.Provider>
       </main>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} tools={tools} recent={recent} onPick={openAndRemember} />
       <PasteSuggestions

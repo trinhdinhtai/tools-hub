@@ -14,6 +14,20 @@ export interface Platform {
   desktop: Desktop;
   /** Checking for, and installing, a new version: the only network access the app makes (ADR-0001). */
   updater: Updater;
+  /** Saving a Tool's result as a file the user picks. */
+  files: PlatformFiles;
+}
+
+/**
+ * The only way a Tool writes a file, and only ever when the user asks: a result exported where the user chooses it,
+ * never Input kept behind their back (ADR-0004).
+ */
+export interface PlatformFiles {
+  /**
+   * Shows the OS save dialog, suggesting `name`, and writes `bytes` to the file the user picks. Resolves false, writing
+   * nothing, if the user cancels; rejects if the file cannot be written.
+   */
+  save(name: string, bytes: Uint8Array): Promise<boolean>;
 }
 
 /**
