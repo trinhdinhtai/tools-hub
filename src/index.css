@@ -35,6 +35,9 @@
   --ring: #b45309;
   --sidebar: #f4f4f5;
   --radius: 0.625rem;
+  /* --border made solid on the sidebar: where two of its hairlines overlap (the curves of the tab on screen) they
+     would darken, as --border is translucent. Follows the theme, as it is worked out from its colours. */
+  --tab-border: color-mix(in srgb, var(--foreground) 8%, var(--sidebar));
 }
 
 /* Dark is a class set by the theme Preference (Light, Dark, or System = the OS theme), see useTheme in App.tsx. */
@@ -85,6 +88,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-sidebar: var(--sidebar);
+  --color-tab-border: var(--tab-border);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

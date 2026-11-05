@@ -99,7 +99,7 @@ export function WorkspaceView({
         role="tablist"
         aria-label={t("tabs.label")}
         // The strip's bottom hairline is an inset shadow, so the tab on screen paints over it and joins its panel.
-        className="no-scrollbar flex h-9 shrink-0 overflow-x-auto bg-sidebar px-2 pt-1 shadow-[inset_0_-1px_0_var(--border)]"
+        className="no-scrollbar flex h-9 shrink-0 overflow-x-auto bg-sidebar px-3 pt-1 shadow-[inset_0_-1px_0_var(--tab-border)]"
       >
         {openTools.map((tool, index) => (
           <Tab
@@ -137,9 +137,10 @@ export function WorkspaceView({
  * with the hairline drawn along the curve and a shadow in the panel's colour filling the space under it.
  */
 const ACTIVE_TAB = cn(
-  "z-10 border-border bg-background text-foreground",
-  "before:pointer-events-none before:absolute before:bottom-0 before:-left-2 before:size-2 before:rounded-br-lg before:border-r before:border-b before:border-border before:shadow-[4px_4px_0_4px_var(--background)]",
-  "after:pointer-events-none after:absolute after:-right-2 after:bottom-0 after:size-2 after:rounded-bl-lg after:border-b after:border-l after:border-border after:shadow-[-4px_4px_0_4px_var(--background)]",
+  "z-10 border-tab-border bg-background text-foreground",
+  // Each square is as wide as the top corners' radius (rounded-lg), so all four curves match.
+  "before:pointer-events-none before:absolute before:bottom-0 before:-left-(--radius) before:size-(--radius) before:rounded-br-lg before:border-r before:border-b before:border-tab-border before:shadow-[calc(var(--radius)/2)_calc(var(--radius)/2)_0_calc(var(--radius)/2)_var(--background)]",
+  "after:pointer-events-none after:absolute after:-right-(--radius) after:bottom-0 after:size-(--radius) after:rounded-bl-lg after:border-b after:border-l after:border-tab-border after:shadow-[calc(var(--radius)/-2)_calc(var(--radius)/2)_0_calc(var(--radius)/2)_var(--background)]",
 );
 
 function Tab({
