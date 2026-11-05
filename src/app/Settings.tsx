@@ -1,9 +1,10 @@
-import { useEffect, useId, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePreference } from "@/lib/preferences";
+import { cn } from "@/lib/utils";
 import { usePreferences } from "@/lib/preferences-context";
 import type { Locale } from "@/lib/tool";
 import type { Platform } from "@/platform/types";
@@ -104,10 +105,13 @@ function SettingsBody({ platform, onDone: setDone }: SettingsProps & { onDone: (
       </Section>
 
       <Section title={t("settings.data")}>
-        <Row label={t("settings.storage.label")} description={t("settings.storage.description")}>
+        <Row stacked label={t("settings.storage.label")} description={t("settings.storage.description")}>
           {(labelId) => (
-            <p aria-labelledby={labelId} className="font-mono text-[13px] break-all text-subtle-foreground select-text">
-              {storePath === "" ? t("settings.storage.unknown") : storePath}
+            <p
+              aria-labelledby={labelId}
+              className="rounded-md bg-muted px-2.5 py-1.5 font-mono text-[13px] text-subtle-foreground select-text [overflow-wrap:anywhere]"
+            >
+              {storePath === "" ? t("settings.storage.unknown") : <PathText path={storePath ?? ""} />}
             </p>
           )}
         </Row>
@@ -156,19 +160,48 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Row({ label, description, children }: { label: string; description?: string; children: (labelId: string) => ReactNode }) {
+/**
+ * A labelled setting. The control sits on the right, capped at half the row so a long value never squeezes the label;
+ * `stacked` puts it under the label at full width, for values to read rather than controls (a file path).
+ */
+function Row({
+  label,
+  description,
+  stacked = false,
+  children,
+}: {
+  label: string;
+  description?: string;
+  stacked?: boolean;
+  children: (labelId: string) => ReactNode;
+}) {
   const id = useId();
   return (
-    <div className="grid gap-3 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-6">
+    <div
+      className={cn(
+        "grid gap-3 px-4 py-3",
+        !stacked && "sm:grid-cols-[minmax(0,1fr)_fit-content(50%)] sm:items-center sm:gap-6",
+      )}
+    >
       <div className="flex flex-col gap-0.5">
         <span id={id} className="font-medium">
           {label}
         </span>
         {description && <span className="text-[13px] text-subtle-foreground">{description}</span>}
       </div>
-      <div className="min-w-0 sm:justify-self-end">{children(id)}</div>
+      <div className={cn("min-w-0", !stacked && "sm:justify-self-end")}>{children(id)}</div>
     </div>
   );
+}
+
+/** A file path that wraps after its separators (`\` or `/`) rather than inside a folder name. */
+function PathText({ path }: { path: string }) {
+  return path.split(/(?<=[\\/])/).map((part, index) => (
+    <Fragment key={index}>
+      {index > 0 && <wbr />}
+      {part}
+    </Fragment>
+  ));
 }
 
 /**
