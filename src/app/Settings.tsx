@@ -1,7 +1,7 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePreference } from "@/lib/preferences";
 import { usePreferences } from "@/lib/preferences-context";
@@ -51,14 +51,14 @@ function SettingsPanel(props: SettingsProps) {
       <div className="no-scrollbar -mx-6 min-h-0 flex-1 overflow-y-auto px-6">
         <SettingsBody {...props} onDone={setDone} />
       </div>
-      <footer className="flex items-center justify-between gap-4">
+      <DialogFooter className="items-center sm:justify-between">
         <p role="status" className="text-[13px] text-subtle-foreground">
           {done && t(`settings.done.${done}`)}
         </p>
         <DialogClose asChild>
           <Button size="sm">{t("settings.finish")}</Button>
         </DialogClose>
-      </footer>
+      </DialogFooter>
     </>
   );
 }

@@ -57,7 +57,7 @@ describe("Settings", () => {
     const dialog = await openSettings(user, "Cài đặt");
 
     const done = within(dialog).getByRole("button", { name: "Xong" });
-    expect(done.closest("footer")).not.toBeNull();
+    expect(done.closest("[data-slot=dialog-footer]")).not.toBeNull();
     expect(done.closest(".overflow-y-auto")).toBeNull();
 
     await user.click(done);
