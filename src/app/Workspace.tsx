@@ -99,7 +99,7 @@ export function WorkspaceView({
         role="tablist"
         aria-label={t("tabs.label")}
         // The strip's bottom hairline is an inset shadow, so the tab on screen paints over it and joins its panel.
-        className="no-scrollbar flex h-9 shrink-0 overflow-x-auto bg-sidebar px-1 pt-1 shadow-[inset_0_-1px_0_var(--border)]"
+        className="no-scrollbar flex h-9 shrink-0 overflow-x-auto bg-sidebar px-2 pt-1 shadow-[inset_0_-1px_0_var(--border)]"
       >
         {openTools.map((tool, index) => (
           <Tab
@@ -131,6 +131,16 @@ export function WorkspaceView({
     </div>
   );
 }
+
+/**
+ * The tab on screen. Each bottom corner curves out: a square just outside the tab whose inner corner is rounded,
+ * with the hairline drawn along the curve and a shadow in the panel's colour filling the space under it.
+ */
+const ACTIVE_TAB = cn(
+  "z-10 border-border bg-background text-foreground",
+  "before:pointer-events-none before:absolute before:bottom-0 before:-left-2 before:size-2 before:rounded-br-lg before:border-r before:border-b before:border-border before:shadow-[4px_4px_0_4px_var(--background)]",
+  "after:pointer-events-none after:absolute after:-right-2 after:bottom-0 after:size-2 after:rounded-bl-lg after:border-b after:border-l after:border-border after:shadow-[-4px_4px_0_4px_var(--background)]",
+);
 
 function Tab({
   tool,
@@ -165,10 +175,10 @@ function Tab({
       <ContextMenuTrigger
         render={<div role="presentation" />}
         className={cn(
-          // Editor-style tabs. The tab on screen takes the panel's background, with rounded top corners and a hairline
-          // round its top and sides; the others sit on the strip, muted.
+          // Editor-style tabs. The tab on screen takes the panel's background, with rounded top corners, a hairline round
+          // its top and sides, and bottom corners that curve out into the panel; the others sit on the strip, muted.
           "group/tab relative flex h-full max-w-56 shrink-0 items-center rounded-t-lg border-x border-t border-transparent text-[13px] text-muted-foreground transition-colors duration-150",
-          active ? "border-border bg-background text-foreground" : "hover:bg-accent/60 hover:text-foreground",
+          active ? ACTIVE_TAB : "hover:bg-accent/60 hover:text-foreground",
         )}
       >
         <button
