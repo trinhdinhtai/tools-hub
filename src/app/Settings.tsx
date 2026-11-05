@@ -2,7 +2,7 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePreference } from "@/lib/preferences";
 import { usePreferences } from "@/lib/preferences-context";
 import type { Locale } from "@/lib/tool";
@@ -29,8 +29,7 @@ export function SettingsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         closeLabel={t("settings.close")}
-        aria-describedby={undefined}
-        className="flex max-h-[min(720px,calc(100vh-4rem))] flex-col gap-6 sm:max-w-2xl"
+        className="flex max-h-[min(720px,calc(100vh-4rem))] flex-col gap-4 sm:max-w-2xl"
       >
         <SettingsPanel {...props} />
       </DialogContent>
@@ -48,16 +47,14 @@ function SettingsPanel(props: SettingsProps) {
       <DialogHeader>
         <DialogTitle className="text-xl font-medium">{t("settings.title")}</DialogTitle>
       </DialogHeader>
-      <div className="no-scrollbar scroll-fade -mx-6 min-h-0 flex-1 overflow-y-auto px-6">
+      <div className="no-scrollbar scroll-fade -mx-4 min-h-0 flex-1 overflow-y-auto px-4">
         <SettingsBody {...props} onDone={setDone} />
       </div>
       <DialogFooter className="items-center sm:justify-between">
         <p role="status" className="text-[13px] text-subtle-foreground">
           {done && t(`settings.done.${done}`)}
         </p>
-        <DialogClose asChild>
-          <Button size="sm">{t("settings.finish")}</Button>
-        </DialogClose>
+        <DialogClose render={<Button size="sm" />}>{t("settings.finish")}</DialogClose>
       </DialogFooter>
     </>
   );
@@ -188,17 +185,21 @@ function Choice<T extends string>({
   onChange: (value: T) => void;
   label: (option: T) => string;
 }) {
+  // `items` lets the trigger show an option's label rather than its value.
+  const items = options.map((option) => ({ value: option, label: label(option) }));
   return (
-    <Select value={value} onValueChange={(next) => onChange(next as T)}>
+    <Select items={items} value={value} onValueChange={(next) => next !== null && onChange(next)}>
       <SelectTrigger size="sm" aria-labelledby={labelId} className="w-48">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option} value={option}>
-            {label(option)}
-          </SelectItem>
-        ))}
+        <SelectGroup>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectGroup>
       </SelectContent>
     </Select>
   );

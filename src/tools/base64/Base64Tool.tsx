@@ -46,34 +46,33 @@ export default function Base64Tool() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
+        {/* Single choice: Base UI ToggleGroup values are arrays; pressing the active item again keeps it. */}
         <ToggleGroup
-          type="single"
           variant="outline"
           size="sm"
           aria-label={t("direction.label")}
-          value={direction}
-          onValueChange={(value) => value && setDirection(value as Direction)}
+          value={[direction]}
+          onValueChange={([value]) => value && setDirection(value as Direction)}
         >
           {DIRECTIONS.map((d) => (
             <ToggleGroupItem
               key={d}
               value={d}
-              className="px-3 text-subtle-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              className="px-3 text-subtle-foreground aria-pressed:bg-primary aria-pressed:text-primary-foreground"
             >
               {t(`direction.${d}`)}
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
         <ToggleGroup
-          type="single"
           variant="outline"
           size="sm"
           aria-label={t("variant.label")}
-          value={variant}
-          onValueChange={(value) => value && setVariant(value as Variant)}
+          value={[variant]}
+          onValueChange={([value]) => value && setVariant(value as Variant)}
         >
           {VARIANTS.map((v) => (
-            <ToggleGroupItem key={v} value={v} className="px-3 text-subtle-foreground data-[state=on]:text-foreground">
+            <ToggleGroupItem key={v} value={v} className="px-3 text-subtle-foreground aria-pressed:text-foreground">
               {t(`variant.${v}`)}
             </ToggleGroupItem>
           ))}

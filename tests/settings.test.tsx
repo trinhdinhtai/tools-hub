@@ -86,7 +86,7 @@ describe("Settings", () => {
     const platform = createMemoryPlatform({ osLocale: "en-US", systemTheme: "light" });
     const { user } = renderApp(platform);
     await user.click(await screen.findByRole("button", { name: "Base64" }));
-    await user.click(await screen.findByRole("radio", { name: "Base32" }));
+    await user.click(await screen.findByRole("button", { name: "Base32" }));
     await openSettings(user);
     await choose(user, "Theme", "Dark");
     await choose(user, "Language", "Tiếng Việt");
@@ -100,7 +100,7 @@ describe("Settings", () => {
     expect(isDark()).toBe(false);
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(await screen.findByRole("radio", { name: "Standard" })).toBeChecked();
+    expect(await screen.findByRole("button", { name: "Standard", pressed: true })).toBeInTheDocument();
   });
 
   it("shows where the store is saved and clears every Recent", async () => {
