@@ -54,8 +54,8 @@
 }
 
 @theme inline {
-  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-sans: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
