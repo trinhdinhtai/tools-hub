@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { usePreference } from "@/lib/preferences";
 import { NamespaceContext, PreferencesContext, toolNamespace } from "@/lib/preferences-context";
 import type { ToolMeta } from "@/lib/tool";
-import type { Platform } from "@/platform/types";
+import type { ColorScheme, Platform } from "@/platform/types";
 import { TOOLS_NS, createI18n } from "@/i18n";
 import { colorSchemeFor, localeFor, schemasFor, type Language, type Theme } from "./app-preferences";
 import { loadPreferences, type Preferences } from "./preferences";
@@ -64,11 +64,21 @@ function useTheme(platform: Platform) {
   const [theme] = usePreference<Theme>("theme");
   const system = useSyncExternalStore(platform.systemTheme.subscribe, platform.systemTheme.get);
   const scheme = colorSchemeFor(theme, system);
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", scheme === "dark");
-    root.style.colorScheme = scheme;
-  }, [scheme]);
+  useEffect(() => applyColorScheme(scheme), [scheme]);
+}
+
+/**
+ * Switches the theme in one frame. Transitions are off while the class flips: otherwise backgrounds change at once
+ * while `transition-colors` text fades over 150ms, and labels briefly vanish (dark text on the new dark background).
+ */
+function applyColorScheme(scheme: ColorScheme) {
+  const root = document.documentElement;
+  root.style.colorScheme = scheme;
+  if (root.classList.contains("dark") === (scheme === "dark")) return;
+  root.classList.add("theme-switching");
+  root.classList.toggle("dark", scheme === "dark");
+  void document.body.offsetWidth; // restyle the whole page now, while transitions are still off
+  requestAnimationFrame(() => root.classList.remove("theme-switching"));
 }
 
 function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | null }) {

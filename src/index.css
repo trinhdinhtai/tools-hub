@@ -82,6 +82,14 @@
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Set for one frame while the theme switches (see applyColorScheme in App.tsx), so every colour changes at once. */
+.theme-switching,
+.theme-switching *,
+.theme-switching *::before,
+.theme-switching *::after {
+  transition: none !important;
+}
+
 /* Scrolls without showing a scrollbar, as in shadcn's Scrollable Content dialog. */
 @utility no-scrollbar {
   scrollbar-width: none;
