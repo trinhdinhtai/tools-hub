@@ -10,9 +10,10 @@ function renderApp(platform: MemoryPlatform) {
   return { user, ...view };
 }
 
+/** Opens the Settings dialog from the sidebar and returns it. */
 async function openSettings(user: ReturnType<typeof userEvent.setup>, name = "Settings") {
   await user.click(await screen.findByRole("button", { name }));
-  return screen.findByRole("heading", { level: 1, name });
+  return screen.findByRole("dialog", { name });
 }
 
 const isDark = () => document.documentElement.classList.contains("dark");
@@ -26,16 +27,18 @@ describe("Settings", () => {
     const platform = createMemoryPlatform({ osLocale: "en-US" });
     const { user, unmount } = renderApp(platform);
     await user.click(await screen.findByRole("button", { name: "Base64" }));
-    expect(await screen.findByLabelText("Input")).toBeInTheDocument();
-    await openSettings(user);
+    await user.type(await screen.findByLabelText("Input"), "foo");
+    const dialog = await openSettings(user);
 
-    await user.click(screen.getByRole("radio", { name: "Tiếng Việt" }));
+    await user.click(within(dialog).getByRole("radio", { name: "Tiếng Việt" }));
 
-    expect(await screen.findByRole("heading", { level: 1, name: "Cài đặt" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Cài đặt" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Đóng" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Công cụ" })).toHaveTextContent("Chuyển đổi");
     expect(document.documentElement.lang).toBe("vi");
-    await user.click(screen.getByRole("button", { name: "Base64" }));
-    expect(await screen.findByLabelText("Dữ liệu nhập")).toBeInTheDocument();
+    // The open Tool stayed behind the dialog, Input intact, now in Vietnamese.
+    expect(screen.getByLabelText("Dữ liệu nhập")).toHaveValue("foo");
 
     unmount();
     renderApp(platform);
@@ -70,11 +73,12 @@ describe("Settings", () => {
 
     await user.click(await screen.findByRole("button", { name: "Khôi phục mặc định" }));
 
-    expect(await screen.findByRole("heading", { level: 1, name: "Settings" })).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(/default/);
-    expect(screen.getByRole("radio", { name: "System (English)" })).toBeChecked();
+    const dialog = await screen.findByRole("dialog", { name: "Settings" });
+    expect(within(dialog).getByRole("status")).toHaveTextContent(/default/);
+    expect(within(dialog).getByRole("radio", { name: "System (English)" })).toBeChecked();
     expect(isDark()).toBe(false);
-    await user.click(screen.getByRole("button", { name: "Base64" }));
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(await screen.findByRole("radio", { name: "Standard" })).toBeChecked();
   });
 

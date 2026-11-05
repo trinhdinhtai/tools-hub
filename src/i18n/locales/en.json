@@ -19,6 +19,7 @@
   },
   "settings": {
     "title": "Settings",
+    "close": "Close",
     "appearance": "Appearance",
     "data": "Storage",
     "language": {

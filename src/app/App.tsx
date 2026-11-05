@@ -12,7 +12,7 @@ import { TOOLS_NS, createI18n } from "@/i18n";
 import { colorSchemeFor, localeFor, schemasFor, type Language, type Theme } from "./app-preferences";
 import { loadPreferences, type Preferences } from "./preferences";
 import { tools, toolsByCategory } from "./registry";
-import { Settings } from "./Settings";
+import { SettingsDialog } from "./Settings";
 
 interface Loaded {
   i18n: i18n;
@@ -71,14 +71,12 @@ function useTheme(platform: Platform) {
   }, [scheme]);
 }
 
-type View = { kind: "tool"; tool: ToolMeta } | { kind: "settings" } | null;
-
 function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | null }) {
   const { t } = useTranslation();
-  const [view, setView] = useState<View>(null);
+  const [activeTool, setActiveTool] = useState<ToolMeta | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   useLanguage(osLocale);
   useTheme(platform);
-  const activeToolId = view?.kind === "tool" ? view.tool.id : null;
 
   return (
     <div className="flex h-full">
@@ -93,7 +91,7 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
               <ul className="flex flex-col gap-0.5">
                 {list.map((tool) => (
                   <li key={tool.id}>
-                    <SidebarItem tool={tool} active={tool.id === activeToolId} onSelect={() => setView({ kind: "tool", tool })} />
+                    <SidebarItem tool={tool} active={tool.id === activeTool?.id} onSelect={() => setActiveTool(tool)} />
                   </li>
                 ))}
               </ul>
@@ -101,20 +99,21 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
           ))}
         </nav>
         <div className="border-t p-2">
-          <NavButton active={view?.kind === "settings"} onSelect={() => setView({ kind: "settings" })} icon={SettingsIcon}>
+          <NavButton
+            active={settingsOpen}
+            onSelect={() => setSettingsOpen(true)}
+            icon={SettingsIcon}
+            aria-haspopup="dialog"
+            aria-expanded={settingsOpen}
+          >
             {t("settings.title")}
           </NavButton>
         </div>
       </aside>
       <main className="min-w-0 flex-1 overflow-y-auto">
-        {view?.kind === "tool" ? (
-          <ToolView key={view.tool.id} tool={view.tool} />
-        ) : view?.kind === "settings" ? (
-          <Settings platform={platform} osLocale={osLocale} />
-        ) : (
-          <EmptyState />
-        )}
+        {activeTool ? <ToolView key={activeTool.id} tool={activeTool} /> : <EmptyState />}
       </main>
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} platform={platform} osLocale={osLocale} />
     </div>
   );
 }
@@ -128,22 +127,27 @@ function SidebarItem({ tool, active, onSelect }: { tool: ToolMeta; active: boole
   );
 }
 
+/** A sidebar entry. It marks the current page with `aria-current`, unless it opens a dialog (`aria-haspopup`). */
 function NavButton({
   active,
   onSelect,
   icon: Icon,
   children,
+  ...aria
 }: {
   active: boolean;
   onSelect: () => void;
   icon: LucideIcon;
   children: ReactNode;
+  "aria-haspopup"?: "dialog";
+  "aria-expanded"?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onSelect}
-      aria-current={active ? "page" : undefined}
+      aria-current={active && !aria["aria-haspopup"] ? "page" : undefined}
+      {...aria}
       className={cn(
         "flex h-8 w-full items-center gap-2 rounded-md px-2 text-left text-subtle-foreground transition-colors duration-150",
         "hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",

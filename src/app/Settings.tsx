@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { usePreference } from "@/lib/preferences";
 import { usePreferences } from "@/lib/preferences-context";
@@ -14,7 +15,35 @@ const LANGUAGE_NAMES: Record<Locale, string> = { en: "English", vi: "Tiáº¿ng Viá
 
 type Done = "reset" | "cleared" | null;
 
-export function Settings({ platform, osLocale }: { platform: Platform; osLocale: string | null }) {
+interface SettingsProps {
+  platform: Platform;
+  osLocale: string | null;
+}
+
+/** Settings open over whatever is on screen, so the open Tool and its Input stay as they are. */
+export function SettingsDialog({
+  open,
+  onOpenChange,
+  ...props
+}: SettingsProps & { open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { t } = useTranslation();
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        closeLabel={t("settings.close")}
+        aria-describedby={undefined}
+        className="flex max-h-[min(720px,calc(100vh-4rem))] flex-col gap-6 overflow-y-auto sm:max-w-2xl"
+      >
+        <DialogHeader>
+          <DialogTitle className="text-xl font-medium">{t("settings.title")}</DialogTitle>
+        </DialogHeader>
+        <SettingsBody {...props} />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function SettingsBody({ platform, osLocale }: SettingsProps) {
   const { t } = useTranslation();
   const preferences = usePreferences();
   const [language, setLanguage] = usePreference<Language>("language");
@@ -34,9 +63,7 @@ export function Settings({ platform, osLocale }: { platform: Platform; osLocale:
   }, [platform]);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-8 px-8 py-6">
-      <h1 className="text-2xl font-medium">{t("settings.title")}</h1>
-
+    <div className="flex flex-col gap-6">
       <Section title={t("settings.appearance")}>
         <Row label={t("settings.language.label")} description={t("settings.language.description")}>
           {(labelId) => (

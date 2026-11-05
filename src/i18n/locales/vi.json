@@ -19,6 +19,7 @@
   },
   "settings": {
     "title": "Cài đặt",
+    "close": "Đóng",
     "appearance": "Giao diện",
     "data": "Lưu trữ",
     "language": {
