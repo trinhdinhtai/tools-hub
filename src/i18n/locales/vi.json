@@ -123,5 +123,26 @@
   "tray": {
     "open": "Mở Tools Hub",
     "quit": "Thoát"
+  },
+  "editor": {
+    "find": "Tìm",
+    "replace": "Thay bằng",
+    "next": "tiếp",
+    "previous": "trước",
+    "all": "tất cả",
+    "matchCase": "phân biệt hoa thường",
+    "regexp": "regex",
+    "byWord": "nguyên từ",
+    "replaceOne": "thay",
+    "replaceAll": "thay tất cả",
+    "close": "Đóng",
+    "currentMatch": "kết quả hiện tại",
+    "onLine": "ở dòng",
+    "goToLine": "Đến dòng",
+    "go": "đi",
+    "replacedMatchOnLine": "đã thay kết quả ở dòng $",
+    "replacedMatches": "đã thay $ kết quả",
+    "selectionDeleted": "Đã xoá vùng chọn",
+    "controlCharacter": "Ký tự điều khiển"
   }
 }

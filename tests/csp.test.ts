@@ -34,3 +34,24 @@ describe("checkCsp catches", () => {
     expect(checkCsp(csp).length).toBeGreaterThan(0);
   });
 });
+
+describe("CodeEditor under the CSP", () => {
+  // The CSP has no 'unsafe-eval', so the editor and everything it pulls in must never compile code from strings.
+  // Styles are injected as <style> or constructed sheets, which `style-src 'unsafe-inline'` allows.
+  const editorSources = import.meta.glob<string>(
+    [
+      "/node_modules/.pnpm/@codemirror+*/node_modules/@codemirror/*/dist/index.js",
+      "/node_modules/.pnpm/@lezer+*/node_modules/@lezer/*/dist/index.js",
+      "/node_modules/.pnpm/{style-mod,w3c-keyname,crelt}@*/node_modules/*/{src/style-mod,index}.js",
+    ],
+    { query: "?raw", import: "default", eager: true },
+  );
+
+  it("compiles no code at run time", () => {
+    expect(Object.keys(editorSources).length).toBeGreaterThanOrEqual(8);
+    const offending = Object.entries(editorSources)
+      .filter(([, text]) => /\bnew Function\s*\(|\beval\s*\(/.test(text))
+      .map(([file]) => file);
+    expect(offending).toEqual([]);
+  });
+});
