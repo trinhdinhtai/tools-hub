@@ -1,7 +1,7 @@
 import type { SVGProps } from "react";
 
 /**
- * Tools Hub wordmark: hammer-shaped "T" + "ools" in the current text color, "hub" in a box: orange on black in the
+ * Tools Hub wordmark: hammer-shaped "T" + "ools" in the current text color, "hub" in a box: orange on pure black in the
  * light theme, black on orange in the dark theme.
  * Drawn from the brand file toolshub-logo-dark.svg, without its background so it works on both themes.
  * "hub" gets a same-color stroke so its smaller glyphs match the stroke weight of "ools", and the box sits
@@ -24,7 +24,7 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
       >
         ools
       </text>
-      <rect x={808} y={285} width={358} height={198} rx={22} className="fill-[#111111] dark:fill-primary" />
+      <rect x={808} y={285} width={358} height={198} rx={22} className="fill-black dark:fill-primary" />
       <text
         transform="translate(987 446) scale(0.9 1)"
         textAnchor="middle"
