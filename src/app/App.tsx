@@ -13,6 +13,7 @@ import type { ToolMeta } from "@/lib/tool";
 import type { ColorScheme, Platform } from "@/platform/types";
 import { TOOLS_NS, createI18n } from "@/i18n";
 import { colorSchemeFor, localeFor, schemasFor, type Language, type Theme } from "./app-preferences";
+import { useDesktopPreferences, useGlobalHotkey } from "./desktop";
 import { useFavorites } from "./favorites";
 import { CommandPalette, isPaletteShortcut, paletteShortcutLabel } from "./Palette";
 import { pastedOnApp, suggestTools } from "./paste-detection";
@@ -103,6 +104,11 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
   const [handoff, setHandoff] = useState<Handoff | null>(null);
   useLanguage(osLocale);
   useTheme(platform);
+  useDesktopPreferences(platform);
+  const globalHotkey = useGlobalHotkey(platform, () => {
+    setSettingsOpen(false);
+    setPaletteOpen(true);
+  });
 
   /** Opens a Tool (or shows its tab) and puts it first in the app's Recent. */
   const openAndRemember = (id: string) => {
@@ -202,7 +208,7 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
           openAndRemember(id);
         }}
       />
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} platform={platform} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} platform={platform} globalHotkey={globalHotkey} />
     </div>
   );
 }
