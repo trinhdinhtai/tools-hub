@@ -28,29 +28,28 @@
   --radius: 0.625rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #141415;
-    --foreground: #ededed;
-    --card: #19191b;
-    --card-foreground: #ededed;
-    --popover: #19191b;
-    --popover-foreground: #ededed;
-    --primary: #ff9900;
-    --primary-foreground: #111111;
-    --secondary: #232325;
-    --secondary-foreground: #ededed;
-    --muted: #232325;
-    --muted-foreground: #85858b;
-    --subtle-foreground: #a1a1a6;
-    --accent: #232325;
-    --accent-foreground: #ededed;
-    --destructive: #e5484d;
-    --border: rgb(237 237 237 / 0.08);
-    --input: rgb(237 237 237 / 0.12);
-    --ring: #ff9900;
-    --sidebar: #0f0f10;
-  }
+/* Dark is a class set by the theme Preference (Light, Dark, or System = the OS theme), see useTheme in App.tsx. */
+:root.dark {
+  --background: #141415;
+  --foreground: #ededed;
+  --card: #19191b;
+  --card-foreground: #ededed;
+  --popover: #19191b;
+  --popover-foreground: #ededed;
+  --primary: #ff9900;
+  --primary-foreground: #111111;
+  --secondary: #232325;
+  --secondary-foreground: #ededed;
+  --muted: #232325;
+  --muted-foreground: #85858b;
+  --subtle-foreground: #a1a1a6;
+  --accent: #232325;
+  --accent-foreground: #ededed;
+  --destructive: #e5484d;
+  --border: rgb(237 237 237 / 0.08);
+  --input: rgb(237 237 237 / 0.12);
+  --ring: #ff9900;
+  --sidebar: #0f0f10;
 }
 
 @theme inline {

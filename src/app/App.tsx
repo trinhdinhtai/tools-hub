@@ -1,19 +1,23 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import type { i18n } from "i18next";
+import { Settings as SettingsIcon, type LucideIcon } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
+import { usePreference } from "@/lib/preferences";
 import { NamespaceContext, PreferencesContext, toolNamespace } from "@/lib/preferences-context";
 import type { ToolMeta } from "@/lib/tool";
 import type { Platform } from "@/platform/types";
-import { TOOLS_NS, createI18n, resolveLocale } from "@/i18n";
-import { schemasFor } from "./app-preferences";
+import { TOOLS_NS, createI18n } from "@/i18n";
+import { colorSchemeFor, localeFor, schemasFor, type Language, type Theme } from "./app-preferences";
 import { loadPreferences, type Preferences } from "./preferences";
 import { tools, toolsByCategory } from "./registry";
+import { Settings } from "./Settings";
 
 interface Loaded {
   i18n: i18n;
   preferences: Preferences;
+  osLocale: string | null;
 }
 
 export function App({ platform }: { platform: Platform }) {
@@ -22,11 +26,12 @@ export function App({ platform }: { platform: Platform }) {
   useEffect(() => {
     let cancelled = false;
     Promise.all([platform.getOsLocale().catch(() => null), loadPreferences(platform.store, schemasFor(tools))])
-      .then(async ([osLocale, preferences]) => ({ i18n: await createI18n(resolveLocale(osLocale)), preferences }))
+      .then(async ([osLocale, preferences]) => {
+        const i18n = await createI18n(localeFor(preferences.get("app").language, osLocale));
+        return { i18n, preferences, osLocale };
+      })
       .then((next) => {
-        if (cancelled) return;
-        document.documentElement.lang = next.i18n.language;
-        setLoaded(next);
+        if (!cancelled) setLoaded(next);
       });
     return () => {
       cancelled = true;
@@ -37,15 +42,43 @@ export function App({ platform }: { platform: Platform }) {
   return (
     <PreferencesContext.Provider value={loaded.preferences}>
       <I18nextProvider i18n={loaded.i18n}>
-        <Shell />
+        <Shell platform={platform} osLocale={loaded.osLocale} />
       </I18nextProvider>
     </PreferencesContext.Provider>
   );
 }
 
-function Shell() {
+/** Applies the language Preference live, without a restart. */
+function useLanguage(osLocale: string | null) {
+  const { i18n } = useTranslation();
+  const [language] = usePreference<Language>("language");
+  const locale = localeFor(language, osLocale);
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    if (i18n.language !== locale) void i18n.changeLanguage(locale);
+  }, [i18n, locale]);
+}
+
+/** Applies the theme Preference; "system" follows the OS theme as it changes. */
+function useTheme(platform: Platform) {
+  const [theme] = usePreference<Theme>("theme");
+  const system = useSyncExternalStore(platform.systemTheme.subscribe, platform.systemTheme.get);
+  const scheme = colorSchemeFor(theme, system);
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle("dark", scheme === "dark");
+    root.style.colorScheme = scheme;
+  }, [scheme]);
+}
+
+type View = { kind: "tool"; tool: ToolMeta } | { kind: "settings" } | null;
+
+function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | null }) {
   const { t } = useTranslation();
-  const [activeTool, setActiveTool] = useState<ToolMeta | null>(null);
+  const [view, setView] = useState<View>(null);
+  useLanguage(osLocale);
+  useTheme(platform);
+  const activeToolId = view?.kind === "tool" ? view.tool.id : null;
 
   return (
     <div className="flex h-full">
@@ -60,16 +93,27 @@ function Shell() {
               <ul className="flex flex-col gap-0.5">
                 {list.map((tool) => (
                   <li key={tool.id}>
-                    <SidebarItem tool={tool} active={tool.id === activeTool?.id} onSelect={() => setActiveTool(tool)} />
+                    <SidebarItem tool={tool} active={tool.id === activeToolId} onSelect={() => setView({ kind: "tool", tool })} />
                   </li>
                 ))}
               </ul>
             </section>
           ))}
         </nav>
+        <div className="border-t p-2">
+          <NavButton active={view?.kind === "settings"} onSelect={() => setView({ kind: "settings" })} icon={SettingsIcon}>
+            {t("settings.title")}
+          </NavButton>
+        </div>
       </aside>
       <main className="min-w-0 flex-1 overflow-y-auto">
-        {activeTool ? <ToolView key={activeTool.id} tool={activeTool} /> : <EmptyState />}
+        {view?.kind === "tool" ? (
+          <ToolView key={view.tool.id} tool={view.tool} />
+        ) : view?.kind === "settings" ? (
+          <Settings platform={platform} osLocale={osLocale} />
+        ) : (
+          <EmptyState />
+        )}
       </main>
     </div>
   );
@@ -77,7 +121,24 @@ function Shell() {
 
 function SidebarItem({ tool, active, onSelect }: { tool: ToolMeta; active: boolean; onSelect: () => void }) {
   const { t } = useTranslation(TOOLS_NS);
-  const Icon = tool.icon;
+  return (
+    <NavButton active={active} onSelect={onSelect} icon={tool.icon}>
+      {t(`${tool.id}.name`)}
+    </NavButton>
+  );
+}
+
+function NavButton({
+  active,
+  onSelect,
+  icon: Icon,
+  children,
+}: {
+  active: boolean;
+  onSelect: () => void;
+  icon: LucideIcon;
+  children: ReactNode;
+}) {
   return (
     <button
       type="button"
@@ -90,7 +151,7 @@ function SidebarItem({ tool, active, onSelect }: { tool: ToolMeta; active: boole
       )}
     >
       <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} strokeWidth={1.5} aria-hidden />
-      <span className="truncate">{t(`${tool.id}.name`)}</span>
+      <span className="truncate">{children}</span>
     </button>
   );
 }

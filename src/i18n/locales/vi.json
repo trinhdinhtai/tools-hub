@@ -16,5 +16,40 @@
   "empty": {
     "title": "Chọn một Công cụ ở thanh bên",
     "body": "Mọi thứ chạy trên máy này. Dữ liệu bạn dán vào không rời khỏi máy và không bao giờ được ghi xuống đĩa."
+  },
+  "settings": {
+    "title": "Cài đặt",
+    "appearance": "Giao diện",
+    "data": "Lưu trữ",
+    "language": {
+      "label": "Ngôn ngữ",
+      "description": "Giao diện đổi ngay, không cần khởi động lại.",
+      "system": "Theo hệ thống ({{language}})"
+    },
+    "theme": {
+      "label": "Theme",
+      "light": "Sáng",
+      "dark": "Tối",
+      "system": "Theo hệ thống"
+    },
+    "storage": {
+      "label": "File lưu Tuỳ chỉnh",
+      "description": "Tuỳ chỉnh và mục Gần đây được lưu ở đây. Dữ liệu nhập thì không bao giờ.",
+      "unknown": "Không rõ"
+    },
+    "recent": {
+      "label": "Gần đây",
+      "description": "Xoá các mục gần đây mà Công cụ ghi nhớ.",
+      "clear": "Xoá Gần đây"
+    },
+    "reset": {
+      "label": "Khôi phục mặc định",
+      "description": "Đưa mọi Tuỳ chỉnh của app và của từng Công cụ về giá trị mặc định.",
+      "action": "Khôi phục mặc định"
+    },
+    "done": {
+      "reset": "Mọi Tuỳ chỉnh đã về giá trị mặc định.",
+      "cleared": "Đã xoá danh sách Gần đây."
+    }
   }
 }
