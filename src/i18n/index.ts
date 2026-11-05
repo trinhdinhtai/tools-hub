@@ -73,3 +73,7 @@ export async function createI18n(locale: Locale): Promise<i18n> {
     });
   return instance;
 }
+
+// i18next copies the locale files when the app starts, so hot-updating one would leave stale strings next to new
+// code (e.g. a `{{placeholder}}` the code no longer fills). In dev, any change here or in a locale file reloads the page.
+import.meta.hot?.accept(() => location.reload());
