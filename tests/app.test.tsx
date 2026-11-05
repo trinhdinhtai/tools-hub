@@ -57,3 +57,28 @@ describe("App shell", () => {
     expect(await screen.findByRole("navigation", { name: "Tools" })).toBeInTheDocument();
   });
 });
+
+describe("Store (ADR-0004)", () => {
+  it("remembers the Base64 alphabet but never writes Input to the store", async () => {
+    const MARKER = "MARKER-7f3a9c-do-not-persist";
+    const platform = createMemoryPlatform({ osLocale: "en-US" });
+    const user = userEvent.setup();
+    const { unmount } = render(<App platform={platform} />);
+
+    await user.click(await screen.findByRole("button", { name: "Base64" }));
+    await user.click(await screen.findByRole("radio", { name: "URL-safe" }));
+    await user.type(screen.getByLabelText("Input"), MARKER);
+    expect(screen.getByLabelText("Output")).not.toHaveValue("");
+    unmount();
+
+    render(<App platform={platform} />);
+    await user.click(await screen.findByRole("button", { name: "Base64" }));
+    expect(await screen.findByRole("radio", { name: "URL-safe" })).toBeChecked();
+    expect(screen.getByLabelText("Input")).toHaveValue("");
+
+    const stored = JSON.stringify(platform.dump());
+    expect(stored).toContain("url-safe");
+    expect(stored).not.toContain(MARKER);
+    expect(stored).not.toContain(btoa(MARKER).replace(/=+$/, ""));
+  });
+});

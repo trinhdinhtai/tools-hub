@@ -11,6 +11,7 @@ export default defineTool({
     en: ["base64", "base64url", "base32", "encode", "decode"],
     vi: ["mã hoá", "giải mã", "chuyển đổi"],
   },
+  preferences: { version: 1, defaults: { variant: "standard" } },
   detectPaste,
   component: lazy(() => import("./Base64Tool")),
 });
