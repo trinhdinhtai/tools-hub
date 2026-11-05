@@ -2,6 +2,16 @@
   "nav": {
     "label": "Công cụ"
   },
+  "tabs": {
+    "label": "Công cụ đang mở",
+    "close": "Đóng {{name}}",
+    "menu": {
+      "close": "Đóng",
+      "closeOthers": "Đóng các tab khác",
+      "closeRight": "Đóng các tab bên phải",
+      "closeAll": "Đóng tất cả"
+    }
+  },
   "categories": {
     "development": "Phát triển",
     "generators": "Tạo dữ liệu",

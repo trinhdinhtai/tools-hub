@@ -73,11 +73,12 @@ export async function loadPreferences(store: PlatformStore, schemas: Schemas): P
       await store.set(PREFERENCES + namespace, { version: schema.version, data: next } satisfies Stored<unknown>);
     },
     async resetAll() {
+      // Clear the store before telling anyone: a listener that writes a Preference back must not be wiped out.
+      await deleteAll(store, PREFERENCES);
       for (const [namespace, schema] of Object.entries(schemas)) {
         if (schema.preferences) values.set(namespace, { ...schema.preferences.defaults });
       }
       notify();
-      await deleteAll(store, PREFERENCES);
     },
     recent: (namespace) => recents.get(namespace) ?? EMPTY_RECENT,
     async addRecent(namespace, item) {

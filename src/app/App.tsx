@@ -1,11 +1,11 @@
-import { Suspense, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import type { i18n } from "i18next";
 import { Settings as SettingsIcon, type LucideIcon } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { usePreference } from "@/lib/preferences";
-import { NamespaceContext, PreferencesContext, toolNamespace } from "@/lib/preferences-context";
+import { PreferencesContext } from "@/lib/preferences-context";
 import type { ToolMeta } from "@/lib/tool";
 import type { ColorScheme, Platform } from "@/platform/types";
 import { TOOLS_NS, createI18n } from "@/i18n";
@@ -13,6 +13,7 @@ import { colorSchemeFor, localeFor, schemasFor, type Language, type Theme } from
 import { loadPreferences, type Preferences } from "./preferences";
 import { tools, toolsByCategory } from "./registry";
 import { SettingsDialog } from "./Settings";
+import { WorkspaceView, useWorkspace } from "./Workspace";
 
 interface Loaded {
   i18n: i18n;
@@ -83,7 +84,7 @@ function applyColorScheme(scheme: ColorScheme) {
 
 function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | null }) {
   const { t } = useTranslation();
-  const [activeTool, setActiveTool] = useState<ToolMeta | null>(null);
+  const { workspace, setWorkspace, open } = useWorkspace(tools);
   const [settingsOpen, setSettingsOpen] = useState(false);
   useLanguage(osLocale);
   useTheme(platform);
@@ -95,13 +96,13 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
           <Logo className="h-6 w-auto" />
         </div>
         <nav aria-label={t("nav.label")} className="flex-1 overflow-y-auto px-2 pb-4">
-          {toolsByCategory().map(([category, list]) => (
+          {toolsByCategory(tools).map(([category, list]) => (
             <section key={category} className="mt-6 first:mt-2">
               <h2 className="mb-2 px-2 text-xs text-muted-foreground">{t(`categories.${category}`)}</h2>
               <ul className="flex flex-col gap-0.5">
                 {list.map((tool) => (
                   <li key={tool.id}>
-                    <SidebarItem tool={tool} active={tool.id === activeTool?.id} onSelect={() => setActiveTool(tool)} />
+                    <SidebarItem tool={tool} active={tool.id === workspace.active} onSelect={() => open(tool.id)} />
                   </li>
                 ))}
               </ul>
@@ -120,8 +121,8 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
           </NavButton>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 overflow-y-auto">
-        {activeTool ? <ToolView key={activeTool.id} tool={activeTool} /> : <EmptyState />}
+      <main className="min-w-0 flex-1">
+        <WorkspaceView tools={tools} workspace={workspace} onChange={setWorkspace} />
       </main>
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} platform={platform} />
     </div>
@@ -167,33 +168,5 @@ function NavButton({
       <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} strokeWidth={1.5} aria-hidden />
       <span className="truncate">{children}</span>
     </button>
-  );
-}
-
-function ToolView({ tool }: { tool: ToolMeta }) {
-  const { t } = useTranslation(TOOLS_NS);
-  const Component = tool.component;
-  return (
-    <div className="mx-auto flex max-w-[1440px] flex-col gap-6 px-8 py-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-medium">{t(`${tool.id}.name`)}</h1>
-        <p className="text-subtle-foreground">{t(`${tool.id}.description`)}</p>
-      </header>
-      <NamespaceContext.Provider value={toolNamespace(tool.id)}>
-        <Suspense fallback={null}>
-          <Component />
-        </Suspense>
-      </NamespaceContext.Provider>
-    </div>
-  );
-}
-
-function EmptyState() {
-  const { t } = useTranslation();
-  return (
-    <div className="flex h-full flex-col items-start justify-center gap-2 px-8">
-      <h1 className="text-2xl font-medium">{t("empty.title")}</h1>
-      <p className="max-w-md text-subtle-foreground">{t("empty.body")}</p>
-    </div>
   );
 }
