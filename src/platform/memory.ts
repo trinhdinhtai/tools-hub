@@ -1,5 +1,5 @@
 import { mediaQuerySystemTheme } from "./system-theme";
-import type { ColorScheme, Desktop, Platform, SystemTheme, TrayLabels } from "./types";
+import type { AvailableUpdate, ColorScheme, Desktop, Platform, SystemTheme, TrayLabels, Updater } from "./types";
 
 export interface MemoryPlatform extends Platform {
   /** Snapshot of everything written to the store, for assertions in tests. */
@@ -10,6 +10,46 @@ export interface MemoryPlatform extends Platform {
   desktopState(): DesktopState;
   /** Simulates the user pressing the global hotkey from another app. */
   pressGlobalHotkey(): void;
+  /** How often the app asked for an update, and which version it installed. */
+  updaterState(): UpdaterState;
+}
+
+export interface UpdaterState {
+  checks: number;
+  installed: string | null;
+}
+
+export interface MemoryUpdaterOptions {
+  appVersion?: string;
+  /** What the release server offers; null (the default) when the app is up to date. */
+  update?: AvailableUpdate | null;
+  /** Makes the check fail with this message, as when offline. */
+  checkError?: string;
+  /** Makes the install fail with this message, as when the update's signature does not match. */
+  installError?: string;
+}
+
+/** An updater that answers from `options` and never touches the network. */
+function memoryUpdater(options: MemoryUpdaterOptions): Updater & { state: UpdaterState } {
+  const state: UpdaterState = { checks: 0, installed: null };
+  let found: AvailableUpdate | null = null;
+  return {
+    state,
+    async currentVersion() {
+      return options.appVersion ?? "0.0.0";
+    },
+    async check() {
+      state.checks += 1;
+      if (options.checkError) throw new Error(options.checkError);
+      found = options.update ?? null;
+      return found && { ...found };
+    },
+    async install() {
+      if (!found) throw new Error("No update to install");
+      if (options.installError) throw new Error(options.installError);
+      state.installed = found.version;
+    },
+  };
 }
 
 export interface DesktopState {
@@ -65,11 +105,18 @@ function fixedSystemTheme(initial: ColorScheme): SystemTheme & { set(scheme: Col
  * In-memory Platform for tests and for running the app in a plain browser.
  * With `systemTheme` given, the OS theme is simulated; otherwise the browser's is used. `isMac` defaults to false.
  * The desktop (hotkey, tray, autostart) is simulated; `takenHotkeys` are combinations another app already holds.
+ * The updater answers from the update options and never touches the network.
  */
 export function createMemoryPlatform(
-  options: { osLocale?: string | null; systemTheme?: ColorScheme; isMac?: boolean; takenHotkeys?: readonly string[] } = {},
+  options: {
+    osLocale?: string | null;
+    systemTheme?: ColorScheme;
+    isMac?: boolean;
+    takenHotkeys?: readonly string[];
+  } & MemoryUpdaterOptions = {},
 ): MemoryPlatform {
   const desktop = memoryDesktop(options.takenHotkeys ?? []);
+  const updater = memoryUpdater(options);
   const data = new Map<string, unknown>();
   const simulated = fixedSystemTheme(options.systemTheme ?? "light");
   const useBrowserTheme = options.systemTheme === undefined && typeof window.matchMedia === "function";
@@ -99,6 +146,8 @@ export function createMemoryPlatform(
     desktop,
     desktopState: () => ({ ...desktop.state }),
     pressGlobalHotkey: desktop.press,
+    updater,
+    updaterState: () => ({ ...updater.state }),
     dump() {
       return Object.fromEntries(data);
     },

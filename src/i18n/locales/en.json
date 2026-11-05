@@ -101,9 +101,23 @@
       "description": "Put every Preference, of the app and of every Tool, back to its default.",
       "action": "Restore defaults"
     },
+    "update": {
+      "title": "Updates",
+      "label": "Tools Hub {{version}}",
+      "description": "Goes online only when you check. Tools Hub never checks on its own.",
+      "check": "Check for updates",
+      "checking": "Checking…",
+      "checkFailed": "Couldn’t check for updates: {{message}}",
+      "available": "Version {{version}} is available",
+      "noNotes": "This release has no notes.",
+      "install": "Install and restart",
+      "installing": "Downloading and installing…",
+      "installFailed": "The update wasn’t installed: {{message}}"
+    },
     "done": {
       "reset": "Every Preference is back to its default.",
-      "cleared": "Recent is cleared."
+      "cleared": "Recent is cleared.",
+      "upToDate": "Tools Hub is up to date."
     }
   },
   "tray": {
