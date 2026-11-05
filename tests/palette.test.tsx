@@ -1,0 +1,133 @@
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import { App } from "@/app/App";
+import { createMemoryPlatform, type MemoryPlatform } from "@/platform/memory";
+
+vi.mock("@/app/registry", async (importOriginal) => {
+  const registry = await importOriginal<typeof import("@/app/registry")>();
+  const { FAKE_TOOLS } = await import("./fake-tools");
+  return { ...registry, tools: [...registry.tools, ...FAKE_TOOLS] };
+});
+
+vi.mock("@/i18n", async (importOriginal) => {
+  const i18n = await importOriginal<typeof import("@/i18n")>();
+  const { FAKE_TOOL_NAMES } = await import("./fake-tools");
+  return {
+    ...i18n,
+    async createI18n(locale: Parameters<typeof i18n.createI18n>[0]) {
+      const instance = await i18n.createI18n(locale);
+      for (const lng of ["en", "vi"]) instance.addResourceBundle(lng, i18n.TOOLS_NS, FAKE_TOOL_NAMES, true);
+      return instance;
+    },
+  };
+});
+
+type User = ReturnType<typeof userEvent.setup>;
+
+function renderApp(platform: MemoryPlatform = createMemoryPlatform({ osLocale: "en-US" })) {
+  const user = userEvent.setup();
+  const view = render(<App platform={platform} />);
+  return { user, platform, ...view };
+}
+
+/** Waits for the app to load, then presses Ctrl+K and returns the palette. */
+async function openPalette(user: User, name = "Search Tools") {
+  await screen.findByRole("navigation");
+  await user.keyboard("{Control>}k{/Control}");
+  return screen.findByRole("dialog", { name });
+}
+
+const tabNames = () =>
+  within(screen.getByRole("tablist"))
+    .queryAllByRole("tab")
+    .map((tab) => tab.textContent);
+
+describe("Command palette", () => {
+  it("opens Base64 from a Vietnamese alias typed without diacritics", async () => {
+    const { user } = renderApp();
+    await openPalette(user);
+
+    await user.keyboard("ma hoa");
+    expect(screen.getByRole("option", { name: /Base64/ })).toHaveAttribute("aria-selected", "true");
+    await user.keyboard("{Enter}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(tabNames()).toEqual(["Base64"]);
+    expect(await screen.findByLabelText("Input")).toBeInTheDocument();
+  });
+
+  it("is driven entirely from the keyboard: arrows move, Enter opens, Esc closes", async () => {
+    const { user } = renderApp();
+    const palette = await openPalette(user);
+    const selected = () => within(palette).getByRole("option", { selected: true });
+
+    expect(within(palette).getByRole("combobox")).toHaveFocus();
+    expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "Base64Converters",
+      "NotesText",
+      "TickerUtilities",
+    ]);
+    expect(selected()).toHaveTextContent("Base64");
+    await user.keyboard("{ArrowDown}{ArrowDown}");
+    expect(selected()).toHaveTextContent("Ticker");
+    await user.keyboard("{ArrowDown}");
+    expect(selected()).toHaveTextContent("Base64");
+    await user.keyboard("{ArrowUp}");
+    expect(selected()).toHaveTextContent("Ticker");
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+
+    await openPalette(user);
+    await user.keyboard("not{Enter}");
+    expect(tabNames()).toEqual(["Notes"]);
+  });
+
+  it("matches English names and aliases while the interface is in Vietnamese", async () => {
+    const { user } = renderApp(createMemoryPlatform({ osLocale: "vi-VN" }));
+    const palette = await openPalette(user, "Tìm Công cụ");
+
+    await user.keyboard("DECODE");
+    expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual(["Base64Chuyển đổi"]);
+    await user.clear(within(palette).getByRole("combobox"));
+    await user.keyboard("regex");
+    expect(within(palette).queryAllByRole("option")).toEqual([]);
+    expect(palette).toHaveTextContent("Không có Công cụ nào khớp “regex”.");
+  });
+
+  it("lists the Tools used lately first, remembers them, and forgets them on Clear Recent", async () => {
+    const platform = createMemoryPlatform({ osLocale: "en-US" });
+    const { user, unmount } = renderApp(platform);
+    const nav = await screen.findByRole("navigation", { name: "Tools" });
+    await user.click(within(nav).getByRole("button", { name: "Ticker" }));
+    await user.click(within(nav).getByRole("button", { name: "Base64" }));
+    unmount();
+
+    renderApp(platform);
+    let palette = await openPalette(user);
+    const group = (name: string) => within(within(palette).getByRole("group", { name })).getAllByRole("option");
+    expect(group("Recent").map((option) => option.textContent)).toEqual(["Base64Converters", "TickerUtilities"]);
+    expect(group("All Tools").map((option) => option.textContent)).toEqual(["NotesText"]);
+    await user.keyboard("{Escape}");
+
+    await user.click(screen.getByRole("button", { name: "Settings" }));
+    await user.click(await screen.findByRole("button", { name: "Clear Recent" }));
+    await user.keyboard("{Escape}");
+    palette = await openPalette(user);
+    expect(within(palette).queryByRole("group", { name: "Recent" })).not.toBeInTheDocument();
+    expect(JSON.stringify(platform.dump())).not.toContain("recent/");
+  });
+
+  it("also opens from the sidebar, and from inside a Tool's Input", async () => {
+    const { user } = renderApp();
+    await user.click(await screen.findByRole("button", { name: /Search Tools/ }));
+    await user.keyboard("{Enter}");
+    await user.click(await screen.findByLabelText("Input"));
+
+    await user.keyboard("{Control>}k{/Control}");
+    expect(await screen.findByRole("dialog", { name: "Search Tools" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Input")).toHaveValue("");
+  });
+});

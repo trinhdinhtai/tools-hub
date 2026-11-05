@@ -1,6 +1,6 @@
 import { Suspense, useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { Star, X } from "lucide-react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { usePreference } from "@/lib/preferences";
 import { NamespaceContext, toolNamespace } from "@/lib/preferences-context";
@@ -48,10 +48,14 @@ export function WorkspaceView({
   tools,
   workspace,
   onChange,
+  favorites,
+  onToggleFavorite,
 }: {
   tools: readonly ToolMeta[];
   workspace: Workspace;
   onChange: (change: Change) => void;
+  favorites: readonly string[];
+  onToggleFavorite: (id: string) => void;
 }) {
   const { t } = useTranslation();
   const baseId = useId();
@@ -118,7 +122,7 @@ export function WorkspaceView({
           hidden={tool.id !== workspace.active}
           className="min-h-0 flex-1 overflow-y-auto"
         >
-          <ToolView tool={tool} />
+          <ToolView tool={tool} favorite={favorites.includes(tool.id)} onToggleFavorite={() => onToggleFavorite(tool.id)} />
         </div>
       ))}
     </div>
@@ -206,14 +210,31 @@ function Tab({
   );
 }
 
-function ToolView({ tool }: { tool: ToolMeta }) {
+function ToolView({ tool, favorite, onToggleFavorite }: { tool: ToolMeta; favorite: boolean; onToggleFavorite: () => void }) {
   const { t } = useTranslation(TOOLS_NS);
+  const { t: tApp } = useTranslation();
   const Component = tool.component;
   return (
     <div className="mx-auto flex max-w-[1440px] flex-col gap-6 px-8 py-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-medium">{t(`${tool.id}.name`)}</h1>
-        <p className="text-subtle-foreground">{t(`${tool.id}.description`)}</p>
+      <header className="flex items-start gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h1 className="text-2xl font-medium">{t(`${tool.id}.name`)}</h1>
+          <p className="text-subtle-foreground">{t(`${tool.id}.description`)}</p>
+        </div>
+        <button
+          type="button"
+          aria-pressed={favorite}
+          aria-label={tApp("favorites.toggle")}
+          title={tApp(favorite ? "favorites.remove" : "favorites.add")}
+          onClick={onToggleFavorite}
+          className={cn(
+            "grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors duration-150",
+            "hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+            favorite && "text-primary hover:text-primary",
+          )}
+        >
+          <Star className="size-4" strokeWidth={1.5} fill={favorite ? "currentColor" : "none"} aria-hidden />
+        </button>
       </header>
       <NamespaceContext.Provider value={toolNamespace(tool.id)}>
         <Suspense fallback={null}>

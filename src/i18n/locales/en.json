@@ -2,6 +2,25 @@
   "nav": {
     "label": "Tools"
   },
+  "palette": {
+    "title": "Search Tools",
+    "placeholder": "Tool name or alias, in English or Vietnamese",
+    "recent": "Recent",
+    "all": "All Tools",
+    "results": "Results",
+    "empty": "No Tool matches “{{query}}”.",
+    "hint": {
+      "move": "move",
+      "open": "open",
+      "close": "close"
+    }
+  },
+  "favorites": {
+    "label": "Favorites",
+    "add": "Add to Favorites",
+    "remove": "Remove from Favorites",
+    "toggle": "Favorite"
+  },
   "tabs": {
     "label": "Open Tools",
     "close": "Close {{name}}",
@@ -51,7 +70,7 @@
     },
     "recent": {
       "label": "Recent",
-      "description": "Forget the recent items Tools remember.",
+      "description": "Forget the Tools you used lately, and the recent items Tools remember.",
       "clear": "Clear Recent"
     },
     "reset": {
