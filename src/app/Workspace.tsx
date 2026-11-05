@@ -98,7 +98,8 @@ export function WorkspaceView({
       <div
         role="tablist"
         aria-label={t("tabs.label")}
-        className="no-scrollbar flex h-10 shrink-0 items-end gap-1 overflow-x-auto border-b px-2"
+        // The strip's bottom hairline is an inset shadow, so the tab on screen paints over it and joins its panel.
+        className="no-scrollbar flex h-9 shrink-0 overflow-x-auto bg-sidebar shadow-[inset_0_-1px_0_var(--border)]"
       >
         {openTools.map((tool, index) => (
           <Tab
@@ -164,9 +165,11 @@ function Tab({
       <ContextMenuTrigger
         render={<div role="presentation" />}
         className={cn(
-          "group/tab relative flex h-8 max-w-56 shrink-0 items-center rounded-t-md text-subtle-foreground transition-colors duration-150",
-          "hover:bg-accent hover:text-foreground",
-          active && "bg-accent text-foreground shadow-[inset_0_0_0_1px_var(--border)]",
+          // Editor-style tabs: square, edge to edge, split by hairlines. The tab on screen takes the panel's background
+          // and a 2px accent line on top; the others stay on the strip, muted.
+          "group/tab relative flex h-full max-w-56 shrink-0 items-center border-r text-[13px] text-muted-foreground transition-colors duration-150",
+          "hover:text-foreground",
+          active && "bg-background text-foreground before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary",
         )}
       >
         <button
@@ -178,7 +181,7 @@ function Tab({
           tabIndex={active ? 0 : -1}
           onClick={() => onChange((current) => showTool(current, tool.id))}
           onKeyDown={onKeyDown}
-          className="flex h-full min-w-0 items-center gap-2 rounded-t-md pr-1 pl-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="flex h-full min-w-0 items-center gap-2 pr-1 pl-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
         >
           <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} strokeWidth={1.5} aria-hidden />
           <span className="truncate">{name}</span>
@@ -191,8 +194,8 @@ function Tab({
             aria-label={t("tabs.close", { name })}
             onClick={() => onChange(close)}
             className={cn(
-              "mr-1 grid size-5 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-background hover:text-foreground",
-              !active && "opacity-0 group-hover/tab:opacity-100",
+              "mr-2 grid size-5 shrink-0 place-items-center rounded-sm text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground",
+              !active && "opacity-0 group-focus-within/tab:opacity-100 group-hover/tab:opacity-100",
             )}
           >
             <X className="size-3.5" strokeWidth={1.5} aria-hidden />
