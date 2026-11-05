@@ -99,7 +99,7 @@ export function WorkspaceView({
         role="tablist"
         aria-label={t("tabs.label")}
         // The strip's bottom hairline is an inset shadow, so the tab on screen paints over it and joins its panel.
-        className="no-scrollbar flex h-9 shrink-0 overflow-x-auto bg-sidebar shadow-[inset_0_-1px_0_var(--border)]"
+        className="no-scrollbar flex h-9 shrink-0 overflow-x-auto bg-sidebar px-1 pt-1 shadow-[inset_0_-1px_0_var(--border)]"
       >
         {openTools.map((tool, index) => (
           <Tab
@@ -165,11 +165,10 @@ function Tab({
       <ContextMenuTrigger
         render={<div role="presentation" />}
         className={cn(
-          // Editor-style tabs: square, edge to edge, split by hairlines. The tab on screen takes the panel's background
-          // and a 2px accent line on top; the others stay on the strip, muted.
-          "group/tab relative flex h-full max-w-56 shrink-0 items-center border-r text-[13px] text-muted-foreground transition-colors duration-150",
-          "hover:text-foreground",
-          active && "bg-background text-foreground before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-primary",
+          // Editor-style tabs. The tab on screen takes the panel's background, with rounded top corners and a hairline
+          // round its top and sides; the others sit on the strip, muted.
+          "group/tab relative flex h-full max-w-56 shrink-0 items-center rounded-t-lg border-x border-t border-transparent text-[13px] text-muted-foreground transition-colors duration-150",
+          active ? "border-border bg-background text-foreground" : "hover:bg-accent/60 hover:text-foreground",
         )}
       >
         <button
@@ -181,7 +180,7 @@ function Tab({
           tabIndex={active ? 0 : -1}
           onClick={() => onChange((current) => showTool(current, tool.id))}
           onKeyDown={onKeyDown}
-          className="flex h-full min-w-0 items-center gap-2 pr-1 pl-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
+          className="flex h-full min-w-0 items-center gap-2 rounded-tl-lg pr-1 pl-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
         >
           <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} strokeWidth={1.5} aria-hidden />
           <span className="truncate">{name}</span>
