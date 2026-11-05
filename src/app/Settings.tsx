@@ -48,7 +48,7 @@ function SettingsPanel(props: SettingsProps) {
       <DialogHeader>
         <DialogTitle className="text-xl font-medium">{t("settings.title")}</DialogTitle>
       </DialogHeader>
-      <div className="no-scrollbar -mx-6 min-h-0 flex-1 overflow-y-auto px-6">
+      <div className="no-scrollbar scroll-fade -mx-6 min-h-0 flex-1 overflow-y-auto px-6">
         <SettingsBody {...props} onDone={setDone} />
       </div>
       <DialogFooter className="items-center sm:justify-between">
