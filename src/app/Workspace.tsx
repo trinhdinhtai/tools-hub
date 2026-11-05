@@ -7,6 +7,7 @@ import { NamespaceContext, toolNamespace } from "@/lib/preferences-context";
 import type { ToolMeta } from "@/lib/tool";
 import { cn } from "@/lib/utils";
 import { TOOLS_NS } from "@/i18n";
+import { toolsWithIds } from "./registry";
 import { closeAll, closeOthers, closeRight, closeTool, openTool, restoreWorkspace, showTool, type Workspace } from "./open-tools";
 
 const sameIds = (a: unknown, b: readonly string[]) => Array.isArray(a) && a.length === b.length && a.every((id, i) => id === b[i]);
@@ -62,7 +63,7 @@ export function WorkspaceView({
   const tabId = (id: string) => `${baseId}-tab-${id}`;
   const panelId = (id: string) => `${baseId}-panel-${id}`;
   const emptyId = `${baseId}-empty`;
-  const openTools = workspace.ids.flatMap((id) => tools.find((tool) => tool.id === id) ?? []);
+  const openTools = toolsWithIds(tools, workspace.ids);
 
   // After a keyboard or menu action changes the tab on screen, focus follows it (to the empty state if none is left).
   const focusActive = useRef(false);

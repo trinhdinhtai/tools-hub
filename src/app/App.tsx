@@ -3,6 +3,7 @@ import { I18nextProvider, useTranslation } from "react-i18next";
 import type { i18n } from "i18next";
 import { Search, Settings as SettingsIcon, type LucideIcon } from "lucide-react";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { Kbd } from "@/components/kbd";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { usePreference, useRecent } from "@/lib/preferences";
@@ -12,9 +13,9 @@ import type { ColorScheme, Platform } from "@/platform/types";
 import { TOOLS_NS, createI18n } from "@/i18n";
 import { colorSchemeFor, localeFor, schemasFor, type Language, type Theme } from "./app-preferences";
 import { useFavorites } from "./favorites";
-import { CommandPalette, Key, isPaletteShortcut, paletteShortcutLabel } from "./Palette";
+import { CommandPalette, isPaletteShortcut, paletteShortcutLabel } from "./Palette";
 import { loadPreferences, type Preferences } from "./preferences";
-import { tools, toolsByCategory } from "./registry";
+import { tools, toolsByCategory, toolsWithIds } from "./registry";
 import { SettingsDialog } from "./Settings";
 import { WorkspaceView, useWorkspace } from "./Workspace";
 
@@ -87,7 +88,7 @@ function applyColorScheme(scheme: ColorScheme) {
 
 function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | null }) {
   const { t } = useTranslation();
-  const { workspace, setWorkspace, open: show } = useWorkspace(tools);
+  const { workspace, setWorkspace, open } = useWorkspace(tools);
   const [recent, addRecent] = useRecent();
   const [favorites, toggleFavorite] = useFavorites(tools.map((tool) => tool.id));
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -96,8 +97,8 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
   useTheme(platform);
 
   /** Opens a Tool (or shows its tab) and puts it first in the app's Recent. */
-  const open = (id: string) => {
-    show(id);
+  const openAndRemember = (id: string) => {
+    open(id);
     addRecent(id);
   };
 
@@ -134,12 +135,12 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
           >
             <Search className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
             <span className="flex-1 truncate">{t("palette.title")}</span>
-            <Key className="text-muted-foreground">{paletteShortcutLabel(isMac)}</Key>
+            <Kbd className="text-muted-foreground">{paletteShortcutLabel(isMac)}</Kbd>
           </button>
         </div>
         <nav aria-label={t("nav.label")} className="flex-1 overflow-y-auto px-2 pb-4">
           {[
-            ["favorites", t("favorites.label"), favorites.flatMap((id) => tools.find((tool) => tool.id === id) ?? [])] as const,
+            ["favorites", t("favorites.label"), toolsWithIds(tools, favorites)] as const,
             ...toolsByCategory(tools).map(([category, list]) => [category, t(`categories.${category}`), list] as const),
           ]
             .filter(([, , list]) => list.length > 0)
@@ -151,7 +152,7 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
                       tool={tool}
                       active={tool.id === workspace.active}
                       favorite={favorites.includes(tool.id)}
-                      onSelect={() => open(tool.id)}
+                      onSelect={() => openAndRemember(tool.id)}
                       onToggleFavorite={() => toggleFavorite(tool.id)}
                     />
                   </li>
@@ -180,7 +181,7 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
           onToggleFavorite={toggleFavorite}
         />
       </main>
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} tools={tools} recent={recent} onPick={open} />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} tools={tools} recent={recent} onPick={openAndRemember} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} platform={platform} />
     </div>
   );

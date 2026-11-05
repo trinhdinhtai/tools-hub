@@ -4,7 +4,7 @@
   },
   "palette": {
     "title": "Search Tools",
-    "placeholder": "Tool name or alias, in English or Vietnamese",
+    "placeholder": "Tool name or keyword, in English or Vietnamese",
     "recent": "Recent",
     "all": "All Tools",
     "results": "Results",

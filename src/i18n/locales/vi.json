@@ -4,7 +4,7 @@
   },
   "palette": {
     "title": "Tìm Công cụ",
-    "placeholder": "Tên hoặc alias của Công cụ, tiếng Anh hay tiếng Việt",
+    "placeholder": "Tên Công cụ hoặc từ khoá, bằng tiếng Anh hay tiếng Việt",
     "recent": "Gần đây",
     "all": "Mọi Công cụ",
     "results": "Kết quả",

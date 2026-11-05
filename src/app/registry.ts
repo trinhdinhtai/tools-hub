@@ -5,6 +5,11 @@ const metaModules = import.meta.glob<ToolMeta>("../tools/*/meta.ts", { import: "
 
 export const tools: readonly ToolMeta[] = Object.values(metaModules).sort((a, b) => a.id.localeCompare(b.id));
 
+/** The Tools with these ids, in the order given; ids of Tools that do not exist are skipped. */
+export function toolsWithIds(list: readonly ToolMeta[], ids: readonly string[]): ToolMeta[] {
+  return ids.flatMap((id) => list.find((tool) => tool.id === id) ?? []);
+}
+
 /** Categories in their canonical order, each with its Tools; empty Categories are left out. */
 export function toolsByCategory(list: readonly ToolMeta[]): [Category, ToolMeta[]][] {
   return CATEGORIES.map((category) => [category, list.filter((tool) => tool.category === category)] as [Category, ToolMeta[]]).filter(

@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
+import { Kbd } from "@/components/kbd";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { LOCALES, TOOLS_NS } from "@/i18n";
 import type { ToolMeta } from "@/lib/tool";
@@ -161,19 +162,15 @@ function PalettePanel({ tools, recent, onPick }: PaletteProps) {
       </div>
       <div aria-hidden className="flex gap-4 border-t bg-muted/50 px-4 py-2 text-xs text-muted-foreground">
         <span>
-          <Key>↑</Key> <Key>↓</Key> {t("palette.hint.move")}
+          <Kbd>↑</Kbd> <Kbd>↓</Kbd> {t("palette.hint.move")}
         </span>
         <span>
-          <Key>Enter</Key> {t("palette.hint.open")}
+          <Kbd>Enter</Kbd> {t("palette.hint.open")}
         </span>
         <span>
-          <Key>Esc</Key> {t("palette.hint.close")}
+          <Kbd>Esc</Kbd> {t("palette.hint.close")}
         </span>
       </div>
     </>
   );
-}
-
-export function Key({ children, className }: { children: string; className?: string }) {
-  return <kbd className={cn("rounded border bg-background px-1 font-mono text-[11px] text-subtle-foreground", className)}>{children}</kbd>;
 }

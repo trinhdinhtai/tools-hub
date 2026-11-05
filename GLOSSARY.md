@@ -22,6 +22,10 @@ _Tránh_: Tab, view, sub-tool, chế độ xem
 Một Tool người dùng đã mở trong workspace, hiển thị thành một tab. Input của nó tồn tại cho tới khi người dùng đóng tab; chuyển qua lại giữa các Open Tool vẫn giữ nguyên trạng thái.
 _Tránh_: Tab, instance, session, phiên
 
+**Favorite** (Yêu thích):
+Một Tool người dùng ghim lên đầu sidebar. Danh sách Favorite là một Preference, giữ theo thứ tự ghim.
+_Tránh_: Bookmark, pin, starred, đánh dấu
+
 **Paste Detection** (Nhận diện khi dán):
 Việc nhận ra nội dung người dùng vừa dán ở ngoài ô nhập liệu và gợi ý Tool phù hợp. App không bao giờ tự đọc clipboard.
 _Tránh_: Clipboard detection, smart detection, đọc clipboard
