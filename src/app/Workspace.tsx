@@ -4,6 +4,7 @@ import { Star, X } from "lucide-react";
 import { Hint } from "@/components/hint";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { usePreference } from "@/lib/preferences";
+import { PasteContext, type PastedText } from "@/lib/paste";
 import { NamespaceContext, toolNamespace } from "@/lib/preferences-context";
 import type { ToolMeta } from "@/lib/tool";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,11 @@ export function useWorkspace(tools: readonly ToolMeta[]) {
 
 type Change = (workspace: Workspace) => Workspace;
 
+/** A pasted text on its way to the Open Tool it was picked for (Paste Detection). */
+export interface Handoff extends PastedText {
+  readonly toolId: string;
+}
+
 /**
  * One tab per Open Tool, and every Open Tool stays mounted: a tab not on screen is only hidden, so its Input and
  * anything it runs (a Stopwatch ticking) carry on. Closing a tab unmounts its Tool, which destroys its Input.
@@ -52,12 +58,15 @@ export function WorkspaceView({
   onChange,
   favorites,
   onToggleFavorite,
+  handoff,
 }: {
   tools: readonly ToolMeta[];
   workspace: Workspace;
   onChange: (change: Change) => void;
   favorites: readonly string[];
   onToggleFavorite: (id: string) => void;
+  /** A pasted text waiting for the Open Tool it was picked for. */
+  handoff: Handoff | null;
 }) {
   const { t } = useTranslation();
   const baseId = useId();
@@ -125,7 +134,9 @@ export function WorkspaceView({
           hidden={tool.id !== workspace.active}
           className="min-h-0 flex-1 overflow-y-auto"
         >
-          <ToolView tool={tool} favorite={favorites.includes(tool.id)} onToggleFavorite={() => onToggleFavorite(tool.id)} />
+          <PasteContext.Provider value={handoff?.toolId === tool.id ? handoff : null}>
+            <ToolView tool={tool} favorite={favorites.includes(tool.id)} onToggleFavorite={() => onToggleFavorite(tool.id)} />
+          </PasteContext.Provider>
         </div>
       ))}
     </div>

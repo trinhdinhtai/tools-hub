@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useEffectEvent, useId, useState, useSyncExternalStore, type ReactNode } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import type { i18n } from "i18next";
 import { Search, Settings as SettingsIcon, type LucideIcon } from "lucide-react";
@@ -15,10 +15,12 @@ import { TOOLS_NS, createI18n } from "@/i18n";
 import { colorSchemeFor, localeFor, schemasFor, type Language, type Theme } from "./app-preferences";
 import { useFavorites } from "./favorites";
 import { CommandPalette, isPaletteShortcut, paletteShortcutLabel } from "./Palette";
+import { pastedOnApp, suggestTools } from "./paste-detection";
+import { PasteSuggestions, type Pasted } from "./PasteSuggestions";
 import { loadPreferences, type Preferences } from "./preferences";
 import { tools, toolsByCategory, toolsWithIds } from "./registry";
 import { SettingsDialog } from "./Settings";
-import { WorkspaceView, useWorkspace } from "./Workspace";
+import { WorkspaceView, useWorkspace, type Handoff } from "./Workspace";
 
 interface Loaded {
   i18n: i18n;
@@ -97,6 +99,8 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
   const [favorites, toggleFavorite] = useFavorites(tools.map((tool) => tool.id));
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [pasted, setPasted] = usePasteDetection();
+  const [handoff, setHandoff] = useState<Handoff | null>(null);
   useLanguage(osLocale);
   useTheme(platform);
 
@@ -183,12 +187,47 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
           onChange={setWorkspace}
           favorites={favorites}
           onToggleFavorite={toggleFavorite}
+          handoff={handoff}
         />
       </main>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} tools={tools} recent={recent} onPick={openAndRemember} />
+      <PasteSuggestions
+        tools={tools}
+        pasted={pasted}
+        onClose={() => setPasted(null)}
+        onPick={(id, text) => {
+          // The pasted text waits here only until the Tool takes it as its Input.
+          const next: Handoff = { toolId: id, text, taken: () => setHandoff((current) => (current === next ? null : current)) };
+          setHandoff(next);
+          openAndRemember(id);
+        }}
+      />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} platform={platform} />
     </div>
   );
+}
+
+/**
+ * Paste Detection: a paste on the app's empty space (not in a field or a dialog) asks every Tool's `detectPaste` and
+ * suggests the Tools that match. Only the user's own paste events are handled; the clipboard is never read.
+ */
+function usePasteDetection() {
+  const [enabled] = usePreference<boolean>("pasteDetection");
+  const [pasted, setPasted] = useState<Pasted | null>(null);
+  const onPaste = useEffectEvent((event: ClipboardEvent) => {
+    if (!enabled || !pastedOnApp(event)) return;
+    const text = event.clipboardData?.getData("text/plain") ?? "";
+    const ids = suggestTools(tools, text);
+    if (ids.length === 0) return;
+    event.preventDefault();
+    setPasted({ text, ids });
+  });
+  useEffect(() => {
+    const listener = (event: ClipboardEvent) => onPaste(event);
+    window.addEventListener("paste", listener);
+    return () => window.removeEventListener("paste", listener);
+  }, []);
+  return [pasted, setPasted] as const;
 }
 
 function SidebarSection({ title, children }: { title: string; children: ReactNode }) {

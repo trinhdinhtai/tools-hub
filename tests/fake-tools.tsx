@@ -1,11 +1,13 @@
 import { lazy, useEffect, useState } from "react";
 import { NotebookPen, Timer } from "lucide-react";
+import { usePaste } from "@/lib/paste";
 import { defineTool, type ToolMeta } from "@/lib/tool";
 
 // Stand-ins for Tools that do not exist yet, so app-level tests can work with more than one Open Tool.
 
 function Notes() {
   const [text, setText] = useState("");
+  usePaste(setText);
   return (
     <label>
       Note
@@ -30,6 +32,8 @@ export const FAKE_TOOLS: ToolMeta[] = [
     category: "text",
     icon: NotebookPen,
     aliases: { en: [], vi: [] },
+    // Any text makes a note, but a weak match: a Tool made for the text should come first.
+    detectPaste: () => 0.3,
     component: lazy(async () => ({ default: Notes })),
   }),
   defineTool({
@@ -37,6 +41,7 @@ export const FAKE_TOOLS: ToolMeta[] = [
     category: "utilities",
     icon: Timer,
     aliases: { en: [], vi: [] },
+    detectPaste: () => 0,
     component: lazy(async () => ({ default: Ticker })),
   }),
 ];

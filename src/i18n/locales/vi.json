@@ -15,6 +15,9 @@
       "close": "đóng"
     }
   },
+  "paste": {
+    "title": "Mở bằng"
+  },
   "favorites": {
     "label": "Yêu thích",
     "add": "Thêm vào Yêu thích",
@@ -51,6 +54,7 @@
     "close": "Đóng",
     "finish": "Xong",
     "appearance": "Giao diện",
+    "behavior": "Hành vi",
     "data": "Lưu trữ",
     "language": {
       "label": "Ngôn ngữ",
@@ -62,6 +66,10 @@
       "light": "Sáng",
       "dark": "Tối",
       "system": "Theo hệ thống"
+    },
+    "pasteDetection": {
+      "label": "Nhận diện khi dán",
+      "description": "Dán ra ngoài ô nhập liệu thì app gợi ý Công cụ hợp với dữ liệu vừa dán. App không bao giờ tự đọc clipboard."
     },
     "storage": {
       "label": "File lưu Tuỳ chỉnh",
