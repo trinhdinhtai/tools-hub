@@ -15,9 +15,14 @@ export const paletteShortcutLabel = (isMac: boolean) => (isMac ? "⌘K" : "Ctrl 
  * `Cmd+K` on macOS, `Ctrl+K` elsewhere. On macOS Ctrl+K stays with text fields (delete to the end of the line).
  * Checks the key's position, not its character, so it works whatever the keyboard layout.
  */
+/** Whether an IME is composing a word (Telex, VNI, CJK): its keys belong to the IME, not to the app. */
+export function isComposing(event: globalThis.KeyboardEvent): boolean {
+  return event.isComposing || event.keyCode === 229;
+}
+
 export function isPaletteShortcut(event: globalThis.KeyboardEvent, isMac: boolean): boolean {
   const modifier = isMac ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey;
-  return modifier && !event.altKey && !event.shiftKey && event.code === "KeyK";
+  return modifier && !isComposing(event) && !event.altKey && !event.shiftKey && event.code === "KeyK";
 }
 
 interface PaletteProps {
@@ -89,6 +94,7 @@ function PalettePanel({ tools, recent, onPick }: PaletteProps) {
   });
 
   const onKeyDown = (event: KeyboardEvent) => {
+    if (isComposing(event.nativeEvent)) return;
     const step = { ArrowDown: 1, ArrowUp: -1 }[event.key];
     if (step !== undefined && options.length > 0) {
       event.preventDefault();

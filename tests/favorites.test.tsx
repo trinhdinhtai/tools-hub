@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "@/app/App";
@@ -78,5 +78,19 @@ describe("Favorites", () => {
     await user.pointer({ keys: "[MouseRight]", target: within(nav).getAllByRole("button", { name: "Base64" })[0]! });
     await user.click(await screen.findByRole("menuitem", { name: "Remove from Favorites" }));
     expect(favorites()).toEqual([]);
+  });
+
+  it("counts every click on the star, even two in a row before the screen updates", async () => {
+    const { user } = renderApp();
+    const nav = await screen.findByRole("navigation", { name: "Tools" });
+    await user.click(within(nav).getByRole("button", { name: "Notes" }));
+    const star = await screen.findByRole("button", { name: "Favorite" });
+
+    act(() => {
+      star.click();
+      star.click();
+    });
+    expect(favorites()).toEqual([]);
+    expect(screen.getByRole("button", { name: "Favorite" })).toHaveAttribute("aria-pressed", "false");
   });
 });

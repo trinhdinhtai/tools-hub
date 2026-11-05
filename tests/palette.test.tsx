@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "@/app/App";
@@ -83,6 +83,23 @@ describe("Command palette", () => {
     await openPalette(user);
     await user.keyboard("not{Enter}");
     expect(tabNames()).toEqual(["Notes"]);
+  });
+
+  it("leaves Enter and the arrows to an IME while it is composing a word", async () => {
+    const { user } = renderApp();
+    const palette = await openPalette(user);
+    const input = within(palette).getByRole("combobox");
+    const selected = () => within(palette).getByRole("option", { selected: true });
+
+    // Telex, VNI or a CJK IME: the keys that pick or commit a composed word must not move the list or open a Tool.
+    fireEvent.keyDown(input, { key: "ArrowDown", isComposing: true });
+    expect(selected()).toHaveTextContent("Base64");
+    fireEvent.keyDown(input, { key: "Enter", isComposing: true });
+    fireEvent.keyDown(input, { key: "Enter", keyCode: 229 });
+    expect(screen.getByRole("dialog", { name: "Search Tools" })).toBeInTheDocument();
+
+    await user.keyboard("{Enter}");
+    expect(tabNames()).toEqual(["Base64"]);
   });
 
   it("matches English names and aliases while the interface is in Vietnamese", async () => {
