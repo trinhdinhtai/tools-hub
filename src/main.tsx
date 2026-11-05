@@ -3,15 +3,13 @@ import { createRoot } from "react-dom/client";
 import { App } from "@/app/App";
 import { createMemoryPlatform } from "@/platform/memory";
 import { createTauriPlatform } from "@/platform/tauri";
-// IBM Plex, bundled with the app (no remote fonts, ADR-0001); only the Latin and Vietnamese subsets.
-import "@fontsource/ibm-plex-sans/latin-400.css";
-import "@fontsource/ibm-plex-sans/latin-500.css";
-import "@fontsource/ibm-plex-sans/latin-600.css";
-import "@fontsource/ibm-plex-sans/vietnamese-400.css";
-import "@fontsource/ibm-plex-sans/vietnamese-500.css";
-import "@fontsource/ibm-plex-sans/vietnamese-600.css";
-import "@fontsource/ibm-plex-mono/latin-400.css";
-import "@fontsource/ibm-plex-mono/vietnamese-400.css";
+// Be Vietnam Pro (UI) and JetBrains Mono (code), bundled with the app (no remote fonts, ADR-0001).
+// Import per weight, not per subset: only these files carry `unicode-range`, so each character is drawn from the
+// subset that has it (the per-subset files claim every character and mix glyphs up, e.g. Vietnamese diacritics).
+import "@fontsource/be-vietnam-pro/400.css";
+import "@fontsource/be-vietnam-pro/500.css";
+import "@fontsource/be-vietnam-pro/600.css";
+import "@fontsource/jetbrains-mono/400.css";
 import "./index.css";
 
 // Outside Tauri (plain `vite` in a browser) the in-memory Platform stands in.
