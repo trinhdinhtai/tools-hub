@@ -3,6 +3,7 @@ import { locale, platform } from "@tauri-apps/plugin-os";
 import { LazyStore } from "@tauri-apps/plugin-store";
 import { mediaQuerySystemTheme } from "./system-theme";
 import { createTauriDesktop } from "./tauri-desktop";
+import { createTauriUpdater } from "./tauri-updater";
 import type { Platform } from "./types";
 
 /** tauri-plugin-store resolves a relative path against the app data directory. */
@@ -28,5 +29,6 @@ export function createTauriPlatform(): Platform {
     systemTheme: mediaQuerySystemTheme(),
     isMac: platform() === "macos",
     desktop: createTauriDesktop(),
+    updater: createTauriUpdater(),
   };
 }

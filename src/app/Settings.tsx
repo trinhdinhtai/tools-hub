@@ -9,7 +9,7 @@ import { usePreference } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 import { usePreferences } from "@/lib/preferences-context";
 import type { Locale } from "@/lib/tool";
-import type { Platform } from "@/platform/types";
+import type { AvailableUpdate, Platform, Updater } from "@/platform/types";
 import { LANGUAGES, THEMES, type Language, type Theme } from "./app-preferences";
 import type { GlobalHotkey } from "./desktop";
 import { acceleratorFromEvent, hotkeyKeys } from "./hotkey";
@@ -17,7 +17,7 @@ import { acceleratorFromEvent, hotkeyKeys } from "./hotkey";
 /** Language names are written in their own language, so they read the same whatever the UI language is. */
 const LANGUAGE_NAMES: Record<Locale, string> = { en: "English", vi: "Tiếng Việt" };
 
-type Done = "reset" | "cleared" | null;
+type Done = "reset" | "cleared" | "upToDate" | null;
 
 interface SettingsProps {
   platform: Platform;
@@ -137,6 +137,10 @@ function SettingsBody({ platform, globalHotkey, onDone: setDone }: SettingsProps
         </Row>
       </Section>
 
+      <Section title={t("settings.update.title")}>
+        <UpdateCheck updater={platform.updater} onDone={setDone} />
+      </Section>
+
       <Section title={t("settings.data")}>
         <Row stacked label={t("settings.storage.label")} description={t("settings.storage.description")}>
           {(labelId) => (
@@ -233,6 +237,105 @@ function Row({
       <div className={cn("min-w-0", !stacked && "sm:justify-self-end")}>{children(id)}</div>
     </div>
   );
+}
+
+type UpdateStep =
+  | { kind: "idle" }
+  | { kind: "checking" }
+  | { kind: "checkFailed"; message: string }
+  | { kind: "available"; update: AvailableUpdate }
+  | { kind: "installing"; update: AvailableUpdate }
+  | { kind: "installFailed"; update: AvailableUpdate; message: string };
+
+/**
+ * The running version and a button to check for a newer one. Nothing is checked until the button is pressed
+ * (ADR-0001); a found update shows its changelog and is installed only if the user chooses to.
+ */
+function UpdateCheck({ updater, onDone }: { updater: Updater; onDone: (done: Done) => void }) {
+  const { t } = useTranslation();
+  const [version, setVersion] = useState("");
+  const [step, setStep] = useState<UpdateStep>({ kind: "idle" });
+
+  useEffect(() => {
+    let cancelled = false;
+    updater.currentVersion().then(
+      (current) => !cancelled && setVersion(current),
+      () => {},
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [updater]);
+
+  async function check() {
+    setStep({ kind: "checking" });
+    onDone(null);
+    try {
+      const update = await updater.check();
+      setStep(update ? { kind: "available", update } : { kind: "idle" });
+      if (!update) onDone("upToDate");
+    } catch (error) {
+      setStep({ kind: "checkFailed", message: errorMessage(error) });
+    }
+  }
+
+  async function install(update: AvailableUpdate) {
+    setStep({ kind: "installing", update });
+    try {
+      // On success the app restarts, so there is nothing to show afterwards.
+      await updater.install();
+    } catch (error) {
+      setStep({ kind: "installFailed", update, message: errorMessage(error) });
+    }
+  }
+
+  // Undefined, not null, without an error: the row then renders no alert at all; role="alert" is announced as it appears.
+  const error =
+    step.kind === "checkFailed"
+      ? t("settings.update.checkFailed", { message: step.message })
+      : step.kind === "installFailed"
+        ? t("settings.update.installFailed", { message: step.message })
+        : undefined;
+  const update = "update" in step ? step.update : null;
+  const busy = step.kind === "checking" || step.kind === "installing";
+
+  return (
+    <>
+      <Row
+        label={t("settings.update.label", { version }).trim()}
+        description={t("settings.update.description")}
+        error={error}
+      >
+        {() => (
+          <Button variant="outline" size="sm" disabled={busy} onClick={check}>
+            {step.kind === "checking" ? t("settings.update.checking") : t("settings.update.check")}
+          </Button>
+        )}
+      </Row>
+      {update && (
+        <Row stacked label={t("settings.update.available", { version: update.version })}>
+          {(labelId) => (
+            <div className="flex flex-col items-start gap-3">
+              <section
+                aria-labelledby={labelId}
+                className="max-h-48 w-full overflow-y-auto rounded-md bg-muted px-2.5 py-1.5 text-[13px] whitespace-pre-wrap text-subtle-foreground select-text"
+              >
+                {update.notes?.trim() || t("settings.update.noNotes")}
+              </section>
+              <Button size="sm" disabled={busy} onClick={() => install(update)}>
+                {step.kind === "installing" ? t("settings.update.installing") : t("settings.update.install")}
+              </Button>
+            </div>
+          )}
+        </Row>
+      )}
+    </>
+  );
+}
+
+/** Tauri commands reject with the Rust error's text; anything else with an Error. */
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 /**

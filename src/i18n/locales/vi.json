@@ -101,9 +101,23 @@
       "description": "Đưa mọi Tuỳ chỉnh của app và của từng Công cụ về giá trị mặc định.",
       "action": "Khôi phục mặc định"
     },
+    "update": {
+      "title": "Cập nhật",
+      "label": "Tools Hub {{version}}",
+      "description": "Chỉ kết nối mạng khi bạn bấm kiểm tra. Tools Hub không bao giờ tự kiểm tra.",
+      "check": "Kiểm tra cập nhật",
+      "checking": "Đang kiểm tra…",
+      "checkFailed": "Không kiểm tra được cập nhật: {{message}}",
+      "available": "Đã có bản {{version}}",
+      "noNotes": "Bản này không có ghi chú phát hành.",
+      "install": "Cài và khởi động lại",
+      "installing": "Đang tải và cài đặt…",
+      "installFailed": "Chưa cài bản cập nhật: {{message}}"
+    },
     "done": {
       "reset": "Mọi Tuỳ chỉnh đã về giá trị mặc định.",
-      "cleared": "Đã xoá danh sách Gần đây."
+      "cleared": "Đã xoá danh sách Gần đây.",
+      "upToDate": "Tools Hub đã là bản mới nhất."
     }
   },
   "tray": {

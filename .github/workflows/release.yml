@@ -1,0 +1,116 @@
+name: Release
+
+# Pushing a tag such as v0.2.0 builds the installers for Windows, macOS and Linux, signs the update files with the
+# Tauri updater key and attaches everything to a draft GitHub Release. The maintainer runs docs/release-checklist.md,
+# then publishes the draft by hand; only a published release is offered by "Check for updates".
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+
+jobs:
+  draft:
+    name: Create the draft release
+    runs-on: ubuntu-latest
+    outputs:
+      release-id: ${{ steps.create.outputs.release-id }}
+      notes: ${{ steps.create.outputs.notes }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: The tag matches the app version
+        run: |
+          version=$(jq -r .version src-tauri/tauri.conf.json)
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match version $version in src-tauri/tauri.conf.json"
+            exit 1
+          fi
+      - id: create
+        name: Create the draft, with notes generated from the merged pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --draft --verify-tag --generate-notes --title "Tools Hub ${GITHUB_REF_NAME#v}"
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"$GITHUB_REF_NAME\") | .id" | head -n1)
+          echo "release-id=$id" >> "$GITHUB_OUTPUT"
+          # The notes go into latest.json too: they are the changelog the app shows before installing.
+          {
+            echo "notes<<RELEASE_NOTES_EOF"
+            gh api "repos/$GITHUB_REPOSITORY/releases/$id" --jq .body
+            echo "RELEASE_NOTES_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build (${{ matrix.name }})
+    needs: draft
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows
+            os: windows-latest
+            args: ""
+          - name: macOS (Apple silicon)
+            os: macos-latest
+            args: --target aarch64-apple-darwin
+            rust-targets: aarch64-apple-darwin
+          - name: macOS (Intel)
+            os: macos-latest
+            args: --target x86_64-apple-darwin
+            rust-targets: x86_64-apple-darwin
+          - name: Linux
+            os: ubuntu-22.04
+            args: ""
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-targets }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: pnpm install --frozen-lockfile
+      # Builds the installers, signs the update files and uploads both, with latest.json, to the draft release.
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          releaseId: ${{ needs.draft.outputs.release-id }}
+          releaseBody: ${{ needs.draft.outputs.notes }}
+          # Windows updates use the NSIS installer, the one the README points to, not the MSI.
+          updaterJsonPreferNsis: true
+          args: ${{ matrix.args }}
+
+      # The offline installer embeds WebView2, for machines without Internet. It is not an update: the updater keeps
+      # using the regular installer above.
+      - name: Build the offline Windows installer
+        if: runner.os == 'Windows'
+        run: pnpm tauri build --bundles nsis --config src-tauri/tauri.windows-offline.conf.json
+      - name: Attach the offline Windows installer
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          dir=src-tauri/target/release/bundle/nsis
+          setup=$(ls "$dir"/*-setup.exe | head -n1)
+          offline="${setup%-setup.exe}-offline-setup.exe"
+          mv "$setup" "$offline"
+          gh release upload "$GITHUB_REF_NAME" "$offline"

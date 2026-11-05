@@ -12,6 +12,30 @@ export interface Platform {
   isMac: boolean;
   /** The window, the tray, the global hotkey and launching with the OS. */
   desktop: Desktop;
+  /** Checking for, and installing, a new version: the only network access the app makes (ADR-0001). */
+  updater: Updater;
+}
+
+/**
+ * Updates run in the Rust shell, never in the webview, and only when the user asks: nothing here is called at
+ * startup or in the background (ADR-0001).
+ */
+export interface Updater {
+  /** The version of the app that is running, e.g. "0.1.0". */
+  currentVersion(): Promise<string>;
+  /** Asks the release server for a newer version; null when the app is up to date. Rejects if the check fails. */
+  check(): Promise<AvailableUpdate | null>;
+  /**
+   * Downloads and installs the update the last `check` found, then restarts the app. Rejects, installing nothing, if
+   * the download fails or its signature does not match the app's update key.
+   */
+  install(): Promise<void>;
+}
+
+export interface AvailableUpdate {
+  version: string;
+  /** The changelog, as written in the release notes; null if the release has none. */
+  notes: string | null;
 }
 
 /** What the app asks of the desktop. The tray, single instance and hiding on close live in the Tauri shell. */

@@ -37,6 +37,23 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "createUpdaterArtifacts": true,
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUzNEVCRTEyQ0Y5QzA1RDAKUldUUUJaelBFcjVPNDFSdVJlVlY1Z3dFSFVKUEFDU1VRMU1tbHVvVmdSZ0RCcndiaWUyU2gyMDIK",
+      "endpoints": [
+        "https://github.com/trinhdinhtai/tools-hub/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }
