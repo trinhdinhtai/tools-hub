@@ -12,7 +12,7 @@ import type { ColorScheme, Platform } from "@/platform/types";
 import { TOOLS_NS, createI18n } from "@/i18n";
 import { colorSchemeFor, localeFor, schemasFor, type Language, type Theme } from "./app-preferences";
 import { useFavorites } from "./favorites";
-import { CommandPalette, Key, PALETTE_SHORTCUT, isPaletteShortcut } from "./Palette";
+import { CommandPalette, Key, isPaletteShortcut, paletteShortcutLabel } from "./Palette";
 import { loadPreferences, type Preferences } from "./preferences";
 import { tools, toolsByCategory } from "./registry";
 import { SettingsDialog } from "./Settings";
@@ -102,16 +102,17 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
   };
 
   // Ctrl+K (Cmd+K on macOS) opens the palette from anywhere, even from inside a Tool's Input.
+  const { isMac } = platform;
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!isPaletteShortcut(event)) return;
+      if (!isPaletteShortcut(event, isMac)) return;
       event.preventDefault();
       setSettingsOpen(false);
       setPaletteOpen(true);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
+  }, [isMac]);
 
   return (
     <div className="flex h-full">
@@ -125,7 +126,7 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
             onClick={() => setPaletteOpen(true)}
             aria-haspopup="dialog"
             aria-expanded={paletteOpen}
-            aria-keyshortcuts="Control+K Meta+K"
+            aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}
             className={cn(
               "flex h-8 w-full items-center gap-2 rounded-md border bg-background px-2 text-left text-muted-foreground transition-colors duration-150",
               "hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
@@ -133,7 +134,7 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
           >
             <Search className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
             <span className="flex-1 truncate">{t("palette.title")}</span>
-            <Key className="text-muted-foreground">{PALETTE_SHORTCUT}</Key>
+            <Key className="text-muted-foreground">{paletteShortcutLabel(isMac)}</Key>
           </button>
         </div>
         <nav aria-label={t("nav.label")} className="flex-1 overflow-y-auto px-2 pb-4">

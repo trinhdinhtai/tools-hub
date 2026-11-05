@@ -7,11 +7,16 @@ import type { ToolMeta } from "@/lib/tool";
 import { cn } from "@/lib/utils";
 import { searchTools, type SearchEntry } from "./search";
 
-/** `Ctrl+K`, or `Cmd+K` on macOS, as shown to the user. Both keys open the palette everywhere. */
-export const PALETTE_SHORTCUT = /Mac|iPhone|iPad/.test(globalThis.navigator?.userAgent ?? "") ? "⌘K" : "Ctrl K";
+/** The palette's shortcut as shown to the user: `Cmd+K` on macOS, `Ctrl+K` elsewhere. */
+export const paletteShortcutLabel = (isMac: boolean) => (isMac ? "⌘K" : "Ctrl K");
 
-export function isPaletteShortcut(event: globalThis.KeyboardEvent): boolean {
-  return (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "k";
+/**
+ * `Cmd+K` on macOS, `Ctrl+K` elsewhere. On macOS Ctrl+K stays with text fields (delete to the end of the line).
+ * Checks the key's position, not its character, so it works whatever the keyboard layout.
+ */
+export function isPaletteShortcut(event: globalThis.KeyboardEvent, isMac: boolean): boolean {
+  const modifier = isMac ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey;
+  return modifier && !event.altKey && !event.shiftKey && event.code === "KeyK";
 }
 
 interface PaletteProps {

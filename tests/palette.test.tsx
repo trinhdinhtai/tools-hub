@@ -120,6 +120,21 @@ describe("Command palette", () => {
     expect(JSON.stringify(platform.dump())).not.toContain("recent/");
   });
 
+  it("opens with Cmd+K on macOS, leaving Ctrl+K to the text field", async () => {
+    const { user } = renderApp(createMemoryPlatform({ osLocale: "en-US", isMac: true }));
+    expect(await screen.findByRole("button", { name: /Search Tools/ })).toHaveTextContent("⌘K");
+
+    await user.keyboard("{Control>}k{/Control}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    await user.keyboard("{Meta>}k{/Meta}");
+    expect(await screen.findByRole("dialog", { name: "Search Tools" })).toBeInTheDocument();
+  });
+
+  it("shows Ctrl K elsewhere", async () => {
+    renderApp();
+    expect(await screen.findByRole("button", { name: /Search Tools/ })).toHaveTextContent("Ctrl K");
+  });
+
   it("also opens from the sidebar, and from inside a Tool's Input", async () => {
     const { user } = renderApp();
     await user.click(await screen.findByRole("button", { name: /Search Tools/ }));
