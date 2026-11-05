@@ -5,6 +5,7 @@ import { Search, Settings as SettingsIcon, type LucideIcon } from "lucide-react"
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Kbd } from "@/components/kbd";
 import { Logo } from "@/components/logo";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { usePreference, useRecent } from "@/lib/preferences";
 import { PreferencesContext } from "@/lib/preferences-context";
@@ -47,7 +48,10 @@ export function App({ platform }: { platform: Platform }) {
   return (
     <PreferencesContext.Provider value={loaded.preferences}>
       <I18nextProvider i18n={loaded.i18n}>
-        <Shell platform={platform} osLocale={loaded.osLocale} />
+        {/* One delay for every tooltip; moving between hinted buttons shows the next one at once. */}
+        <TooltipProvider delay={500}>
+          <Shell platform={platform} osLocale={loaded.osLocale} />
+        </TooltipProvider>
       </I18nextProvider>
     </PreferencesContext.Provider>
   );

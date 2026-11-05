@@ -12,6 +12,13 @@ export default tseslint.config(
     languageOptions: { ecmaVersion: 2022, globals: globals.browser },
     rules: {
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXOpeningElement[name.name=/^[a-z]/] > JSXAttribute[name.name='title']",
+          message: "Hover hints use <Hint> from @/components/hint (the shadcn tooltip), never the title attribute.",
+        },
+      ],
     },
   },
   {

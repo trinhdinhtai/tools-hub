@@ -1,6 +1,7 @@
 import { Suspense, useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Star, X } from "lucide-react";
+import { Hint } from "@/components/hint";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { usePreference } from "@/lib/preferences";
 import { NamespaceContext, toolNamespace } from "@/lib/preferences-context";
@@ -183,18 +184,20 @@ function Tab({
           <span className="truncate">{name}</span>
         </button>
         {/* Out of the tab order: from the keyboard, Delete closes the focused tab. */}
-        <button
-          type="button"
-          tabIndex={-1}
-          aria-label={t("tabs.close", { name })}
-          onClick={() => onChange(close)}
-          className={cn(
-            "mr-1 grid size-5 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-background hover:text-foreground",
-            !active && "opacity-0 group-hover/tab:opacity-100",
-          )}
-        >
-          <X className="size-3.5" strokeWidth={1.5} aria-hidden />
-        </button>
+        <Hint label={t("tabs.close", { name })} side="bottom">
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={t("tabs.close", { name })}
+            onClick={() => onChange(close)}
+            className={cn(
+              "mr-1 grid size-5 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-background hover:text-foreground",
+              !active && "opacity-0 group-hover/tab:opacity-100",
+            )}
+          >
+            <X className="size-3.5" strokeWidth={1.5} aria-hidden />
+          </button>
+        </Hint>
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onClick={() => onMenuChange(close)}>{t("tabs.menu.close")}</ContextMenuItem>
@@ -222,20 +225,21 @@ function ToolView({ tool, favorite, onToggleFavorite }: { tool: ToolMeta; favori
           <h1 className="text-2xl font-medium">{t(`${tool.id}.name`)}</h1>
           <p className="text-subtle-foreground">{t(`${tool.id}.description`)}</p>
         </div>
-        <button
-          type="button"
-          aria-pressed={favorite}
-          aria-label={tApp("favorites.toggle")}
-          title={tApp(favorite ? "favorites.remove" : "favorites.add")}
-          onClick={onToggleFavorite}
-          className={cn(
-            "grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors duration-150",
-            "hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-            favorite && "text-primary hover:text-primary",
-          )}
-        >
-          <Star className="size-4" strokeWidth={1.5} fill={favorite ? "currentColor" : "none"} aria-hidden />
-        </button>
+        <Hint label={tApp(favorite ? "favorites.remove" : "favorites.add")} side="bottom">
+          <button
+            type="button"
+            aria-pressed={favorite}
+            aria-label={tApp("favorites.toggle")}
+            onClick={onToggleFavorite}
+            className={cn(
+              "grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors duration-150",
+              "hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+              favorite && "text-primary hover:text-primary",
+            )}
+          >
+            <Star className="size-4" strokeWidth={1.5} fill={favorite ? "currentColor" : "none"} aria-hidden />
+          </button>
+        </Hint>
       </header>
       <NamespaceContext.Provider value={toolNamespace(tool.id)}>
         <Suspense fallback={null}>

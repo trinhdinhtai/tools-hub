@@ -80,6 +80,21 @@ describe("Favorites", () => {
     expect(favorites()).toEqual([]);
   });
 
+  it("explains the star in a tooltip, not the browser's own title", async () => {
+    const { user } = renderApp();
+    const nav = await screen.findByRole("navigation", { name: "Tools" });
+    await user.click(within(nav).getByRole("button", { name: "Notes" }));
+    const star = await screen.findByRole("button", { name: "Favorite" });
+    expect(star).not.toHaveAttribute("title");
+
+    await user.hover(star);
+    expect(await screen.findByText("Add to Favorites")).toBeInTheDocument();
+    await user.click(star);
+    await user.unhover(star);
+    await user.hover(star);
+    expect(await screen.findByText("Remove from Favorites")).toBeInTheDocument();
+  });
+
   it("counts every click on the star, even two in a row before the screen updates", async () => {
     const { user } = renderApp();
     const nav = await screen.findByRole("navigation", { name: "Tools" });
