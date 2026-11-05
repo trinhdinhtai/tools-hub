@@ -171,7 +171,12 @@ function Row({ label, description, children }: { label: string; description?: st
   );
 }
 
-/** A single choice among a few fixed options, shown as a select labelled by its row. */
+/**
+ * A single choice among a few fixed options, shown as a select labelled by its row.
+ *
+ * Picking a Language or Theme re-renders the whole app, so the choice is applied only once the list has finished
+ * closing; otherwise the closing list shows a frame in the new colours or language. The trigger shows the pick at once.
+ */
 function Choice<T extends string>({
   labelId,
   value,
@@ -185,10 +190,27 @@ function Choice<T extends string>({
   onChange: (value: T) => void;
   label: (option: T) => string;
 }) {
+  const [open, setOpen] = useState(false);
+  const [picked, setPicked] = useState<T | null>(null);
   // `items` lets the trigger show an option's label rather than its value.
   const items = options.map((option) => ({ value: option, label: label(option) }));
   return (
-    <Select items={items} value={value} onValueChange={(next) => next !== null && onChange(next)}>
+    <Select
+      items={items}
+      value={picked ?? value}
+      open={open}
+      onOpenChange={setOpen}
+      onValueChange={(next) => {
+        if (next === null) return;
+        if (open) setPicked(next);
+        else onChange(next);
+      }}
+      onOpenChangeComplete={(isOpen) => {
+        if (isOpen || picked === null) return;
+        onChange(picked);
+        setPicked(null);
+      }}
+    >
       <SelectTrigger size="sm" aria-labelledby={labelId} className="w-48">
         <SelectValue />
       </SelectTrigger>
