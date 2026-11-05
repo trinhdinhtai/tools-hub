@@ -1,7 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
-  <rect width="1024" height="1024" rx="224" fill="#141415"/>
-  <rect x="232" y="232" width="248" height="248" rx="56" fill="#2dd4bf"/>
-  <rect x="544" y="232" width="248" height="248" rx="56" fill="#3a3a3d"/>
-  <rect x="232" y="544" width="248" height="248" rx="56" fill="#3a3a3d"/>
-  <rect x="544" y="544" width="248" height="248" rx="56" fill="#3a3a3d"/>
+  <!-- Square app icon from toolshub-logo-dark.svg: the orange "hub" box on the logo's dark ground. -->
+  <rect width="1024" height="1024" rx="224" fill="#111111"/>
+  <rect x="152" y="312" width="720" height="420" rx="48" fill="#ff9900"/>
+  <text x="512" y="652" text-anchor="middle" transform="translate(51.2 0) scale(0.9 1)"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-weight="700" font-size="376"
+        fill="#111111" stroke="#111111" stroke-width="10" stroke-linejoin="round" letter-spacing="-4">hub</text>
 </svg>
