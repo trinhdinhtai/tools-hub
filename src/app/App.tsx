@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import type { i18n } from "i18next";
+import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import type { ToolMeta } from "@/lib/tool";
 import type { Platform } from "@/platform/types";
@@ -41,7 +42,9 @@ function Shell() {
   return (
     <div className="flex h-full">
       <aside className="flex w-60 shrink-0 flex-col border-r bg-sidebar">
-        <div className="flex h-14 items-center px-4 text-[15px] font-medium">Tools Hub</div>
+        <div className="flex h-14 items-center px-4">
+          <Logo className="h-6 w-auto" />
+        </div>
         <nav aria-label={t("nav.label")} className="flex-1 overflow-y-auto px-2 pb-4">
           {toolsByCategory().map(([category, list]) => (
             <section key={category} className="mt-6 first:mt-2">
@@ -78,7 +81,7 @@ function SidebarItem({ tool, active, onSelect }: { tool: ToolMeta; active: boole
         active && "bg-accent text-foreground shadow-[inset_0_0_0_1px_var(--border)]",
       )}
     >
-      <Icon className="size-4 shrink-0 text-muted-foreground" strokeWidth={1.5} aria-hidden />
+      <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} strokeWidth={1.5} aria-hidden />
       <span className="truncate">{t(`${tool.id}.name`)}</span>
     </button>
   );

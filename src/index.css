@@ -3,7 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Graphite neutral ramp, teal accent. Fonts are bundled (see main.tsx): the app never loads remote resources (ADR-0001). */
+/* Graphite neutral ramp, brand orange #ff9900 as primary (dark text on it: white fails contrast). Fonts are bundled (see main.tsx): the app never loads remote resources (ADR-0001). */
 :root {
   --background: #fafafa;
   --foreground: #171717;
@@ -11,8 +11,8 @@
   --card-foreground: #171717;
   --popover: #ffffff;
   --popover-foreground: #171717;
-  --primary: #171717;
-  --primary-foreground: #fafafa;
+  --primary: #ff9900;
+  --primary-foreground: #111111;
   --secondary: #f4f4f5;
   --secondary-foreground: #171717;
   --muted: #f4f4f5;
@@ -20,11 +20,10 @@
   --subtle-foreground: #525252;
   --accent: #f4f4f5;
   --accent-foreground: #171717;
-  --brand: #0f766e;
   --destructive: #dc2626;
   --border: rgb(23 23 23 / 0.08);
   --input: rgb(23 23 23 / 0.12);
-  --ring: #0f766e;
+  --ring: #ff9900;
   --sidebar: #f4f4f5;
   --radius: 0.625rem;
 }
@@ -37,8 +36,8 @@
     --card-foreground: #ededed;
     --popover: #19191b;
     --popover-foreground: #ededed;
-    --primary: #ededed;
-    --primary-foreground: #141415;
+    --primary: #ff9900;
+    --primary-foreground: #111111;
     --secondary: #232325;
     --secondary-foreground: #ededed;
     --muted: #232325;
@@ -46,11 +45,10 @@
     --subtle-foreground: #a1a1a6;
     --accent: #232325;
     --accent-foreground: #ededed;
-    --brand: #2dd4bf;
     --destructive: #e5484d;
     --border: rgb(237 237 237 / 0.08);
     --input: rgb(237 237 237 / 0.12);
-    --ring: #2dd4bf;
+    --ring: #ff9900;
     --sidebar: #0f0f10;
   }
 }
@@ -73,7 +71,6 @@
   --color-subtle-foreground: var(--subtle-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --color-brand: var(--brand);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -98,5 +95,8 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-size: 14px;
+  }
+  ::selection {
+    background-color: rgb(255 153 0 / 0.3);
   }
 }

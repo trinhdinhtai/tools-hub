@@ -53,7 +53,11 @@ export default function Base64Tool() {
           onValueChange={(value) => value && setDirection(value as Direction)}
         >
           {DIRECTIONS.map((d) => (
-            <ToggleGroupItem key={d} value={d} className="px-3 text-subtle-foreground data-[state=on]:text-foreground">
+            <ToggleGroupItem
+              key={d}
+              value={d}
+              className="px-3 text-subtle-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+            >
               {t(`direction.${d}`)}
             </ToggleGroupItem>
           ))}
