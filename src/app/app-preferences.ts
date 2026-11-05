@@ -12,7 +12,8 @@ export type Theme = (typeof THEMES)[number];
 
 /**
  * The app's own Preferences: "system" means follow the OS. `openTools` is the tab order of the Open Tools and
- * `activeTool` the one on screen ("" for none): only their ids, never their Input (ADR-0004).
+ * `activeTool` the one on screen ("" for none): only their ids, never their Input (ADR-0004). `favorites` are the
+ * ids of the Tools pinned to the top of the sidebar, in pinning order. The app's Recent is the Tools opened lately.
  */
 export const APP_SCHEMA = {
   preferences: {
@@ -22,8 +23,10 @@ export const APP_SCHEMA = {
       theme: "system" satisfies Theme,
       openTools: [] as string[],
       activeTool: "",
+      favorites: [] as string[],
     },
   },
+  recent: { version: 1, maxItems: 8 },
 };
 
 /** The app's namespace plus `tool/<id>` for every Tool that declares a Preference or Recent schema. */

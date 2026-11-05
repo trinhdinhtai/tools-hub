@@ -2,6 +2,25 @@
   "nav": {
     "label": "Công cụ"
   },
+  "palette": {
+    "title": "Tìm Công cụ",
+    "placeholder": "Tên Công cụ hoặc từ khoá, bằng tiếng Anh hay tiếng Việt",
+    "recent": "Gần đây",
+    "all": "Mọi Công cụ",
+    "results": "Kết quả",
+    "empty": "Không có Công cụ nào khớp “{{query}}”.",
+    "hint": {
+      "move": "di chuyển",
+      "open": "mở",
+      "close": "đóng"
+    }
+  },
+  "favorites": {
+    "label": "Yêu thích",
+    "add": "Thêm vào Yêu thích",
+    "remove": "Bỏ khỏi Yêu thích",
+    "toggle": "Yêu thích"
+  },
   "tabs": {
     "label": "Công cụ đang mở",
     "close": "Đóng {{name}}",
@@ -51,7 +70,7 @@
     },
     "recent": {
       "label": "Gần đây",
-      "description": "Xoá các mục gần đây mà Công cụ ghi nhớ.",
+      "description": "Xoá danh sách Công cụ dùng gần đây và các mục gần đây mà Công cụ ghi nhớ.",
       "clear": "Xoá Gần đây"
     },
     "reset": {

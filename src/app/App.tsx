@@ -1,17 +1,22 @@
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import type { i18n } from "i18next";
-import { Settings as SettingsIcon, type LucideIcon } from "lucide-react";
+import { Search, Settings as SettingsIcon, type LucideIcon } from "lucide-react";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@/components/ui/context-menu";
+import { Kbd } from "@/components/kbd";
 import { Logo } from "@/components/logo";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { usePreference } from "@/lib/preferences";
+import { usePreference, useRecent } from "@/lib/preferences";
 import { PreferencesContext } from "@/lib/preferences-context";
 import type { ToolMeta } from "@/lib/tool";
 import type { ColorScheme, Platform } from "@/platform/types";
 import { TOOLS_NS, createI18n } from "@/i18n";
 import { colorSchemeFor, localeFor, schemasFor, type Language, type Theme } from "./app-preferences";
+import { useFavorites } from "./favorites";
+import { CommandPalette, isPaletteShortcut, paletteShortcutLabel } from "./Palette";
 import { loadPreferences, type Preferences } from "./preferences";
-import { tools, toolsByCategory } from "./registry";
+import { tools, toolsByCategory, toolsWithIds } from "./registry";
 import { SettingsDialog } from "./Settings";
 import { WorkspaceView, useWorkspace } from "./Workspace";
 
@@ -43,7 +48,10 @@ export function App({ platform }: { platform: Platform }) {
   return (
     <PreferencesContext.Provider value={loaded.preferences}>
       <I18nextProvider i18n={loaded.i18n}>
-        <Shell platform={platform} osLocale={loaded.osLocale} />
+        {/* One delay for every tooltip; moving between hinted buttons shows the next one at once. */}
+        <TooltipProvider delay={500}>
+          <Shell platform={platform} osLocale={loaded.osLocale} />
+        </TooltipProvider>
       </I18nextProvider>
     </PreferencesContext.Provider>
   );
@@ -85,9 +93,31 @@ function applyColorScheme(scheme: ColorScheme) {
 function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | null }) {
   const { t } = useTranslation();
   const { workspace, setWorkspace, open } = useWorkspace(tools);
+  const [recent, addRecent] = useRecent();
+  const [favorites, toggleFavorite] = useFavorites(tools.map((tool) => tool.id));
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   useLanguage(osLocale);
   useTheme(platform);
+
+  /** Opens a Tool (or shows its tab) and puts it first in the app's Recent. */
+  const openAndRemember = (id: string) => {
+    open(id);
+    addRecent(id);
+  };
+
+  // Ctrl+K (Cmd+K on macOS) opens the palette from anywhere, even from inside a Tool's Input.
+  const { isMac } = platform;
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!isPaletteShortcut(event, isMac)) return;
+      event.preventDefault();
+      setSettingsOpen(false);
+      setPaletteOpen(true);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isMac]);
 
   return (
     <div className="flex h-full">
@@ -95,19 +125,44 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
         <div className="flex h-14 items-center px-4">
           <Logo className="h-6 w-auto" />
         </div>
+        <div className="px-2 pb-2">
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={paletteOpen}
+            aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}
+            className={cn(
+              "flex h-8 w-full items-center gap-2 rounded-md border bg-background px-2 text-left text-muted-foreground transition-colors duration-150",
+              "hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+            )}
+          >
+            <Search className="size-4 shrink-0" strokeWidth={1.5} aria-hidden />
+            <span className="flex-1 truncate">{t("palette.title")}</span>
+            <Kbd className="text-muted-foreground">{paletteShortcutLabel(isMac)}</Kbd>
+          </button>
+        </div>
         <nav aria-label={t("nav.label")} className="flex-1 overflow-y-auto px-2 pb-4">
-          {toolsByCategory(tools).map(([category, list]) => (
-            <section key={category} className="mt-6 first:mt-2">
-              <h2 className="mb-2 px-2 text-xs text-muted-foreground">{t(`categories.${category}`)}</h2>
-              <ul className="flex flex-col gap-0.5">
+          {[
+            ["favorites", t("favorites.label"), toolsWithIds(tools, favorites)] as const,
+            ...toolsByCategory(tools).map(([category, list]) => [category, t(`categories.${category}`), list] as const),
+          ]
+            .filter(([, , list]) => list.length > 0)
+            .map(([key, title, list]) => (
+              <SidebarSection key={key} title={title}>
                 {list.map((tool) => (
                   <li key={tool.id}>
-                    <SidebarItem tool={tool} active={tool.id === workspace.active} onSelect={() => open(tool.id)} />
+                    <SidebarItem
+                      tool={tool}
+                      active={tool.id === workspace.active}
+                      favorite={favorites.includes(tool.id)}
+                      onSelect={() => openAndRemember(tool.id)}
+                      onToggleFavorite={() => toggleFavorite(tool.id)}
+                    />
                   </li>
                 ))}
-              </ul>
-            </section>
-          ))}
+              </SidebarSection>
+            ))}
         </nav>
         <div className="border-t p-2">
           <NavButton
@@ -122,19 +177,59 @@ function Shell({ platform, osLocale }: { platform: Platform; osLocale: string | 
         </div>
       </aside>
       <main className="min-w-0 flex-1">
-        <WorkspaceView tools={tools} workspace={workspace} onChange={setWorkspace} />
+        <WorkspaceView
+          tools={tools}
+          workspace={workspace}
+          onChange={setWorkspace}
+          favorites={favorites}
+          onToggleFavorite={toggleFavorite}
+        />
       </main>
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} tools={tools} recent={recent} onPick={openAndRemember} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} platform={platform} />
     </div>
   );
 }
 
-function SidebarItem({ tool, active, onSelect }: { tool: ToolMeta; active: boolean; onSelect: () => void }) {
-  const { t } = useTranslation(TOOLS_NS);
+function SidebarSection({ title, children }: { title: string; children: ReactNode }) {
+  const id = useId();
   return (
-    <NavButton active={active} onSelect={onSelect} icon={tool.icon}>
-      {t(`${tool.id}.name`)}
-    </NavButton>
+    <section aria-labelledby={id} className="mt-6 first:mt-2">
+      <h2 id={id} className="mb-2 px-2 text-xs text-muted-foreground">
+        {title}
+      </h2>
+      <ul className="flex flex-col gap-0.5">{children}</ul>
+    </section>
+  );
+}
+
+/** A Tool in the sidebar. Right-click, Shift+F10 or the Menu key opens its menu, to pin or unpin it. */
+function SidebarItem({
+  tool,
+  active,
+  favorite,
+  onSelect,
+  onToggleFavorite,
+}: {
+  tool: ToolMeta;
+  active: boolean;
+  favorite: boolean;
+  onSelect: () => void;
+  onToggleFavorite: () => void;
+}) {
+  const { t } = useTranslation();
+  const { t: tTools } = useTranslation(TOOLS_NS);
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger render={<div role="presentation" />}>
+        <NavButton active={active} onSelect={onSelect} icon={tool.icon}>
+          {tTools(`${tool.id}.name`)}
+        </NavButton>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={onToggleFavorite}>{t(favorite ? "favorites.remove" : "favorites.add")}</ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
 

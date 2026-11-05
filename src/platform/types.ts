@@ -8,6 +8,8 @@ export interface Platform {
   getOsLocale(): Promise<string | null>;
   /** The OS light/dark setting, live. */
   systemTheme: SystemTheme;
+  /** Whether the OS is macOS, where shortcuts use Cmd rather than Ctrl. */
+  isMac: boolean;
 }
 
 /** Persistent key-value store for Preference and Recent data. Never Input. */

@@ -28,9 +28,11 @@ function fixedSystemTheme(initial: ColorScheme): SystemTheme & { set(scheme: Col
 
 /**
  * In-memory Platform for tests and for running the app in a plain browser.
- * With `systemTheme` given, the OS theme is simulated; otherwise the browser's is used.
+ * With `systemTheme` given, the OS theme is simulated; otherwise the browser's is used. `isMac` defaults to false.
  */
-export function createMemoryPlatform(options: { osLocale?: string | null; systemTheme?: ColorScheme } = {}): MemoryPlatform {
+export function createMemoryPlatform(
+  options: { osLocale?: string | null; systemTheme?: ColorScheme; isMac?: boolean } = {},
+): MemoryPlatform {
   const data = new Map<string, unknown>();
   const simulated = fixedSystemTheme(options.systemTheme ?? "light");
   const useBrowserTheme = options.systemTheme === undefined && typeof window.matchMedia === "function";
@@ -56,6 +58,7 @@ export function createMemoryPlatform(options: { osLocale?: string | null; system
       return options.osLocale === undefined ? (navigator.language ?? null) : options.osLocale;
     },
     systemTheme: useBrowserTheme ? mediaQuerySystemTheme() : simulated,
+    isMac: options.isMac ?? false,
     dump() {
       return Object.fromEntries(data);
     },

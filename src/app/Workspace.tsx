@@ -1,12 +1,14 @@
 import { Suspense, useCallback, useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { Star, X } from "lucide-react";
+import { Hint } from "@/components/hint";
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { usePreference } from "@/lib/preferences";
 import { NamespaceContext, toolNamespace } from "@/lib/preferences-context";
 import type { ToolMeta } from "@/lib/tool";
 import { cn } from "@/lib/utils";
 import { TOOLS_NS } from "@/i18n";
+import { toolsWithIds } from "./registry";
 import { closeAll, closeOthers, closeRight, closeTool, openTool, restoreWorkspace, showTool, type Workspace } from "./open-tools";
 
 const sameIds = (a: unknown, b: readonly string[]) => Array.isArray(a) && a.length === b.length && a.every((id, i) => id === b[i]);
@@ -48,17 +50,21 @@ export function WorkspaceView({
   tools,
   workspace,
   onChange,
+  favorites,
+  onToggleFavorite,
 }: {
   tools: readonly ToolMeta[];
   workspace: Workspace;
   onChange: (change: Change) => void;
+  favorites: readonly string[];
+  onToggleFavorite: (id: string) => void;
 }) {
   const { t } = useTranslation();
   const baseId = useId();
   const tabId = (id: string) => `${baseId}-tab-${id}`;
   const panelId = (id: string) => `${baseId}-panel-${id}`;
   const emptyId = `${baseId}-empty`;
-  const openTools = workspace.ids.flatMap((id) => tools.find((tool) => tool.id === id) ?? []);
+  const openTools = toolsWithIds(tools, workspace.ids);
 
   // After a keyboard or menu action changes the tab on screen, focus follows it (to the empty state if none is left).
   const focusActive = useRef(false);
@@ -92,7 +98,8 @@ export function WorkspaceView({
       <div
         role="tablist"
         aria-label={t("tabs.label")}
-        className="no-scrollbar flex h-10 shrink-0 items-end gap-1 overflow-x-auto border-b px-2"
+        // The strip's bottom hairline is an inset shadow, so the tab on screen paints over it and joins its panel.
+        className="no-scrollbar flex h-9 shrink-0 overflow-x-auto bg-sidebar px-3 pt-1 shadow-[inset_0_-1px_0_var(--tab-border)]"
       >
         {openTools.map((tool, index) => (
           <Tab
@@ -118,12 +125,23 @@ export function WorkspaceView({
           hidden={tool.id !== workspace.active}
           className="min-h-0 flex-1 overflow-y-auto"
         >
-          <ToolView tool={tool} />
+          <ToolView tool={tool} favorite={favorites.includes(tool.id)} onToggleFavorite={() => onToggleFavorite(tool.id)} />
         </div>
       ))}
     </div>
   );
 }
+
+/**
+ * The tab on screen. Each bottom corner curves out: a square just outside the tab whose inner corner is rounded,
+ * with the hairline drawn along the curve and a shadow in the panel's colour filling the space under it.
+ */
+const ACTIVE_TAB = cn(
+  "z-10 border-tab-border bg-background text-foreground",
+  // Each square is as wide as the top corners' radius (rounded-lg), so all four curves match.
+  "before:pointer-events-none before:absolute before:bottom-0 before:-left-(--radius) before:size-(--radius) before:rounded-br-lg before:border-r before:border-b before:border-tab-border before:shadow-[calc(var(--radius)/2)_calc(var(--radius)/2)_0_calc(var(--radius)/2)_var(--background)]",
+  "after:pointer-events-none after:absolute after:-right-(--radius) after:bottom-0 after:size-(--radius) after:rounded-bl-lg after:border-b after:border-l after:border-tab-border after:shadow-[calc(var(--radius)/-2)_calc(var(--radius)/2)_0_calc(var(--radius)/2)_var(--background)]",
+);
 
 function Tab({
   tool,
@@ -158,9 +176,10 @@ function Tab({
       <ContextMenuTrigger
         render={<div role="presentation" />}
         className={cn(
-          "group/tab relative flex h-8 max-w-56 shrink-0 items-center rounded-t-md text-subtle-foreground transition-colors duration-150",
-          "hover:bg-accent hover:text-foreground",
-          active && "bg-accent text-foreground shadow-[inset_0_0_0_1px_var(--border)]",
+          // Editor-style tabs. The tab on screen takes the panel's background, with rounded top corners, a hairline round
+          // its top and sides, and bottom corners that curve out into the panel; the others sit on the strip, muted.
+          "group/tab relative flex h-full max-w-56 shrink-0 items-center rounded-t-lg border-x border-t border-transparent text-[13px] text-muted-foreground transition-colors duration-150",
+          active ? ACTIVE_TAB : "hover:bg-accent/60 hover:text-foreground",
         )}
       >
         <button
@@ -172,24 +191,26 @@ function Tab({
           tabIndex={active ? 0 : -1}
           onClick={() => onChange((current) => showTool(current, tool.id))}
           onKeyDown={onKeyDown}
-          className="flex h-full min-w-0 items-center gap-2 rounded-t-md pr-1 pl-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          className="flex h-full min-w-0 items-center gap-2 rounded-tl-lg pr-1 pl-3 text-left focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-inset"
         >
           <Icon className={cn("size-4 shrink-0", active ? "text-primary" : "text-muted-foreground")} strokeWidth={1.5} aria-hidden />
           <span className="truncate">{name}</span>
         </button>
         {/* Out of the tab order: from the keyboard, Delete closes the focused tab. */}
-        <button
-          type="button"
-          tabIndex={-1}
-          aria-label={t("tabs.close", { name })}
-          onClick={() => onChange(close)}
-          className={cn(
-            "mr-1 grid size-5 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-background hover:text-foreground",
-            !active && "opacity-0 group-hover/tab:opacity-100",
-          )}
-        >
-          <X className="size-3.5" strokeWidth={1.5} aria-hidden />
-        </button>
+        <Hint label={t("tabs.close", { name })} side="bottom">
+          <button
+            type="button"
+            tabIndex={-1}
+            aria-label={t("tabs.close", { name })}
+            onClick={() => onChange(close)}
+            className={cn(
+              "mr-2 grid size-5 shrink-0 place-items-center rounded-sm text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-foreground",
+              !active && "opacity-0 group-focus-within/tab:opacity-100 group-hover/tab:opacity-100",
+            )}
+          >
+            <X className="size-3.5" strokeWidth={1.5} aria-hidden />
+          </button>
+        </Hint>
       </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem onClick={() => onMenuChange(close)}>{t("tabs.menu.close")}</ContextMenuItem>
@@ -206,14 +227,32 @@ function Tab({
   );
 }
 
-function ToolView({ tool }: { tool: ToolMeta }) {
+function ToolView({ tool, favorite, onToggleFavorite }: { tool: ToolMeta; favorite: boolean; onToggleFavorite: () => void }) {
   const { t } = useTranslation(TOOLS_NS);
+  const { t: tApp } = useTranslation();
   const Component = tool.component;
   return (
     <div className="mx-auto flex max-w-[1440px] flex-col gap-6 px-8 py-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-medium">{t(`${tool.id}.name`)}</h1>
-        <p className="text-subtle-foreground">{t(`${tool.id}.description`)}</p>
+      <header className="flex items-start gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <h1 className="text-2xl font-medium">{t(`${tool.id}.name`)}</h1>
+          <p className="text-subtle-foreground">{t(`${tool.id}.description`)}</p>
+        </div>
+        <Hint label={tApp(favorite ? "favorites.remove" : "favorites.add")} side="bottom">
+          <button
+            type="button"
+            aria-pressed={favorite}
+            aria-label={tApp("favorites.toggle")}
+            onClick={onToggleFavorite}
+            className={cn(
+              "grid size-8 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors duration-150",
+              "hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+              favorite && "text-primary hover:text-primary",
+            )}
+          >
+            <Star className="size-4" strokeWidth={1.5} fill={favorite ? "currentColor" : "none"} aria-hidden />
+          </button>
+        </Hint>
       </header>
       <NamespaceContext.Provider value={toolNamespace(tool.id)}>
         <Suspense fallback={null}>
