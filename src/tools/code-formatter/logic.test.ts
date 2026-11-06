@@ -91,3 +91,173 @@ describe("formatCode: beautify", () => {
     expect(result.ok && result.text.split("\n")).toHaveLength(5000 * 4 + 1);
   });
 });
+
+describe("formatCode: minify", () => {
+  it("minifies JavaScript without renaming what other code can see", async () => {
+    const input = "// add\nfunction add(first, second) {\n  const sum = first + second;\n  return sum;\n}\nconsole.log(add(1, 2));\n";
+    expect(await formatCode(input, "javascript", "minify", "2")).toEqual({
+      ok: true,
+      text: "function add(d,n){return d+n}console.log(add(1,2));",
+    });
+  });
+
+  it("minifies CSS", async () => {
+    expect(await formatCode("/* c */\na {\n  color: #ff0000;\n  margin: 0px 0px;\n}\n", "css", "minify", "2")).toEqual({
+      ok: true,
+      text: "a{color:red;margin:0}",
+    });
+  });
+
+  it("minifies HTML, keeping the spaces that show and what is preformatted", async () => {
+    const input = [
+      "<!DOCTYPE html>",
+      "<html>",
+      "  <head>",
+      "    <title> Hi </title>",
+      "  </head>",
+      "  <body>",
+      "    <!-- note -->",
+      '    <p   class="a   b"  >Hello   <b>world</b> !</p>',
+      "    <span>a</span>",
+      "    <span>b</span>",
+      "    <pre>  keep",
+      "   this </pre>",
+      "    <textarea>  and\n  this</textarea>",
+      "  </body>",
+      "</html>",
+      "",
+    ].join("\n");
+    expect(await formatCode(input, "html", "minify", "2")).toEqual({
+      ok: true,
+      text:
+        '<!DOCTYPE html><html><head><title>Hi</title></head><body><p class="a   b">Hello <b>world</b> !</p>' +
+        "<span>a</span> <span>b</span><pre>  keep\n   this </pre><textarea>  and\n  this</textarea></body></html>",
+    });
+  });
+
+  it("minifies the CSS and JavaScript inside HTML, and leaves other scripts as they are", async () => {
+    const input = [
+      "<style>",
+      "  a { color: #ff0000; }",
+      "</style>",
+      "<script>",
+      "  var total = 1 + 2;",
+      "</script>",
+      '<script type="application/ld+json">',
+      '  { "a": 1 }',
+      "</script>",
+    ].join("\n");
+    expect(await formatCode(input, "html", "minify", "2")).toEqual({
+      ok: true,
+      text: '<style>a{color:red}</style><script>var total=3;</script><script type="application/ld+json">{ "a": 1 }</script>',
+    });
+  });
+
+  it("leaves what is quoted in a tag, and a script it cannot read, as they are", async () => {
+    const input = "<a  title = \"a > b = c\"\n  href='x' >go</a>\n<script>\n  if (</script>";
+    expect(await formatCode(input, "html", "minify", "2")).toEqual({
+      ok: true,
+      text: "<a title=\"a > b = c\" href='x'>go</a><script>if (</script>",
+    });
+  });
+
+  it("minifies XML, keeping text, CDATA and processing instructions", async () => {
+    const input = [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      "<!-- c -->",
+      '<root a = "1"',
+      "      b='x  y'>",
+      "  <item>  text  </item>",
+      "  <![CDATA[ <raw>  ]]>",
+      "  <empty />",
+      "</root>",
+      "",
+    ].join("\n");
+    expect(await formatCode(input, "xml", "minify", "2")).toEqual({
+      ok: true,
+      text: `<?xml version="1.0" encoding="UTF-8"?><root a="1" b='x  y'><item>  text  </item><![CDATA[ <raw>  ]]><empty/></root>`,
+    });
+  });
+
+  it("minifies SQL, keeping strings and quoted names", async () => {
+    const input = [
+      "SELECT a ,  \"my  col\"",
+      "FROM t -- the table",
+      "WHERE x = 'a  b -- not a comment' /* c */",
+      "  AND y IN ( 1 , 2 )",
+      "  AND z = 'it''s' ;",
+    ].join("\n");
+    expect(await formatCode(input, "sql", "minify", "2")).toEqual({
+      ok: true,
+      text: `SELECT a,"my  col" FROM t WHERE x='a  b -- not a comment' AND y IN(1,2) AND z='it''s';`,
+    });
+  });
+
+  it.each<[string, string, string]>([
+    ["a space between words in mixed content", "<p><b>a</b> <i>b</i></p>", "<p><b>a</b> <i>b</i></p>"],
+    ["whitespace under xml:space=preserve", '<r>\n  <t xml:space="preserve">\n  <a/> </t>\n</r>', '<r><t xml:space="preserve">\n  <a/> </t></r>'],
+  ])("keeps %s in XML", async (_name, input, output) => {
+    expect(await formatCode(input, "xml", "minify", "2")).toEqual({ ok: true, text: output });
+  });
+
+  it("keeps HTML conditional comments", async () => {
+    const input = "<div>\n  <!--[if IE]><p>IE</p><![endif]-->\n  <!-- gone -->\n</div>";
+    expect(await formatCode(input, "html", "minify", "2")).toEqual({
+      ok: true,
+      text: "<div><!--[if IE]><p>IE</p><![endif]--></div>",
+    });
+  });
+
+  it("keeps SQL optimizer hints and MySQL version comments", async () => {
+    expect(await formatCode("SELECT /*+ INDEX(t i) */ a\nFROM t /* gone */", "sql", "minify", "2")).toEqual({
+      ok: true,
+      text: "SELECT /*+ INDEX(t i) */ a FROM t",
+    });
+  });
+
+  it("keeps the line break between strings PostgreSQL joins", async () => {
+    expect(await formatCode("SELECT 'a'\n  'b' AS x", "sql", "minify", "2")).toEqual({ ok: true, text: "SELECT 'a'\n'b' AS x" });
+  });
+
+  it.each<[string, string, string]>([
+    ["PostgreSQL parameters", "SELECT a FROM t WHERE id = $1", "SELECT a FROM t WHERE id=$1"],
+    ["MySQL backticks", "SELECT `my col` FROM `t`", "SELECT `my col` FROM `t`"],
+    ["T-SQL brackets", "SELECT [my col] FROM [t]", "SELECT [my col] FROM [t]"],
+  ])("accepts %s", async (_name, input, minified) => {
+    expect(await formatCode(input, "sql", "beautify", "2")).toMatchObject({ ok: true });
+    expect(await formatCode(input, "sql", "minify", "2")).toEqual({ ok: true, text: minified });
+  });
+
+  it("never joins a minus sign onto the next one, which would start a comment", async () => {
+    expect(await formatCode("SELECT 1 - -1", "sql", "minify", "2")).toEqual({ ok: true, text: "SELECT 1 - -1" });
+  });
+
+  it.each<[Language, string]>([
+    ["javascript", "const a = {b:1"],
+    ["css", "a { color: red"],
+    ["html", "<div><span></div>"],
+    ["sql", "SELECT a FROM (b"],
+  ])("refuses %s that does not parse", async (language, input) => {
+    expect(await formatCode(input, language, "minify", "2")).toMatchObject({ ok: false, error: { reason: "invalid", line: 1 } });
+  });
+
+  it("refuses XML that does not parse", async () => {
+    expect(await formatCode("<a><b></a>", "xml", "minify", "2")).toMatchObject({ ok: false, error: { reason: "invalid" } });
+  });
+
+  it("keeps Unicode as it is", async () => {
+    expect(await formatCode("<p>  Tiếng   Việt 🎉 </p>", "html", "minify", "2")).toEqual({ ok: true, text: "<p>Tiếng Việt 🎉</p>" });
+    expect(await formatCode("SELECT 'chào  👋'  AS  \"tên\"", "sql", "minify", "2")).toEqual({
+      ok: true,
+      text: `SELECT 'chào  👋' AS "tên"`,
+    });
+  });
+
+  it("minifies a large Input", async () => {
+    const input = Array.from({ length: 5000 }, (_, i) => `<item id="${i}">\n  <name> n${i} </name>\n</item>`).join("\n");
+    const result = await formatCode(`<list>${input}</list>`, "xml", "minify", "2");
+    expect(result.ok && result.text).toBe(
+      `<list>${Array.from({ length: 5000 }, (_, i) => `<item id="${i}"><name> n${i} </name></item>`).join("")}</list>`,
+    );
+  });
+});

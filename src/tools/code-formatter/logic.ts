@@ -1,4 +1,7 @@
 import type { Plugin } from "prettier";
+import { minifyMarkup } from "./markup";
+import { minifyCss, minifyJavaScript } from "./minify";
+import { minifySql } from "./sql";
 
 export const LANGUAGES = ["html", "css", "javascript", "xml", "sql"] as const;
 export type Language = (typeof LANGUAGES)[number];
@@ -14,6 +17,8 @@ export type Indent = (typeof INDENTS)[number];
 export type FormatError = { reason: "empty" } | { reason: "invalid"; line?: number; column?: number; message: string };
 
 export type FormatResult = { ok: true; text: string } | { ok: false; error: FormatError };
+
+const SQL_DIALECTS = ["sql", "postgresql", "mysql", "transactsql", "plsql"] as const;
 
 const indentOptions = (indent: Indent) => ({ useTabs: indent === "tab", tabWidth: indent === "4" ? 4 : 2 });
 
@@ -44,7 +49,16 @@ async function prettierSetup(language: Exclude<Language, "sql">): Promise<{ pars
 async function beautify(text: string, language: Language, indent: Indent): Promise<string> {
   if (language === "sql") {
     const { format } = await import("sql-formatter");
-    return `${format(text, { language: "sql", keywordCase: "upper", ...indentOptions(indent) })}\n`;
+    // Standard SQL first, then the dialects whose syntax it lacks ($1, [name], `name`); an error is standard SQL's.
+    let firstError: unknown;
+    for (const dialect of SQL_DIALECTS) {
+      try {
+        return `${format(text, { language: dialect, keywordCase: "upper", ...indentOptions(indent) })}\n`;
+      } catch (error) {
+        firstError ??= error;
+      }
+    }
+    throw firstError;
   }
   const { format } = await import("prettier/standalone");
   const { parser, plugins } = await prettierSetup(language);
@@ -52,11 +66,32 @@ async function beautify(text: string, language: Language, indent: Indent): Promi
   return format(text, { parser, plugins, xmlWhitespaceSensitivity: "ignore", ...indentOptions(indent) });
 }
 
-interface PrettierSyntaxError {
+/** Where a parser says the error is: Prettier puts it in `loc`, terser in `line` and a 0-based `col`. */
+interface ParserError {
   loc?: { start?: { line?: number | null; column?: number | null } };
+  line?: number;
+  col?: number;
 }
 
 const positive = (n: unknown) => (typeof n === "number" && Number.isInteger(n) && n > 0 ? n : undefined);
+
+/**
+ * Minifiers forgive what a parser refuses (csso closes an unclosed block), so all but JavaScript are first parsed
+ * by their beautifier: code that does not parse is an error when minified too.
+ */
+async function minify(text: string, language: Language): Promise<string> {
+  if (language === "javascript") return minifyJavaScript(text);
+  await beautify(text, language, "2");
+  switch (language) {
+    case "css":
+      return minifyCss(text);
+    case "html":
+    case "xml":
+      return minifyMarkup(text, language, { javascript: minifyJavaScript, css: minifyCss });
+    case "sql":
+      return minifySql(text);
+  }
+}
 
 /** A parser's error as a FormatError: the first line of its message, without the position it repeats. */
 function invalid(error: unknown): FormatError {
@@ -67,20 +102,20 @@ function invalid(error: unknown): FormatError {
     .replace(/ at line \d+ column \d+\.?$/, "")
     .replace(/ For more info see \S+$/, "")
     .trim();
-  const start = (error as PrettierSyntaxError | null)?.loc?.start;
+  const parser = error as ParserError | null;
+  const start = parser?.loc?.start;
   // sql-formatter puts the position only in its message: "Parse error at token: «EOF» at line 1 column 17".
   const sqlAt = /\bat line (\d+) column (\d+)/.exec(raw);
-  const line = positive(start?.line) ?? positive(Number(sqlAt?.[1]));
-  const column = positive(start?.column) ?? positive(Number(sqlAt?.[2]));
+  const line = positive(start?.line) ?? positive(parser?.line) ?? positive(Number(sqlAt?.[1]));
+  const column = positive(start?.column) ?? positive((parser?.col ?? -1) + 1) ?? positive(Number(sqlAt?.[2]));
   return line === undefined ? { reason: "invalid", message } : { reason: "invalid", line, column: column ?? 1, message };
 }
 
 /** Beautifies or minifies `text` as `language`; code that is not valid is an error, never a broken result. */
 export async function formatCode(text: string, language: Language, action: Action, indent: Indent): Promise<FormatResult> {
-  void action;
   if (!text.trim()) return { ok: false, error: { reason: "empty" } };
   try {
-    return { ok: true, text: await beautify(text, language, indent) };
+    return { ok: true, text: action === "beautify" ? await beautify(text, language, indent) : await minify(text, language) };
   } catch (error) {
     return { ok: false, error: invalid(error) };
   }
