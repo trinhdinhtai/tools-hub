@@ -1,0 +1,32 @@
+{
+  "input": "Dữ liệu nhập",
+  "output": "Kết quả",
+  "style": {
+    "label": "Kiểu",
+    "format": "Định dạng",
+    "minify": "Thu gọn"
+  },
+  "indent": {
+    "label": "Thụt lề",
+    "2": "2 dấu cách",
+    "4": "4 dấu cách",
+    "tab": "Tab"
+  },
+  "sortKeys": "Sắp xếp key",
+  "valid": "JSON hợp lệ · {{count}} ký tự",
+  "errorAt": "Dòng {{line}}, cột {{column}}: {{message}}",
+  "errors": {
+    "unexpected-end": "JSON kết thúc quá sớm: thiếu một giá trị, dấu nháy hoặc dấu đóng ngoặc",
+    "expected-value": "cần một giá trị (chuỗi, số, object, array, true, false hoặc null) nhưng gặp “{{found}}”",
+    "expected-key": "cần một key trong dấu nháy kép nhưng gặp “{{found}}”",
+    "expected-colon": "cần “:” sau key nhưng gặp “{{found}}”",
+    "expected-comma-or-brace": "cần “,” hoặc “}” nhưng gặp “{{found}}”",
+    "expected-comma-or-bracket": "cần “,” hoặc “]” nhưng gặp “{{found}}”",
+    "trailing-comma": "dấu phẩy thừa: bỏ dấu “,” trước dấu đóng ngoặc",
+    "trailing-content": "có “{{found}}” thừa sau khi JSON đã kết thúc",
+    "invalid-number": "số không hợp lệ: không có số 0 ở đầu, và sau “.” hay “e” phải có chữ số",
+    "invalid-escape": "escape không hợp lệ trong chuỗi: dùng \\\", \\\\, \\/, \\b, \\f, \\n, \\r, \\t hoặc \\u kèm 4 chữ số hex",
+    "unescaped-control": "xuống dòng, tab và các ký tự điều khiển khác trong chuỗi phải được escape",
+    "unterminated-string": "chuỗi này không có dấu nháy kép đóng"
+  }
+}
