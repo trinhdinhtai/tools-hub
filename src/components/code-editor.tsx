@@ -97,6 +97,8 @@ const theme = EditorView.theme({
   "&.cm-focused": { outline: "none" },
   ".cm-scroller": { fontFamily: "var(--font-mono)", lineHeight: "20px" },
   ".cm-content": { caretColor: "var(--foreground)", padding: "8px 0" },
+  // drawSelection draws its own cursor, black unless told otherwise, so caretColor alone leaves it unseen in dark.
+  ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--foreground)", borderLeftWidth: "1.5px" },
   ".cm-gutters": { backgroundColor: "transparent", color: "var(--muted-foreground)", border: "none" },
   ".cm-activeLineGutter": { backgroundColor: "transparent", color: "var(--foreground)" },
   "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection": {
