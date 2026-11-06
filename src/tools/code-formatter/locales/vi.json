@@ -1,0 +1,34 @@
+{
+  "language": "Ngôn ngữ",
+  "auto": "Tự nhận",
+  "languages": {
+    "html": "HTML",
+    "css": "CSS",
+    "javascript": "JavaScript",
+    "xml": "XML",
+    "sql": "SQL"
+  },
+  "action": {
+    "label": "Thao tác",
+    "beautify": "Làm đẹp",
+    "minify": "Thu gọn"
+  },
+  "indent": {
+    "label": "Thụt lề",
+    "2": "2 dấu cách",
+    "4": "4 dấu cách",
+    "tab": "Tab"
+  },
+  "input": "Dữ liệu nhập",
+  "output": "Kết quả",
+  "detected": "Nhận diện: {{language}}",
+  "formatting": "Đang định dạng…",
+  "saved": "Nhỏ hơn {{percent}}%",
+  "errors": {
+    "undetected": "Không nhận ra ngôn ngữ của đoạn code này. Hãy chọn ở mục Ngôn ngữ.",
+    "invalid": "Không phải {{language}} hợp lệ.",
+    "invalidAt": "Không phải {{language}} hợp lệ: dòng {{line}}, cột {{column}}.",
+    "detail": "Trình phân tích báo: {{message}}",
+    "failed": "Không định dạng được đoạn code này: {{message}}"
+  }
+}

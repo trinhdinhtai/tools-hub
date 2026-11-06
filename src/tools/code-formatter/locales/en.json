@@ -1,0 +1,34 @@
+{
+  "language": "Language",
+  "auto": "Auto",
+  "languages": {
+    "html": "HTML",
+    "css": "CSS",
+    "javascript": "JavaScript",
+    "xml": "XML",
+    "sql": "SQL"
+  },
+  "action": {
+    "label": "Action",
+    "beautify": "Beautify",
+    "minify": "Minify"
+  },
+  "indent": {
+    "label": "Indent",
+    "2": "2 spaces",
+    "4": "4 spaces",
+    "tab": "Tab"
+  },
+  "input": "Input",
+  "output": "Output",
+  "detected": "Detected: {{language}}",
+  "formatting": "Formatting…",
+  "saved": "{{percent}}% smaller",
+  "errors": {
+    "undetected": "Could not tell which language this is. Pick it under Language.",
+    "invalid": "Not valid {{language}}.",
+    "invalidAt": "Not valid {{language}}: line {{line}}, column {{column}}.",
+    "detail": "The parser says: {{message}}",
+    "failed": "Could not format this code: {{message}}"
+  }
+}
