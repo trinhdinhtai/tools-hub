@@ -121,8 +121,10 @@ export default function JsonViewerTool() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-2">
-          {/* The editor is named by its own label; this heading is for sight. */}
-          <Label aria-hidden>{t("input")}</Label>
+          {/* The editor is named by its own label; this heading is for sight. As tall as the Path row beside it. */}
+          <div className="flex h-7 items-center">
+            <Label aria-hidden>{t("input")}</Label>
+          </div>
           <CodeEditor
             label={t("input")}
             value={input}
@@ -153,7 +155,7 @@ export default function JsonViewerTool() {
           )}
         </div>
         <div className="flex min-w-0 flex-col gap-2">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex h-7 items-center justify-between gap-3">
             <Label aria-hidden>{t("output")}</Label>
             <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
               <Label htmlFor={`${id}-path`} className="text-xs text-subtle-foreground">
