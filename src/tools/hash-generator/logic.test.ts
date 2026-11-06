@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { ALGORITHMS, digestsOf } from "./logic";
+import { ALGORITHMS, digestsOf, type AlgorithmId } from "./logic";
 
 const utf8 = new TextEncoder();
 const digestOf = (data: Uint8Array) => digestsOf(data, null);
 
 // Standard test vectors: RFC 1321 (MD5), FIPS 180-4 (SHA-1, SHA-2), FIPS 202 (SHA-3) and the Keccak team's
 // reference values for Keccak-256. Cross-checked against Node's OpenSSL crypto, an independent implementation.
-const VECTORS: readonly [string, string, string][] = [
+const VECTORS: readonly [AlgorithmId, string, string][] = [
   ["md5", "d41d8cd98f00b204e9800998ecf8427e", "900150983cd24fb0d6963f7d28e17f72"],
   ["sha-1", "da39a3ee5e6b4b0d3255bfef95601890afd80709", "a9993e364706816aba3e25717850c26c9cd0d89d"],
   ["sha-224", "d14a028c2a3a2bc9476102bb288234c415a2b01f828ea62ac5b3e42f", "23097d223405d8228642a477bda255b32aadbce4bda0b3f7e36c9da7"],

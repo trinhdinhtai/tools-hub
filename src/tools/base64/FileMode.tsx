@@ -8,7 +8,7 @@ import { FileDropZone } from "@/components/file-drop-zone";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useSaveFile } from "@/lib/files";
+import { useFormatSize, useSaveFile } from "@/lib/files";
 import { runInWorker } from "@/lib/worker";
 import type { FileJob, FileJobResult } from "./file-jobs";
 import { VARIANT_NAMES, fileExtension, type Variant } from "./logic";
@@ -37,15 +37,6 @@ function useFileJob(job: FileJob | null) {
   }, [job]);
   if (!job) return null;
   return run?.job === job ? run : { job, progress: 0 };
-}
-
-function useFormatSize() {
-  const { i18n } = useTranslation();
-  return (bytes: number) => {
-    const [value, unit] =
-      bytes >= 1e9 ? [bytes / 1e9, "gigabyte"] : bytes >= 1e6 ? [bytes / 1e6, "megabyte"] : bytes >= 1e3 ? [bytes / 1e3, "kilobyte"] : [bytes, "byte"];
-    return new Intl.NumberFormat(i18n.language, { style: "unit", unit, maximumFractionDigits: 1 }).format(value);
-  };
 }
 
 /** Shows the OS save dialog for `bytes`, reporting a failed write; cancelling is not a failure. */
