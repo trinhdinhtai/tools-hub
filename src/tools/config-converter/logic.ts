@@ -1,8 +1,10 @@
 import { parse as parseTomlText, stringify as stringifyTomlValue, TomlError } from "smol-toml";
 import { Document, isNode, isScalar, parseAllDocuments, visit } from "yaml";
+import { readEnv, writeEnv } from "./env";
 import { InvalidConfig, position } from "./invalid";
+import { readProperties, writeProperties } from "./properties";
 
-export const FORMATS = ["json", "yaml", "toml"] as const;
+export const FORMATS = ["json", "yaml", "toml", "env", "properties"] as const;
 export type Format = (typeof FORMATS)[number];
 
 /** What a config holds once read: one value per document. Only YAML can hold more than one. */
@@ -15,7 +17,9 @@ export type ConfigError =
   /** TOML has no null; `path` is where the first one is, e.g. `servers[0].name`. */
   | { reason: "toml-null"; path: string }
   /** The output format holds only a table of keys at the top, not an array or a single value. */
-  | { reason: "not-a-table" };
+  | { reason: "not-a-table" }
+  /** A key the output format cannot hold, e.g. one with a space in a .env file. */
+  | { reason: "bad-key"; key: string };
 
 export type ParseResult = { ok: true; docs: Documents } | { ok: false; error: ConfigError };
 export type ConvertResult = { ok: true; text: string } | { ok: false; error: ConfigError };
@@ -91,6 +95,8 @@ const PARSERS: Record<Format, (text: string) => Documents> = {
   json: parseJson,
   yaml: parseYaml,
   toml: parseToml,
+  env: (text) => [readEnv(text)],
+  properties: (text) => [readProperties(text)],
 };
 
 /** Reads a config, or says why it cannot. */
@@ -133,6 +139,9 @@ function stringifyToml(table: Record<string, unknown>): ConvertResult {
   return { ok: true, text: stringifyTomlValue(table).trimEnd() + "\n" };
 }
 
+function stringifyFlat(written: { text: string } | { badKey: string }): ConvertResult {
+  return "badKey" in written ? { ok: false, error: { reason: "bad-key", key: written.badKey } } : { ok: true, ...written };
+}
 
 /** Writes what a config holds in a format, or says why that format cannot hold it. */
 export function stringifyConfig(docs: Documents, format: Format): ConvertResult {
@@ -142,7 +151,9 @@ export function stringifyConfig(docs: Documents, format: Format): ConvertResult 
   const value = asOne(docs);
   if (format === "json") return { ok: true, text: JSON.stringify(value, null, 2) + "\n" };
   if (!isTable(value)) return { ok: false, error: { reason: "not-a-table" } };
-  return stringifyToml(value);
+  if (format === "toml") return stringifyToml(value);
+  if (format === "properties") return { ok: true, text: writeProperties(value) };
+  return stringifyFlat(writeEnv(value));
 }
 
 /** Converts a config from one format to another, or says why it cannot. */

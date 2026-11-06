@@ -95,6 +95,104 @@ describe("convertConfig", () => {
     expect(convertConfig("a: 1\n---\nb: 2\n", "yaml", "toml")).toEqual({ ok: false, error: { reason: "not-a-table" } });
   });
 
+  it("reads .env with comments, export, quotes and escapes", () => {
+    const env = [
+      "# database",
+      "export DB_HOST=localhost",
+      "DB_PORT = 5432 # default",
+      'GREETING="hello\\nworld \\"quoted\\""',
+      "RAW='no $expansion \\n here'",
+      "EMPTY=",
+      'MULTI="line one',
+      'line two"',
+    ].join("\n");
+    expect(parseConfig(env, "env")).toEqual({
+      ok: true,
+      docs: [
+        {
+          DB_HOST: "localhost",
+          DB_PORT: "5432",
+          GREETING: 'hello\nworld "quoted"',
+          RAW: "no $expansion \\n here",
+          EMPTY: "",
+          MULTI: "line one\nline two",
+        },
+      ],
+    });
+  });
+
+  it("writes nested values to .env as keys joined with __, quoting what needs it", () => {
+    expect(convertConfig('{"db":{"host":"x","port":5432},"tags":["a","b"],"motd":"hi there\\n","off":null}', "json", "env")).toEqual({
+      ok: true,
+      text: 'db__host=x\ndb__port=5432\ntags__0=a\ntags__1=b\nmotd="hi there\\n"\noff=\n',
+    });
+  });
+
+  it("reads keys joined with __ in .env back into nested objects and arrays", () => {
+    expect(parseConfig("db__host=x\ntags__0=a\ntags__1=b\n", "env")).toEqual({
+      ok: true,
+      docs: [{ db: { host: "x" }, tags: ["a", "b"] }],
+    });
+  });
+
+  it("keeps keys flat when nesting them would clash", () => {
+    expect(parseConfig("db=main\ndb__host=x\n", "env")).toEqual({ ok: true, docs: [{ db: "main", db__host: "x" }] });
+  });
+
+  it("says which .env line is not valid", () => {
+    expect(convertConfig("A=1\nnot an assignment\n", "env", "json")).toEqual({
+      ok: false,
+      error: { reason: "invalid", line: 2, column: 1 },
+    });
+    expect(convertConfig('A=1\nB="never closed\n', "env", "json")).toEqual({
+      ok: false,
+      error: { reason: "invalid", line: 2, column: 3 },
+    });
+  });
+
+  it("refuses .env for a config that is not a table of keys", () => {
+    expect(convertConfig('"just text"', "json", "env")).toEqual({ ok: false, error: { reason: "not-a-table" } });
+  });
+
+  it("reads .properties the way Java does, and nests dotted keys", () => {
+    const properties = [
+      "# comment",
+      "! also a comment",
+      "server.port=8080",
+      "server.host : example.com",
+      "app.name   Tools Hub",
+      "app.greeting = hello, \\",
+      "    world",
+      "app.unicode = caf\\u00e9 \\t tab",
+      "servers[0].name=a",
+      "servers[1].name=b",
+    ].join("\n");
+    expect(parseConfig(properties, "properties")).toEqual({
+      ok: true,
+      docs: [
+        {
+          server: { port: "8080", host: "example.com" },
+          app: { name: "Tools Hub", greeting: "hello, world", unicode: "café \t tab" },
+          servers: [{ name: "a" }, { name: "b" }],
+        },
+      ],
+    });
+  });
+
+  it("writes .properties with dotted keys and escapes", () => {
+    expect(convertConfig('{"server":{"port":8080},"servers":[{"name":"a"}],"my key":"x=y","note":"  two\\nlines"}', "json", "properties")).toEqual({
+      ok: true,
+      text: "server.port=8080\nservers[0].name=a\nmy\\ key=x=y\nnote=\\ \\ two\\nlines\n",
+    });
+  });
+
+  it("says which .properties line has a broken \\u escape", () => {
+    expect(convertConfig("a=1\nb=\\u00zz\n", "properties", "json")).toEqual({
+      ok: false,
+      error: { reason: "invalid", line: 2, column: 3 },
+    });
+  });
+
   it("writes a single YAML document as a single JSON value", () => {
     expect(convertConfig("server:\n  port: 80\n", "yaml", "json")).toEqual({
       ok: true,
