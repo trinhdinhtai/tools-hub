@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Compartment, EditorState, type Extension } from "@codemirror/state";
+import { Compartment, EditorState, StateEffect, StateField, type Extension } from "@codemirror/state";
 import {
+  Decoration,
+  type DecorationSet,
   EditorView,
   drawSelection,
   highlightActiveLineGutter,
@@ -28,8 +30,41 @@ export interface CodeEditorProps {
   language?: Extension;
   /** Marks the content as invalid, e.g. Input that cannot be decoded. */
   invalid?: boolean;
+  /**
+   * Parts of the text to highlight, e.g. the matches of a pattern. Leave it undefined to keep the marks already
+   * shown: they move with the edits, so a slow update does not make them flicker.
+   */
+  marks?: readonly EditorMark[];
   className?: string;
 }
+
+/** A highlighted part of the text, in UTF-16 units; marks may nest. */
+export interface EditorMark {
+  from: number;
+  to: number;
+  className: string;
+}
+
+const setMarks = StateEffect.define<readonly EditorMark[]>();
+
+const marksField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update(marks, transaction) {
+    let next = marks.map(transaction.changes);
+    for (const effect of transaction.effects) {
+      if (!effect.is(setMarks)) continue;
+      const length = transaction.state.doc.length;
+      next = Decoration.set(
+        effect.value
+          .filter((mark) => mark.from < mark.to && mark.to <= length)
+          .map((mark) => Decoration.mark({ class: mark.className }).range(mark.from, mark.to)),
+        true,
+      );
+    }
+    return next;
+  },
+  provide: (field) => EditorView.decorations.from(field),
+});
 
 /** CodeMirror's English phrases, translated through the `editor` keys of the app namespace. */
 function phrases(t: TFunction<typeof APP_NS>): Record<string, string> {
@@ -99,7 +134,7 @@ const highlightStyle = HighlightStyle.define([
  * The app's code editor (CodeMirror 6): line numbers, syntax highlighting and search (Ctrl/Cmd+F). Controlled: it
  * shows `value` and reports edits through `onChange`. Tab is left to move focus, so the keyboard is never trapped.
  */
-export function CodeEditor({ label, value, onChange, readOnly = false, language, invalid, className }: CodeEditorProps) {
+export function CodeEditor({ label, value, onChange, readOnly = false, language, invalid, marks, className }: CodeEditorProps) {
   const { t, i18n } = useTranslation(APP_NS);
   const host = useRef<HTMLDivElement>(null);
   const view = useRef<EditorView>(null);
@@ -134,6 +169,7 @@ export function CodeEditor({ label, value, onChange, readOnly = false, language,
           EditorView.lineWrapping,
           keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
           theme,
+          marksField,
           c.attributes.of([]),
           c.readOnly.of([]),
           c.language.of([]),
@@ -180,6 +216,11 @@ export function CodeEditor({ label, value, onChange, readOnly = false, language,
     shown.current = value;
     editor.dispatch({ changes: { from: 0, to: editor.state.doc.length, insert: value } });
   }, [value]);
+
+  // After the value above, so the marks are laid on the text they were made for.
+  useEffect(() => {
+    if (marks) view.current?.dispatch({ effects: setMarks.of(marks) });
+  }, [marks]);
 
   return (
     <div

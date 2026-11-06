@@ -1,0 +1,4 @@
+{
+  "name": "Regex Tester",
+  "description": "Kiểm tra biểu thức chính quy: highlight match và capture group ngay khi gõ, xem trước kết quả thay thế"
+}

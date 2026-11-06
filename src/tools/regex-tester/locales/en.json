@@ -1,0 +1,49 @@
+{
+  "mode": "Mode",
+  "modes": {
+    "match": "Match",
+    "replace": "Replace"
+  },
+  "pattern": "Pattern",
+  "flags": {
+    "label": "Flags",
+    "g": "Global: find every match, not only the first",
+    "i": "Ignore case",
+    "m": "Multiline: ^ and $ match at each line",
+    "s": "Dot all: . also matches line breaks",
+    "u": "Unicode: whole code points, \\u{…} and \\p{…}",
+    "y": "Sticky: each match starts where the last one ended"
+  },
+  "text": "Test string",
+  "replacement": "Replacement",
+  "replacementHint": "$1 or $<name> for a group, $& for the match, $$ for a $",
+  "result": "Result",
+  "matches": "Matches",
+  "count": "Matches: {{count}}",
+  "noMatch": "No match",
+  "truncated": "Matches: the first {{count}}; the rest are left out",
+  "shown": "Showing {{shown}} of {{count}}",
+  "match": "Match {{number}}",
+  "span": "{{start}}–{{end}}",
+  "empty": "empty",
+  "unmatched": "no part in the match",
+  "invalid": "Invalid pattern: {{message}}",
+  "errors": {
+    "unterminated-group": "a “(” is never closed with “)”",
+    "unmatched-paren": "a “)” has no “(” to close",
+    "nothing-to-repeat": "a quantifier (*, +, ? or {…}) has nothing before it to repeat",
+    "unterminated-class": "a “[” is never closed with “]”",
+    "range-out-of-order": "a range in […] goes backwards, e.g. z-a instead of a-z",
+    "trailing-backslash": "the pattern ends with a lone “\\”",
+    "quantifier-out-of-order": "in {min,max} the min is larger than the max",
+    "duplicate-group-name": "two groups have the same name",
+    "invalid-group-name": "a group name must start with a letter, $ or _",
+    "invalid-named-reference": "\\k<…> refers to a group name that does not exist",
+    "invalid-group": "“(?” must be followed by :, =, !, <=, <! or <name>",
+    "invalid-escape": "an escape is not valid here; with the u flag only defined escapes are allowed",
+    "invalid-property": "\\p{…} names an unknown Unicode property",
+    "invalid-pattern": "{{detail}}"
+  },
+  "timeout": "Stopped after {{seconds}} s. The pattern may backtrack without end on this text, e.g. a nested quantifier like (a+)+",
+  "failed": "The pattern could not be run: {{message}}"
+}
