@@ -65,6 +65,7 @@ describe("Command palette", () => {
     expect(within(palette).getByRole("combobox")).toHaveFocus();
     expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual([
       "Base64Converters",
+      "Code FormatterDevelopment",
       "Config ConverterConverters",
       "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
@@ -73,7 +74,7 @@ describe("Command palette", () => {
       "TickerUtilities",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
     expect(selected()).toHaveTextContent("Ticker");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -131,6 +132,7 @@ describe("Command palette", () => {
     const group = (name: string) => within(within(palette).getByRole("group", { name })).getAllByRole("option");
     expect(group("Recent").map((option) => option.textContent)).toEqual(["Base64Converters", "TickerUtilities"]);
     expect(group("All Tools").map((option) => option.textContent)).toEqual([
+      "Code FormatterDevelopment",
       "Config ConverterConverters",
       "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
