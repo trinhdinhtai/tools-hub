@@ -161,3 +161,55 @@ export function convertConfig(text: string, from: Format, to: Format): ConvertRe
   const parsed = parseConfig(text, from);
   return parsed.ok ? stringifyConfig(parsed.docs, to) : parsed;
 }
+
+/** Lines with content: blank lines and `#` comments left out. */
+const contentLines = (text: string) =>
+  text.split(/\r\n|\r|\n/).filter((line) => line.trim() && !line.trimStart().startsWith("#"));
+
+const parses = (text: string, format: Format) => parseConfig(text, format).ok;
+
+/** `KEY=value` with an upper-case key and no space before `=`; `==…` is Base64 padding, not a value. */
+const ENV_LINE = /^(?:export[ \t]+)?[A-Z_][A-Z0-9_]*=(?!=)/;
+/** `key=value` with a dotted key, no space before `=`; Java keys like `server.port`. */
+const PROPERTIES_LINE = /^[A-Za-z_][\w-]*(?:\.[\w-]+|\[\d+\])*=(?!=)/;
+const TOML_TABLE = /^\[\[?[\w."' -]+\]\]?\s*(?:#.*)?$/;
+const TOML_ASSIGNMENT = /^[\w."'-]+ = \S/;
+
+/** A YAML map or sequence whose top-level keys read like config keys: no spaces, so prose with colons is not YAML. */
+function looksLikeYaml(text: string, lines: string[]): boolean {
+  const parsed = parseConfig(text, "yaml");
+  if (!parsed.ok) return false;
+  const structured = parsed.docs.filter((doc) => typeof doc === "object" && doc !== null);
+  if (structured.length === 0) return false;
+  if (lines.length < 2 && !text.trimStart().startsWith("---")) return false;
+  return structured.every((doc) => Array.isArray(doc) || Object.keys(doc as object).every((key) => !/\s/.test(key)));
+}
+
+/** The format the text is most likely in, or null if it does not look like a config. */
+export function detectFormat(text: string): Format | null {
+  const lines = contentLines(text);
+  if (lines.length === 0) return null;
+  const start = text.trimStart()[0];
+  if ((start === "{" || start === "[") && parses(text, "json")) return "json";
+  if (lines.every((line) => ENV_LINE.test(line.trimStart())) && parses(text, "env")) return "env";
+  if (lines.some((line) => TOML_TABLE.test(line.trim()) || TOML_ASSIGNMENT.test(line.trim())) && parses(text, "toml")) {
+    return "toml";
+  }
+  if (lines.every((line) => PROPERTIES_LINE.test(line.trimStart())) && lines.some((line) => /^[^=]*[.[]/.test(line))) {
+    return "properties";
+  }
+  return looksLikeYaml(text, lines) ? "yaml" : null;
+}
+
+const SCORES: Record<Format, number> = { json: 0.5, yaml: 0.7, toml: 0.8, env: 0.8, properties: 0.6 };
+
+/**
+ * Paste Detection: a config in any of the formats. JSON scores below JSON Viewer, which suits it better; an empty
+ * object or array is not worth suggesting.
+ */
+export function detectPaste(text: string): number {
+  const format = detectFormat(text);
+  if (format === null) return 0;
+  if (format === "json" && /^\s*(?:\{\s*\}|\[\s*\])\s*$/.test(text)) return 0;
+  return SCORES[format];
+}

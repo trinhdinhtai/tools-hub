@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { convertConfig, FORMATS, parseConfig, stringifyConfig, type Format } from "./logic";
+import { convertConfig, detectFormat, detectPaste, FORMATS, parseConfig, stringifyConfig, type Format } from "./logic";
 
 describe("convertConfig", () => {
   it("converts a JSON object to YAML", () => {
@@ -43,6 +43,7 @@ describe("convertConfig", () => {
     const bomb = ["a: &a [x, x, x, x, x, x, x, x, x, x]"];
     for (let i = 1; i < 10; i++) bomb.push(`${names[i]}: &${names[i]} [${Array(10).fill(`*${names[i - 1]}`).join(", ")}]`);
     expect(convertConfig(bomb.join("\n"), "yaml", "json")).toEqual({ ok: false, error: { reason: "invalid" } });
+    expect(detectFormat("a: &a\n  b: *a\nc: 1\n")).toBeNull();
   });
 
   it("drops the empty document a trailing --- leaves", () => {
@@ -263,6 +264,69 @@ describe("round trip", () => {
     for (const to of FORMATS) {
       const there = convertConfig(JSON.stringify(big), "json", to);
       expect(there.ok && parseConfig(there.text, to)).toEqual({ ok: true, docs: [big] });
+    }
+  });
+});
+
+describe("detectFormat", () => {
+  it.each([
+    ['{\n  "name": "app"\n}', "json"],
+    ["[1, 2]", "json"],
+    ["name: app\nserver:\n  port: 80\n", "yaml"],
+    ["- a\n- b\n", "yaml"],
+    ["---\na: 1\n---\nb: 2\n", "yaml"],
+    ['title = "demo"\n\n[server]\nport = 8080\n', "toml"],
+    ["[package]\nname = 'x'\n", "toml"],
+    ["# db\nDB_HOST=localhost\nexport DB_PORT=5432\n", "env"],
+    ["API_KEY=abc123", "env"],
+    ["server.port=8080\nspring.datasource.url=jdbc:mysql://localhost/db\n", "properties"],
+    ["# app\napp.name=Tools Hub\n", "properties"],
+  ] as const)("recognises %j as %s", (text, format) => {
+    expect(detectFormat(text)).toBe(format);
+  });
+
+  it.each([
+    "",
+    "   ",
+    "hello world",
+    "42",
+    "Note: buy milk",
+    "Dear team:\nThe meeting is at noon: see you there",
+    "https://example.com/search?q=yaml&lang=vi",
+    "SGVsbG8sIFRvb2xzIEh1Yg==",
+    "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.c2lnbmF0dXJl",
+    "{not json",
+    String.raw`^\d{3}-\d{4}$`,
+  ])("recognises nothing in %j", (text) => {
+    expect(detectFormat(text)).toBeNull();
+  });
+});
+
+describe("detectPaste", () => {
+  it("scores YAML, TOML and .env", () => {
+    expect(detectPaste("name: app\nserver:\n  port: 80\n")).toBeGreaterThanOrEqual(0.7);
+    expect(detectPaste('title = "demo"\n\n[server]\nport = 8080\n')).toBeGreaterThanOrEqual(0.7);
+    expect(detectPaste("DB_HOST=localhost\nDB_PORT=5432\n")).toBeGreaterThanOrEqual(0.7);
+    expect(detectPaste("server.port=8080\napp.name=x\n")).toBeGreaterThan(0);
+  });
+
+  it("scores JSON below JSON Viewer, which is the better fit for it", () => {
+    const score = detectPaste('{"name":"app","port":8080}');
+    expect(score).toBeGreaterThan(0);
+    expect(score).toBeLessThan(0.9);
+  });
+
+  it("scores 0 for content other Tools are for, and for plain text", () => {
+    for (const text of [
+      "SGVsbG8sIFRvb2xzIEh1Yg==",
+      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.c2lnbmF0dXJl",
+      "https://example.com/?a=b",
+      "just some words",
+      "{}",
+      "[]",
+      "",
+    ]) {
+      expect(detectPaste(text), text).toBe(0);
     }
   });
 });
