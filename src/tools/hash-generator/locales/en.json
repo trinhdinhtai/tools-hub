@@ -1,0 +1,18 @@
+{
+  "mode": "Mode",
+  "modes": {
+    "text": "Text",
+    "file": "File"
+  },
+  "input": "Input",
+  "output": "Digests",
+  "key": {
+    "label": "HMAC key",
+    "hint": "Leave empty to hash without a key"
+  },
+  "file": {
+    "zone": "File to hash",
+    "hashing": "Hashing…",
+    "failed": "Couldn’t hash the file: {{message}}"
+  }
+}
