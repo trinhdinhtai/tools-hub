@@ -1,0 +1,32 @@
+{
+  "input": "Input",
+  "output": "Output",
+  "style": {
+    "label": "Style",
+    "format": "Format",
+    "minify": "Minify"
+  },
+  "indent": {
+    "label": "Indent",
+    "2": "2 spaces",
+    "4": "4 spaces",
+    "tab": "Tab"
+  },
+  "sortKeys": "Sort keys",
+  "valid": "Valid JSON · {{count}} chars",
+  "errorAt": "Line {{line}}, column {{column}}: {{message}}",
+  "errors": {
+    "unexpected-end": "the JSON ends too early: a value, a quote or a closing bracket is missing",
+    "expected-value": "expected a value (string, number, object, array, true, false or null) but found “{{found}}”",
+    "expected-key": "expected a key in double quotes but found “{{found}}”",
+    "expected-colon": "expected “:” after the key but found “{{found}}”",
+    "expected-comma-or-brace": "expected “,” or “}” but found “{{found}}”",
+    "expected-comma-or-bracket": "expected “,” or “]” but found “{{found}}”",
+    "trailing-comma": "trailing comma: remove the “,” before the closing bracket",
+    "trailing-content": "unexpected “{{found}}” after the end of the JSON",
+    "invalid-number": "not a valid number: no leading zeros, and “.” and “e” must be followed by digits",
+    "invalid-escape": "invalid escape in a string: use \\\", \\\\, \\/, \\b, \\f, \\n, \\r, \\t or \\u followed by 4 hex digits",
+    "unescaped-control": "line breaks, tabs and other control characters must be escaped inside a string",
+    "unterminated-string": "this string is never closed with a double quote"
+  }
+}
