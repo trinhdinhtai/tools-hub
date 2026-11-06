@@ -1,4 +1,9 @@
 {
+  "mode": "Chế độ",
+  "modes": {
+    "text": "Văn bản",
+    "tree": "Cây"
+  },
   "input": "Dữ liệu nhập",
   "output": "Kết quả",
   "style": {
@@ -28,5 +33,17 @@
     "invalid-escape": "escape không hợp lệ trong chuỗi: dùng \\\", \\\\, \\/, \\b, \\f, \\n, \\r, \\t hoặc \\u kèm 4 chữ số hex",
     "unescaped-control": "xuống dòng, tab và các ký tự điều khiển khác trong chuỗi phải được escape",
     "unterminated-string": "chuỗi này không có dấu nháy kép đóng"
+  },
+  "path": {
+    "label": "Path",
+    "invalid": "Path không hợp lệ ở cột {{column}}",
+    "notFound": "Không có giá trị nào tại {{path}}"
+  },
+  "repair": {
+    "action": "Sửa thành JSON",
+    "hint": "Đọc được JSON5, NDJSON và literal của Python, Ruby hay JavaScript."
+  },
+  "tree": {
+    "showMore": "Hiện thêm {{count}}"
   }
 }

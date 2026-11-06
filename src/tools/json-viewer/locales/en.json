@@ -1,4 +1,9 @@
 {
+  "mode": "Mode",
+  "modes": {
+    "text": "Text",
+    "tree": "Tree"
+  },
   "input": "Input",
   "output": "Output",
   "style": {
@@ -28,5 +33,17 @@
     "invalid-escape": "invalid escape in a string: use \\\", \\\\, \\/, \\b, \\f, \\n, \\r, \\t or \\u followed by 4 hex digits",
     "unescaped-control": "line breaks, tabs and other control characters must be escaped inside a string",
     "unterminated-string": "this string is never closed with a double quote"
+  },
+  "path": {
+    "label": "Path",
+    "invalid": "Path is not valid at column {{column}}",
+    "notFound": "Nothing at {{path}}"
+  },
+  "repair": {
+    "action": "Fix JSON",
+    "hint": "Reads JSON5, NDJSON and Python, Ruby or JavaScript literals."
+  },
+  "tree": {
+    "showMore": "Show {{count}} more"
   }
 }

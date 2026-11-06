@@ -1,4 +1,4 @@
 {
   "name": "JSON Viewer",
-  "description": "Định dạng, thu gọn và kiểm tra JSON, sắp xếp key"
+  "description": "Định dạng, thu gọn, kiểm tra và sửa JSON, truy vấn bằng path và xem dạng cây"
 }

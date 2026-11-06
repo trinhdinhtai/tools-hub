@@ -1,4 +1,4 @@
 {
   "name": "JSON Viewer",
-  "description": "Format, minify and validate JSON, and sort its keys"
+  "description": "Format, minify, validate and fix JSON, query it by path and browse it as a tree"
 }
