@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCode, type FormatError, type Indent, type Language } from "./logic";
+import { detectLanguage, formatCode, type FormatError, type Indent, type Language } from "./logic";
 
 describe("formatCode: beautify", () => {
   it("indents JavaScript", async () => {
@@ -259,5 +259,48 @@ describe("formatCode: minify", () => {
     expect(result.ok && result.text).toBe(
       `<list>${Array.from({ length: 5000 }, (_, i) => `<item id="${i}"><name> n${i} </name></item>`).join("")}</list>`,
     );
+  });
+});
+
+describe("detectLanguage", () => {
+  it.each<[string, Language]>([
+    ["<!DOCTYPE html><html><body></body></html>", "html"],
+    ["  <div class=\"a\"><p>hi</p></div>", "html"],
+    ["<template><slot></slot></template>", "html"],
+    ['<?xml version="1.0"?><root/>', "xml"],
+    ["<note><to>Tove</to><from>Jani</from></note>", "xml"],
+    ['<svg xmlns="http://www.w3.org/2000/svg"><circle r="1"/></svg>', "xml"],
+    ["select * from users where id = 1", "sql"],
+    ["﻿SELECT 1", "sql"],
+    ["-- users\nINSERT INTO t (a) VALUES (1);", "sql"],
+    ["WITH x AS (SELECT 1) SELECT * FROM x", "sql"],
+    ["CREATE TABLE t (id INT PRIMARY KEY)", "sql"],
+    ["body { margin: 0; }", "css"],
+    [".a > .b:hover, #c::before { color: red }", "css"],
+    ["@media (max-width: 600px) { a { color: red } }", "css"],
+    [":root { --gap: 4px; }", "css"],
+    ["a { color: var(--c); }", "css"],
+    ['a[href^="http"]:not(.x) { content: "return"; }', "css"],
+    ["switch (x) { case 1: break; }", "javascript"],
+    ["const o = { a: 1 }", "javascript"],
+    ["const a = 1;", "javascript"],
+    ["function f() { return { a: 1 }; }", "javascript"],
+    ["import x from 'y'\nexport default x", "javascript"],
+    ["document.querySelector('a').addEventListener('click', () => {})", "javascript"],
+    ["if (a) { b = c; }", "javascript"],
+    ["// Tiếng Việt 👋\nlet s = 'chào'", "javascript"],
+  ])("tells %j is %s", (text, language) => {
+    expect(detectLanguage(text)).toBe(language);
+  });
+
+  it.each(["", "   ", "hello world", "Xin chào các bạn", "12345"])("has no language for %j", (text) => {
+    expect(detectLanguage(text)).toBeNull();
+  });
+
+  it("is quick on a large Input", () => {
+    const text = `${"a { color: red; }\n".repeat(50_000)}`;
+    const start = performance.now();
+    expect(detectLanguage(text)).toBe("css");
+    expect(performance.now() - start).toBeLessThan(200);
   });
 });

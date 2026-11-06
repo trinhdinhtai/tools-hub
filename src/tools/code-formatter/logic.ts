@@ -18,6 +18,57 @@ export type FormatError = { reason: "empty" } | { reason: "invalid"; line?: numb
 
 export type FormatResult = { ok: true; text: string } | { ok: false; error: FormatError };
 
+/** Element names of HTML; markup that opens with any other name is taken for XML. */
+const HTML_TAGS = new Set(
+  (
+    "html head body title meta link base style script noscript template slot div span p a b i u s em strong small " +
+    "code pre br hr img picture source video audio canvas iframe ul ol li dl dt dd table caption thead tbody tfoot " +
+    "tr td th form input button select option optgroup textarea label fieldset legend section article header " +
+    "footer nav main aside h1 h2 h3 h4 h5 h6 figure figcaption blockquote details summary dialog abbr cite mark " +
+    "sub sup time kbd q"
+  ).split(" "),
+);
+
+/** A statement's first word, and what must follow it for the text to be SQL rather than prose that starts the same. */
+const SQL_STATEMENTS: [RegExp, RegExp][] = [
+  [/^select\b/i, /./],
+  [/^insert\b/i, /\binto\b/i],
+  [/^update\b/i, /\bset\b/i],
+  [/^delete\b/i, /\bfrom\b/i],
+  [/^with\b/i, /\bas\s*\(/i],
+  [/^(create|alter|drop)\b/i, /\b(table|view|index|database|schema|function|procedure|trigger|sequence|type)\b/i],
+  [/^truncate\b/i, /\btable\b/i],
+];
+
+const JAVASCRIPT = /\b(const|let|var|function|return|import|export|class|async|await|typeof|require)\b|=>|\b(console|document|window)\.|\b(if|for|while|switch)\s*\(/;
+const CSS_AT_RULE = /^@(media|import|font-face|keyframes|charset|supports|layer|tailwind|page|container|namespace)\b/i;
+/** A selector, then a block of declarations: `a[href="x"]:hover { color: red }`, but not `x = { a: 1 }`. */
+const CSS_RULE = /^(?:[^{};=[]|\[[^\]]*\])*\{[^{}]*:[^{}]*\}/;
+/** Blocks with a colon in them that are JavaScript, not a CSS rule: `switch (x) { case 1: … }`. */
+const JAVASCRIPT_BLOCK = /^(if|else|for|while|do|switch|try|function|class|const|let|var|return)\b/;
+const LEADING_COMMENTS = /^(\s|--[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\/)*/;
+
+/** The language `text` is written in, from how it starts; null when it does not look like code. */
+export function detectLanguage(text: string): Language | null {
+  // How the code starts says enough; a long Input is not read to its end.
+  const head = text.slice(0, 20_000).trimStart();
+  if (head.startsWith("<")) {
+    if (/^<\?xml\b/i.test(head)) return "xml";
+    const withoutComments = head.replace(/^(<!--[\s\S]*?-->\s*)*/, "");
+    if (/^<!doctype\s+html\b/i.test(withoutComments)) return "html";
+    const name = /^<([A-Za-z][\w:.-]*)/.exec(withoutComments)?.[1];
+    if (!name) return null;
+    return HTML_TAGS.has(name.toLowerCase()) ? "html" : "xml";
+  }
+  const code = head.replace(LEADING_COMMENTS, "");
+  if (!code) return null;
+  if (SQL_STATEMENTS.some(([start, then]) => start.test(code) && then.test(code))) return "sql";
+  // CSS first: its values may hold words JavaScript also has (`var(--gap)`).
+  if (CSS_AT_RULE.test(code) || (CSS_RULE.test(code) && !JAVASCRIPT_BLOCK.test(code))) return "css";
+  if (JAVASCRIPT.test(code)) return "javascript";
+  return null;
+}
+
 const SQL_DIALECTS = ["sql", "postgresql", "mysql", "transactsql", "plsql"] as const;
 
 const indentOptions = (indent: Indent) => ({ useTabs: indent === "tab", tabWidth: indent === "4" ? 4 : 2 });
