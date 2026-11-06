@@ -6,6 +6,8 @@
 //   // Tool UI
 //   runInWorker(() => new Worker(new URL("./file.worker.ts", import.meta.url), { type: "module" }), input);
 
+import { useEffect, useState } from "react";
+
 /** The work a worker does; it may call `progress` with a fraction from 0 to 1. */
 export type WorkerHandler<I, O> = (input: I, progress: (fraction: number) => void) => O | Promise<O>;
 
@@ -84,4 +86,30 @@ export function runInWorker<I, O>(
     result,
     cancel: () => fail(new DOMException("The run was cancelled", "AbortError")),
   };
+}
+
+/** A run of `useWorkerJob`: the job it belongs to, how far it has got, and its outcome once settled. */
+export interface WorkerRun<O> {
+  progress: number;
+  result?: O;
+  error?: string;
+}
+
+/**
+ * Runs `job` in a fresh worker from `spawn` whenever it changes, dropping the run of the job before. The result of the
+ * old job never lands: a run is only shown while its job is the current one. Input byte buffers move to the worker.
+ */
+export function useWorkerJob<I, O>(spawn: () => Worker, job: I | null): (WorkerRun<O> & { job: I }) | null {
+  const [run, setRun] = useState<(WorkerRun<O> & { job: I }) | null>(null);
+  useEffect(() => {
+    if (!job) return;
+    const task = runInWorker<I, O>(spawn, job, (progress) => setRun({ job, progress }));
+    task.result.then(
+      (result) => setRun({ job, progress: 1, result }),
+      (error: Error) => error.name !== "AbortError" && setRun({ job, progress: 1, error: error.message }),
+    );
+    return task.cancel;
+  }, [job]);
+  if (!job) return null;
+  return run?.job === job ? run : { job, progress: 0 };
 }

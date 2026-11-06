@@ -107,6 +107,20 @@ describe("digestsOf with a key (HMAC)", () => {
     });
   });
 
+  it("RFC 4231 case 3: 0xaa key over 0xdd data", () => {
+    const digests = digestsOf(new Uint8Array(50).fill(0xdd), new Uint8Array(20).fill(0xaa));
+    expect(digests).toMatchObject({
+      md5: "2ab8b9a9f7d3894d15ad8383b97044b2",
+      "sha-1": "125d7342b9ac11cd91a39af48aa17b4f63f175d3",
+      "sha-224": "7fb3cb3588c6c1f6ffa9694d7d6ad2649365b0c1f65d69d1ec8333ea",
+      "sha-256": "773ea91e36800e46854db8ebd09181a72959098b3ef8c122d9635514ced565fe",
+      "sha-384": "88062608d3e6ad8a0aa2ace014c8a86f0aa635d947ac9febe83ef4e55966144b2a5ab39dc13814b94e3ab6e101a34f27",
+      "sha-512":
+        "fa73b0089d56a284efb0f0756c890be9b1b5dbdd8ee81a3655f83e33b2279d39bf3e848279a722c806b485a47e67c807b946a337bee8942674278859e13292fb",
+      "sha3-256": "84ec79124a27107865cedd8bd82da9965e5ed8c37b0ac98005a7f39ed58a4207",
+    });
+  });
+
   it("hashes a key longer than the block size by hashing it first", () => {
     expect(hmacOf("Test Using Larger Than Block-Size Key - Hash Key First", new Uint8Array(200).fill(0xaa))).toMatchObject({
       md5: "8df98dca2397c5c8399d42a5bcc6e477",

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CopyButton } from "@/components/copy-button";
 import { ErrorMessage } from "@/components/error-message";
@@ -8,31 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useFormatSize } from "@/lib/files";
-import { runInWorker } from "@/lib/worker";
+import { useWorkerJob } from "@/lib/worker";
 import type { FileJob, FileJobResult } from "./file-jobs";
 import { ALGORITHMS, digestsOf, type AlgorithmId } from "./logic";
 import { MODES, type Mode } from "./modes";
 
 const utf8 = new TextEncoder();
 const spawn = () => new Worker(new URL("./file.worker.ts", import.meta.url), { type: "module" });
-
-type Run = { job: FileJob; progress: number; result?: FileJobResult; error?: string };
-
-/** Runs `job` in a worker whenever it changes, dropping the run of the job before. */
-function useFileJob(job: FileJob | null) {
-  const [run, setRun] = useState<Run | null>(null);
-  useEffect(() => {
-    if (!job) return;
-    const task = runInWorker<FileJob, FileJobResult>(spawn, job, (progress) => setRun({ job, progress }));
-    task.result.then(
-      (result) => setRun({ job, progress: 1, result }),
-      (error: Error) => error.name !== "AbortError" && setRun({ job, progress: 1, error: error.message }),
-    );
-    return task.cancel;
-  }, [job]);
-  if (!job) return null;
-  return run?.job === job ? run : { job, progress: 0 };
-}
 
 /** One row per algorithm: its untranslated name, the hex digest, and a copy button. */
 function DigestList({ digests }: { digests: Record<AlgorithmId, string> }) {
@@ -105,7 +87,7 @@ export default function HashGeneratorTool() {
   const key = useMemo(() => (keyText ? utf8.encode(keyText) : null), [keyText]);
   const textDigests = useMemo(() => (mode === "text" ? digestsOf(utf8.encode(text), key) : null), [mode, text, key]);
   const fileJob = useMemo<FileJob | null>(() => (mode === "file" && file ? { file, key } : null), [mode, file, key]);
-  const fileRun = useFileJob(fileJob);
+  const fileRun = useWorkerJob<FileJob, FileJobResult>(spawn, fileJob);
 
   return (
     <div className="flex flex-col gap-4">
