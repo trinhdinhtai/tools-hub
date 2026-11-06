@@ -4,6 +4,10 @@
 
 Issues are tracked in GitHub Issues on trinhdinhtai/tools-hub using the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
+### Branch per ticket
+
+Before starting work on any ticket, create a new branch from an up-to-date `main`. Never commit ticket work directly on `main`. Name it `<type>/<issue#>-<short-slug>` (e.g. `feat/4-app-shell-base64`); drop the number when there is no issue (e.g. `chore/vietnamese-fonts`).
+
 ### Triage labels
 
 Uses the five default triage labels (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
