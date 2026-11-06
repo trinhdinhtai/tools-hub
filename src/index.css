@@ -113,6 +113,12 @@
   #root {
     height: 100%;
   }
+  /* The app fills the window and its parts scroll on their own, so the page never does: WebView2 otherwise shows a
+     second scrollbar when the root overflows by a rounding error at fractional display scales. */
+  html,
+  body {
+    overflow: hidden;
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-size: 14px;
