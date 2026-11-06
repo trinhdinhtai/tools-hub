@@ -1,0 +1,29 @@
+{
+  "from": "From",
+  "to": "To",
+  "auto": "Auto",
+  "swap": "Swap formats",
+  "input": "Input",
+  "output": "Output",
+  "formats": {
+    "json": "JSON",
+    "yaml": "YAML",
+    "toml": "TOML",
+    "env": ".env",
+    "properties": ".properties"
+  },
+  "detected": "Detected: {{format}}",
+  "notes": {
+    "env": "Every value becomes a string; nested keys are joined with __.",
+    "properties": "Every value becomes a string; nested keys are joined with dots, array items as [0].",
+    "documents": "{{count}} YAML documents become one array."
+  },
+  "errors": {
+    "undetected": "Could not tell which format this is. Pick it under From.",
+    "invalid": "Not valid {{format}}.",
+    "invalidAt": "Not valid {{format}}: line {{line}}, column {{column}}.",
+    "toml-null": "TOML has no null, and “{{path}}” is null. Give it a value or remove it.",
+    "not-a-table": "{{format}} holds only keys at the top, but this config is an array or a single value.",
+    "bad-key": "A .env key holds only letters, digits, _, . and -, so “{{key}}” cannot be written."
+  }
+}

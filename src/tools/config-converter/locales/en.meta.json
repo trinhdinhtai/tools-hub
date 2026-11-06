@@ -1,0 +1,4 @@
+{
+  "name": "Config Converter",
+  "description": "Convert config between JSON, YAML (several documents too), TOML, .env and Java .properties"
+}
