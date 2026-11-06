@@ -41,7 +41,8 @@ export interface JsonError {
 
 export type TransformResult = { ok: true; text: string } | { ok: false; error: JsonError };
 
-type JsonNode =
+/** Parsed JSON that remembers how it was written: keys and scalars keep their raw text, quotes and escapes included. */
+export type JsonNode =
   | { kind: "object"; entries: [key: string, value: JsonNode][] }
   | { kind: "array"; items: JsonNode[] }
   /** A string, number, true, false or null, exactly as written. */
@@ -200,9 +201,11 @@ function position(text: string, offset: number): { line: number; column: number 
   return { line, column };
 }
 
-const decodedKey = (raw: string): string => JSON.parse(raw) as string;
+/** The text of a raw JSON string, quotes removed and escapes decoded. */
+export const decodedKey = (raw: string): string => JSON.parse(raw) as string;
 
-function print(root: JsonNode, { output, indent, sortKeys }: TransformOptions): string {
+/** Writes a parsed value as JSON: only whitespace and, if asked, key order differ from how it was written. */
+export function printJson(root: JsonNode, { output, indent, sortKeys }: TransformOptions): string {
   const unit = output === "minify" ? "" : indent === "tab" ? "\t" : " ".repeat(indent);
   const colon = unit ? ": " : ":";
   const breaks: string[] = [];
@@ -250,11 +253,19 @@ function print(root: JsonNode, { output, indent, sortKeys }: TransformOptions): 
 }
 
 /** By key, comparing UTF-16 code units so the order is the same in every locale; equal keys keep their order. */
-function sortedEntries(entries: [string, JsonNode][]): [string, JsonNode][] {
+export function sortedEntries(entries: [string, JsonNode][]): [string, JsonNode][] {
   return entries
     .map((entry) => ({ entry, key: decodedKey(entry[0]) }))
     .sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
     .map(({ entry }) => entry);
+}
+
+export type ParseResult = { ok: true; node: JsonNode } | { ok: false; error: JsonError };
+
+/** Parses strict JSON, or says where and why it is not valid JSON. */
+export function parseJson(text: string): ParseResult {
+  const parsed = tryParse(text);
+  return "reason" in parsed ? { ok: false, error: parsed } : { ok: true, node: parsed };
 }
 
 function tryParse(text: string): JsonNode | JsonError {
@@ -269,9 +280,8 @@ function tryParse(text: string): JsonNode | JsonError {
 
 /** Formats or minifies JSON, or says where and why it is not valid JSON. Only whitespace and key order change. */
 export function transformJson(text: string, options: TransformOptions): TransformResult {
-  const parsed = tryParse(text);
-  if ("reason" in parsed) return { ok: false, error: parsed };
-  return { ok: true, text: print(parsed, options) };
+  const parsed = parseJson(text);
+  return parsed.ok ? { ok: true, text: printJson(parsed.node, options) } : parsed;
 }
 
 /** Paste Detection: a valid JSON object or array. Scalars on their own ("42", "true") are too common to suggest. */
