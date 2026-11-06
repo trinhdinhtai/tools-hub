@@ -119,6 +119,29 @@
   body {
     overflow: hidden;
   }
+  /* Scrollbars as shadcn's ScrollArea draws them: a thin rounded thumb on no track, without arrow buttons. WebView2
+     is Chromium, so the -webkit- pseudo-elements style every scroller, the editors' included. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-button {
+    display: none;
+  }
+  ::-webkit-scrollbar-thumb {
+    /* The transparent border is the 2px gap around the thumb, as the ScrollArea's padding. */
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-clip: padding-box;
+    background-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--muted-foreground) 60%, transparent);
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-size: 14px;
