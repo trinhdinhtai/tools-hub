@@ -1,0 +1,22 @@
+{
+  "original": "Original",
+  "modified": "Modified",
+  "arrayKey": "Match array items by key",
+  "arrayKeyHint": "Items with the same value of this key are compared wherever they are in the array. Leave it empty to compare by position.",
+  "changes": "Changes",
+  "summary": "{{added}} added, {{removed}} removed, {{changed}} changed",
+  "noChanges": "Both documents hold the same values",
+  "kinds": {
+    "added": "Added",
+    "removed": "Removed",
+    "changed": "Changed"
+  },
+  "shown": "Showing the first {{shown}} of {{count}} changes",
+  "patch": "JSON Patch",
+  "copyPatch": "Copy JSON Patch",
+  "errors": {
+    "invalid": "{{side}} is not valid JSON or YAML.",
+    "invalidAt": "{{side}} is not valid JSON or YAML: line {{line}}, column {{column}}.",
+    "too-deep": "{{side}} nests deeper than {{depth}} levels, too deep to compare."
+  }
+}

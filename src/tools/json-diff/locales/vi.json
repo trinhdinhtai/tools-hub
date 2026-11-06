@@ -1,0 +1,22 @@
+{
+  "original": "Bản gốc",
+  "modified": "Bản sửa đổi",
+  "arrayKey": "Ghép phần tử mảng theo key",
+  "arrayKeyHint": "Các phần tử có cùng giá trị ở key này được so với nhau, dù nằm ở đâu trong mảng. Để trống để so theo vị trí.",
+  "changes": "Khác biệt",
+  "summary": "{{added}} thêm, {{removed}} xoá, {{changed}} sửa",
+  "noChanges": "Hai tài liệu có cùng giá trị",
+  "kinds": {
+    "added": "Thêm",
+    "removed": "Xoá",
+    "changed": "Sửa"
+  },
+  "shown": "Đang hiện {{shown}} khác biệt đầu tiên trên tổng {{count}}",
+  "patch": "JSON Patch",
+  "copyPatch": "Sao chép JSON Patch",
+  "errors": {
+    "invalid": "{{side}} không phải JSON hoặc YAML hợp lệ.",
+    "invalidAt": "{{side}} không phải JSON hoặc YAML hợp lệ: dòng {{line}}, cột {{column}}.",
+    "too-deep": "{{side}} lồng sâu hơn {{depth}} cấp, quá sâu để so sánh."
+  }
+}

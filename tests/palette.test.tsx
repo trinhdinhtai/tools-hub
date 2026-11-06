@@ -66,13 +66,14 @@ describe("Command palette", () => {
     expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual([
       "Base64Converters",
       "Config ConverterConverters",
+      "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
       "NotesText",
       "Regex TesterDevelopment",
       "TickerUtilities",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
     expect(selected()).toHaveTextContent("Ticker");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -131,6 +132,7 @@ describe("Command palette", () => {
     expect(group("Recent").map((option) => option.textContent)).toEqual(["Base64Converters", "TickerUtilities"]);
     expect(group("All Tools").map((option) => option.textContent)).toEqual([
       "Config ConverterConverters",
+      "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
       "NotesText",
       "Regex TesterDevelopment",
