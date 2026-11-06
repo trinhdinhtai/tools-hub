@@ -124,6 +124,12 @@ describe("compareDocuments", () => {
     });
   });
 
+  it("finds no change between YAML with merge keys and the same YAML written out", () => {
+    const merged = "base: &base\n  host: a\n  port: 1\nprod:\n  <<: *base\n  host: b\n";
+    const expanded = "base:\n  host: a\n  port: 1\nprod:\n  host: b\n  port: 1\n";
+    expect(compared(merged, expanded).changes).toEqual([]);
+  });
+
   it("compares YAML with JSON, by value", () => {
     expect(compared('{"server":{"port":80,"hosts":["a"]}}', "server:\n  port: 81\n  hosts: [a]\n").changes).toEqual([
       { kind: "changed", path: "$.server.port", before: 80, after: 81 },
