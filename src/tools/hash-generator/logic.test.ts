@@ -76,3 +76,58 @@ describe("digestsOf", () => {
     expect(digests["sha3-256"]).toBe("a5733617a486f64f1e7f7a6bdc1ef37aa4a51e363d61da282379b210cb03983a");
   });
 });
+
+describe("digestsOf with a key (HMAC)", () => {
+  const hmacOf = (data: string, key: Uint8Array) => digestsOf(utf8.encode(data), key);
+
+  // RFC 4231 test cases 1 and 2 (its SHA variants), plus RFC 2202's HMAC-MD5, whose test case 1 uses a
+  // 16-byte key. Verified with Node's OpenSSL crypto, an independent implementation.
+  it("RFC 4231 case 1: 0x0b-repeated key over 'Hi There'", () => {
+    expect(hmacOf("Hi There", new Uint8Array(20).fill(0x0b))).toMatchObject({
+      "sha-1": "b617318655057264e28bc0b6fb378c8ef146be00",
+      "sha-224": "896fb1128abbdf196832107cd49df33f47b4b1169912ba4f53684b22",
+      "sha-256": "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7",
+      "sha-384": "afd03944d84895626b0825f4ab46907f15f9dadbe4101ec682aa034c7cebc59cfaea9ea9076ede7f4af152e8b2fa9cb6",
+      "sha-512":
+        "87aa7cdea5ef619d4ff0b4241a1d6cb02379f4e2ce4ec2787ad0b30545e17cdedaa833b7d6b8a702038b274eaea3f4e4be9d914eeb61f1702e696c203a126854",
+      "sha3-256": "ba85192310dffa96e2a3a40e69774351140bb7185e1202cdcc917589f95e16bb",
+      "sha3-512": "eb3fbd4b2eaab8f5c504bd3a41465aacec15770a7cabac531e482f860b5ec7ba47ccb2c6f2afce8f88d22b6dc61380f23a668fd3888bb80537c0a0b86407689e",
+    });
+    expect(hmacOf("Hi There", new Uint8Array(16).fill(0x0b))["md5"]).toBe("9294727a3638bb1c13f48ef8158bfc9d");
+  });
+
+  it("RFC 4231 case 2: 'Jefe' over 'what do ya want for nothing?'", () => {
+    const key = utf8.encode("Jefe");
+    expect(hmacOf("what do ya want for nothing?", key)).toMatchObject({
+      md5: "750c783e6ab0b503eaa86e310a5db738",
+      "sha-1": "effcdf6ae5eb2fa2d27416d5f184df9c259a7c79",
+      "sha-256": "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843",
+      "sha-512":
+        "164b7a7bfcf819e2e395fbe73b56e0a387bd64222e831fd610270cd7ea2505549758bf75c05a994a6d034f65f8f0e6fdcaeab1a34d4a6b4b636e070a38bce737",
+    });
+  });
+
+  it("hashes a key longer than the block size by hashing it first", () => {
+    expect(hmacOf("Test Using Larger Than Block-Size Key - Hash Key First", new Uint8Array(200).fill(0xaa))).toMatchObject({
+      md5: "8df98dca2397c5c8399d42a5bcc6e477",
+      "sha-1": "f91271dc2fd036f54d74d134ff739fefb59aac86",
+      "sha-256": "f84c159648a99f6ace4dc6e293ebc50e9ec6936ebd7022091d9ae0f5cd6693ba",
+      "sha3-256": "49ad92b02124fdac9627ae45e008a696182ab6bfb8470457777c744aeb9df06f",
+    });
+  });
+
+  it("keeps Unicode text and keys as UTF-8", () => {
+    expect(hmacOf("Xin chào 🌍", utf8.encode("khóa"))).toMatchObject({
+      "sha-256": "f615887b4dc6a8ee2dd1140e8ac49a71fadf25a3be9f452576cd018535b2b983",
+      "sha3-256": "454929fbed420692e89badd183866af43e6424cb95b7fe43c07b9e9b082a5734",
+    });
+  });
+
+  it("treats an empty key as an ordinary key, not as no key", () => {
+    const withEmptyKey = digestsOf(utf8.encode("abc"), new Uint8Array(0));
+    const plain = digestsOf(utf8.encode("abc"), null);
+    expect(withEmptyKey["sha-256"]).not.toBe(plain["sha-256"]);
+    // HMAC with an empty key over 'abc', computed with Node's OpenSSL crypto.
+    expect(withEmptyKey["sha-256"]).toBe("fd7adb152c05ef80dccf50a1fa4c05d5a3ec6da95575fc312ae7c5d091836351");
+  });
+});
