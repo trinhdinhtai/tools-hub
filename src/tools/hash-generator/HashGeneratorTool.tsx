@@ -62,60 +62,36 @@ function Progress({ label, value }: { label: string; value: number }) {
   );
 }
 
-function TextMode({ text, onText, keyText, onKey }: { text: string; onText: (text: string) => void; keyText: string; onKey: (key: string) => void }) {
+function TextMode({ text, onText }: { text: string; onText: (text: string) => void }) {
   const { t } = useTranslation("hash-generator");
   const id = useId();
-  const digests = useMemo(() => digestsOf(utf8.encode(text), keyText ? utf8.encode(keyText) : null), [text, keyText]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={`${id}-input`}>{t("input")}</Label>
-        <Textarea
-          id={`${id}-input`}
-          value={text}
-          onChange={(event) => onText(event.target.value)}
-          spellCheck={false}
-          autoComplete="off"
-          className="min-h-40 resize-y font-mono text-[13px] leading-5"
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={`${id}-key`}>{t("key.label")}</Label>
-        <Input
-          id={`${id}-key`}
-          value={keyText}
-          onChange={(event) => onKey(event.target.value)}
-          spellCheck={false}
-          autoComplete="off"
-          className="max-w-96 font-mono text-[13px]"
-        />
-        <p className="text-xs text-subtle-foreground">{t("key.hint")}</p>
-      </div>
-      <DigestList digests={digests} />
+    <div className="flex flex-col gap-2">
+      <Label htmlFor={`${id}-input`}>{t("input")}</Label>
+      <Textarea
+        id={`${id}-input`}
+        value={text}
+        onChange={(event) => onText(event.target.value)}
+        spellCheck={false}
+        autoComplete="off"
+        className="min-h-40 resize-y font-mono text-[13px] leading-5"
+      />
     </div>
   );
 }
 
-function FileMode({ file, onFile, keyText }: { file: File | null; onFile: (file: File) => void; keyText: string }) {
+function FileMode({ file, onFile }: { file: File | null; onFile: (file: File) => void }) {
   const { t } = useTranslation("hash-generator");
   const formatSize = useFormatSize();
-  const key = useMemo(() => (keyText ? utf8.encode(keyText) : null), [keyText]);
-  const job = useMemo<FileJob | null>(() => file && { file, key }, [file, key]);
-  const run = useFileJob(job);
 
   return (
-    <div className="flex flex-col gap-2">
-      <FileDropZone
-        label={t("file.zone")}
-        onFile={onFile}
-        hint={file ? `${file.name} · ${formatSize(file.size)}` : undefined}
-        className="h-40 min-h-0"
-      />
-      {run && !run.result && !run.error && <Progress label={t("file.hashing")} value={run.progress} />}
-      {run?.error && <ErrorMessage>{t("file.failed", { message: run.error })}</ErrorMessage>}
-      {run?.result && <DigestList digests={run.result} />}
-    </div>
+    <FileDropZone
+      label={t("file.zone")}
+      onFile={onFile}
+      hint={file ? `${file.name} · ${formatSize(file.size)}` : undefined}
+      className="h-40 min-h-0"
+    />
   );
 }
 
@@ -126,26 +102,53 @@ export default function HashGeneratorTool() {
   const [text, setText] = useState("");
   const [keyText, setKeyText] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const key = useMemo(() => (keyText ? utf8.encode(keyText) : null), [keyText]);
+  const textDigests = useMemo(() => (mode === "text" ? digestsOf(utf8.encode(text), key) : null), [mode, text, key]);
+  const fileJob = useMemo<FileJob | null>(() => (mode === "file" && file ? { file, key } : null), [mode, file, key]);
+  const fileRun = useFileJob(fileJob);
 
   return (
     <div className="flex flex-col gap-4">
-      <ToggleGroup
-        variant="outline"
-        size="sm"
-        aria-label={t("mode")}
-        value={[mode]}
-        onValueChange={([value]) => value && setMode(value as Mode)}
-      >
-        {MODES.map((m) => (
-          <ToggleGroupItem key={m} value={m} className="px-3 text-subtle-foreground aria-pressed:text-foreground">
-            {t(`modes.${m}`)}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
+      <div className="flex flex-wrap items-center gap-3">
+        <ToggleGroup
+          variant="outline"
+          size="sm"
+          aria-label={t("mode")}
+          value={[mode]}
+          onValueChange={([value]) => value && setMode(value as Mode)}
+        >
+          {MODES.map((m) => (
+            <ToggleGroupItem key={m} value={m} className="px-3 text-subtle-foreground aria-pressed:text-foreground">
+              {t(`modes.${m}`)}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        <div className="w-64">
+          <Input
+            aria-label={t("key.label")}
+            value={keyText}
+            onChange={(event) => setKeyText(event.target.value)}
+            placeholder={t("key.label")}
+            spellCheck={false}
+            autoComplete="off"
+            className="font-mono text-[13px]"
+          />
+        </div>
+        <p className="text-xs text-subtle-foreground">{t("key.hint")}</p>
+      </div>
+
       {mode === "text" ? (
-        <TextMode text={text} onText={setText} keyText={keyText} onKey={setKeyText} />
+        <>
+          <TextMode text={text} onText={setText} />
+          {textDigests && <DigestList digests={textDigests} />}
+        </>
       ) : (
-        <FileMode file={file} onFile={setFile} keyText={keyText} />
+        <>
+          <FileMode file={file} onFile={setFile} />
+          {fileRun && !fileRun.result && !fileRun.error && <Progress label={t("file.hashing")} value={fileRun.progress} />}
+          {fileRun?.error && <ErrorMessage>{t("file.failed", { message: fileRun.error })}</ErrorMessage>}
+          {fileRun?.result && <DigestList digests={fileRun.result} />}
+        </>
       )}
     </div>
   );
