@@ -1,5 +1,5 @@
 import { parse as parseTomlText, stringify as stringifyTomlValue, TomlError } from "smol-toml";
-import { Document } from "yaml";
+import { Document, isScalar, visit } from "yaml";
 import { readJson } from "@/lib/json";
 import { readYaml } from "@/lib/yaml";
 import { readEnv, writeEnv } from "./env";
@@ -100,10 +100,21 @@ function stringifyFlat(written: { text: string } | { badKey: string }): ConvertR
   return "badKey" in written ? { ok: false, error: { reason: "bad-key", key: written.badKey } } : { ok: true, ...written };
 }
 
+/** One YAML document; a key named `<<` is quoted, as plain it would be read back as a merge key. */
+function writeYamlDocument(value: unknown): string {
+  const doc = new Document(value);
+  visit(doc, {
+    Pair(_, pair) {
+      if (isScalar(pair.key) && pair.key.value === "<<") pair.key.type = "QUOTE_DOUBLE";
+    },
+  });
+  return doc.toString();
+}
+
 /** Writes what a config holds in a format, or says why that format cannot hold it. */
 export function stringifyConfig(docs: Documents, format: Format): ConvertResult {
   if (format === "yaml") {
-    return { ok: true, text: docs.map((doc, i) => (i > 0 ? "---\n" : "") + new Document(doc).toString()).join("") };
+    return { ok: true, text: docs.map((doc, i) => (i > 0 ? "---\n" : "") + writeYamlDocument(doc)).join("") };
   }
   const value = asOne(docs);
   if (format === "json") return { ok: true, text: JSON.stringify(value, null, 2) + "\n" };
