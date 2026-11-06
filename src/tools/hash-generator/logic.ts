@@ -35,12 +35,33 @@ const HASHES: Record<AlgorithmId, CHash> = {
   "keccak-256": keccak_256,
 };
 
+/** Incremental hashing of one Input by every algorithm at once: feed it chunks, then take the digests. */
+export interface Hashers {
+  update(chunk: Uint8Array): void;
+  /** Every algorithm's digest as lowercase hex, keyed by algorithm id. */
+  final(): Record<AlgorithmId, string>;
+}
+
+/** Hashers for every algorithm, or HMACs with `key`. An empty key still makes an HMAC, `null` a plain hash. */
+export function createHashers(key: Uint8Array | null): Hashers {
+  const states = ALGORITHMS.map(({ id }) => (key === null ? HASHES[id].create() : hmac.create(HASHES[id], key)));
+  return {
+    update(chunk) {
+      for (const state of states) state.update(chunk);
+    },
+    final() {
+      const out = {} as Record<AlgorithmId, string>;
+      ALGORITHMS.forEach(({ id }, i) => {
+        out[id] = bytesToHex(states[i]!.digest());
+      });
+      return out;
+    },
+  };
+}
+
 /** Every algorithm's digest of `data` as lowercase hex, keyed by algorithm id. `key` makes each an HMAC. */
 export function digestsOf(data: Uint8Array, key: Uint8Array | null): Record<AlgorithmId, string> {
-  const out = {} as Record<AlgorithmId, string>;
-  for (const { id } of ALGORITHMS) {
-    const hash = HASHES[id];
-    out[id] = bytesToHex(key === null ? hash(data) : hmac(hash, key, data));
-  }
-  return out;
+  const hashers = createHashers(key);
+  hashers.update(data);
+  return hashers.final();
 }
