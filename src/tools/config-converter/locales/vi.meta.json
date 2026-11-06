@@ -1,0 +1,4 @@
+{
+  "name": "Config Converter",
+  "description": "Chuyển cấu hình qua lại giữa JSON, YAML (kể cả nhiều document), TOML, .env và Java .properties"
+}

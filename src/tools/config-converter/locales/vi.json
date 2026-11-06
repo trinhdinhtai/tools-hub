@@ -1,0 +1,29 @@
+{
+  "from": "Từ",
+  "to": "Sang",
+  "auto": "Tự nhận",
+  "swap": "Đảo định dạng",
+  "input": "Dữ liệu nhập",
+  "output": "Kết quả",
+  "formats": {
+    "json": "JSON",
+    "yaml": "YAML",
+    "toml": "TOML",
+    "env": ".env",
+    "properties": ".properties"
+  },
+  "detected": "Nhận diện: {{format}}",
+  "notes": {
+    "env": "Mọi giá trị đều thành chuỗi; key lồng nhau được nối bằng __.",
+    "properties": "Mọi giá trị đều thành chuỗi; key lồng nhau được nối bằng dấu chấm, phần tử mảng ghi dạng [0].",
+    "documents": "{{count}} document YAML được gộp thành một mảng."
+  },
+  "errors": {
+    "undetected": "Không nhận ra định dạng này. Hãy chọn ở mục Từ.",
+    "invalid": "Không phải {{format}} hợp lệ.",
+    "invalidAt": "Không phải {{format}} hợp lệ: dòng {{line}}, cột {{column}}.",
+    "toml-null": "TOML không có null, mà “{{path}}” đang là null. Hãy gán giá trị hoặc bỏ nó đi.",
+    "not-a-table": "{{format}} chỉ chứa các key ở cấp ngoài cùng, nhưng cấu hình này là một mảng hoặc một giá trị đơn.",
+    "bad-key": "Key của .env chỉ gồm chữ cái, chữ số, _, . và -, nên không ghi được “{{key}}”."
+  }
+}
