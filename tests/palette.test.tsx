@@ -67,10 +67,11 @@ describe("Command palette", () => {
       "Base64Converters",
       "JSON ViewerDevelopment",
       "NotesText",
+      "Regex TesterDevelopment",
       "TickerUtilities",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
     expect(selected()).toHaveTextContent("Ticker");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -110,9 +111,9 @@ describe("Command palette", () => {
     await user.keyboard("DECODE");
     expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual(["Base64Chuyển đổi"]);
     await user.clear(within(palette).getByRole("combobox"));
-    await user.keyboard("regex");
+    await user.keyboard("qwerty");
     expect(within(palette).queryAllByRole("option")).toEqual([]);
-    expect(palette).toHaveTextContent("Không có Công cụ nào khớp “regex”.");
+    expect(palette).toHaveTextContent("Không có Công cụ nào khớp “qwerty”.");
   });
 
   it("lists the Tools used lately first, remembers them, and forgets them on Clear Recent", async () => {
@@ -127,7 +128,11 @@ describe("Command palette", () => {
     let palette = await openPalette(user);
     const group = (name: string) => within(within(palette).getByRole("group", { name })).getAllByRole("option");
     expect(group("Recent").map((option) => option.textContent)).toEqual(["Base64Converters", "TickerUtilities"]);
-    expect(group("All Tools").map((option) => option.textContent)).toEqual(["JSON ViewerDevelopment", "NotesText"]);
+    expect(group("All Tools").map((option) => option.textContent)).toEqual([
+      "JSON ViewerDevelopment",
+      "NotesText",
+      "Regex TesterDevelopment",
+    ]);
     await user.keyboard("{Escape}");
 
     await user.click(screen.getByRole("button", { name: "Settings" }));

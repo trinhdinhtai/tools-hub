@@ -1,0 +1,49 @@
+{
+  "mode": "Chế độ",
+  "modes": {
+    "match": "Khớp",
+    "replace": "Thay thế"
+  },
+  "pattern": "Pattern",
+  "flags": {
+    "label": "Flag",
+    "g": "Global: tìm mọi match, không chỉ match đầu tiên",
+    "i": "Không phân biệt hoa thường",
+    "m": "Nhiều dòng: ^ và $ khớp ở đầu và cuối mỗi dòng",
+    "s": "Dot all: dấu . khớp cả ký tự xuống dòng",
+    "u": "Unicode: theo nguyên code point, dùng được \\u{…} và \\p{…}",
+    "y": "Sticky: mỗi match bắt đầu ngay chỗ match trước kết thúc"
+  },
+  "text": "Chuỗi kiểm tra",
+  "replacement": "Thay bằng",
+  "replacementHint": "$1 hoặc $<tên> cho một group, $& cho cả match, $$ cho một dấu $",
+  "result": "Kết quả",
+  "matches": "Các match",
+  "count": "Số match: {{count}}",
+  "noMatch": "Không có match nào",
+  "truncated": "Số match: {{count}} match đầu tiên, phần còn lại bị bỏ qua",
+  "shown": "Đang hiện {{shown}} trên {{count}}",
+  "match": "Match {{number}}",
+  "span": "{{start}}–{{end}}",
+  "empty": "rỗng",
+  "unmatched": "không tham gia match",
+  "invalid": "Pattern không hợp lệ: {{message}}",
+  "errors": {
+    "unterminated-group": "có dấu “(” không được đóng bằng “)”",
+    "unmatched-paren": "có dấu “)” không có “(” tương ứng",
+    "nothing-to-repeat": "quantifier (*, +, ? hoặc {…}) không có gì phía trước để lặp",
+    "unterminated-class": "có dấu “[” không được đóng bằng “]”",
+    "range-out-of-order": "một khoảng trong […] bị ngược, ví dụ z-a thay vì a-z",
+    "trailing-backslash": "pattern kết thúc bằng một dấu “\\” lẻ",
+    "quantifier-out-of-order": "trong {min,max}, min lớn hơn max",
+    "duplicate-group-name": "có hai group trùng tên",
+    "invalid-group-name": "tên group phải bắt đầu bằng chữ cái, $ hoặc _",
+    "invalid-named-reference": "\\k<…> trỏ tới một tên group không tồn tại",
+    "invalid-group": "sau “(?” phải là :, =, !, <=, <! hoặc <tên>",
+    "invalid-escape": "escape này không hợp lệ ở đây; với flag u chỉ được dùng các escape đã định nghĩa",
+    "invalid-property": "\\p{…} dùng một thuộc tính Unicode không tồn tại",
+    "invalid-pattern": "{{detail}}"
+  },
+  "timeout": "Đã dừng sau {{seconds}} giây. Pattern có thể backtrack không dứt trên chuỗi này, ví dụ quantifier lồng nhau như (a+)+",
+  "failed": "Không chạy được pattern: {{message}}"
+}
