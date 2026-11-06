@@ -34,6 +34,32 @@ describe("convertConfig", () => {
     });
   });
 
+  it("expands YAML merge keys, so no `<<` key reaches the output", () => {
+    const yaml = "defaults: &defaults\n  adapter: postgres\n  pool: 5\nproduction:\n  <<: *defaults\n  pool: 20\n";
+    expect(convertConfig(yaml, "yaml", "json")).toEqual({
+      ok: true,
+      text: '{\n  "defaults": {\n    "adapter": "postgres",\n    "pool": 5\n  },\n  "production": {\n    "adapter": "postgres",\n    "pool": 20\n  }\n}\n',
+    });
+    expect(convertConfig(yaml, "yaml", "env")).toEqual({
+      ok: true,
+      text: "defaults__adapter=postgres\ndefaults__pool=5\nproduction__adapter=postgres\nproduction__pool=20\n",
+    });
+  });
+
+  it("expands merge keys when the output is YAML too", () => {
+    expect(convertConfig("a: &a {x: 1}\nb:\n  <<: *a\n  y: 2\n", "yaml", "yaml")).toEqual({
+      ok: true,
+      text: "a:\n  x: 1\nb:\n  x: 1\n  y: 2\n",
+    });
+  });
+
+  it("quotes a key named << in YAML, so that it is not read back as a merge key", () => {
+    const json = '{\n  "<<": 1,\n  "a": {\n    "<<": [\n      1\n    ]\n  }\n}\n';
+    const yaml = convertConfig(json, "json", "yaml");
+    expect(yaml).toEqual({ ok: true, text: '"<<": 1\na:\n  "<<":\n    - 1\n' });
+    expect(convertConfig(yaml.ok ? yaml.text : "", "yaml", "json")).toEqual({ ok: true, text: json });
+  });
+
   it("refuses YAML whose aliases refer to themselves, or expand without end", () => {
     for (const to of FORMATS) {
       expect(convertConfig("a: &a\n  b: *a\n", "yaml", to)).toEqual({ ok: false, error: { reason: "invalid" } });

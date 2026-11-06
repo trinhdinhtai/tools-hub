@@ -10,7 +10,10 @@ class InvalidYaml extends Error {
   }
 }
 
-/** A key twice in one map is not YAML. The library checks it too, but in quadratic time: large maps took seconds. */
+/**
+ * A key twice in one map is not YAML. The library checks it too, but in quadratic time: large maps took seconds.
+ * Each merge key `<<` holds a symbol of its own, so a map may have several of them.
+ */
 function checkUniqueKeys(doc: Document.Parsed, text: string) {
   visit(doc, {
     Map(_, map) {
@@ -52,11 +55,12 @@ function readDocument(doc: Document.Parsed, text: string): unknown {
 }
 
 /**
- * Reads a YAML stream into plain JSON values, one per document. Refuses a key twice in a map, and aliases that refer
- * to themselves or expand without end.
+ * Reads a YAML stream into plain JSON values, one per document. Merge keys (`<<: *base`) are expanded, the keys written
+ * in the map winning; a merge key whose value is not a map is refused. Refuses a key twice in a map, and aliases that
+ * refer to themselves or expand without end.
  */
 export function readYaml(text: string): YamlResult {
-  const docs = parseAllDocuments(text, { uniqueKeys: false });
+  const docs = parseAllDocuments(text, { uniqueKeys: false, merge: true });
   // A `---` at the end, or two in a row, leaves an empty document that is not part of the stream's content.
   const isEmpty = (doc: Document.Parsed) => doc.contents === null || (isScalar(doc.contents) && doc.contents.source === "");
   const kept = docs.length > 1 ? docs.filter((doc) => !isEmpty(doc)) : docs;
