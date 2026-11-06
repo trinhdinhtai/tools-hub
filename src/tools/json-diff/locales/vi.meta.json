@@ -1,0 +1,4 @@
+{
+  "name": "JSON Diff",
+  "description": "So sánh hai tài liệu JSON hoặc YAML theo giá trị, liệt kê khác biệt theo path và sao chép dưới dạng JSON Patch"
+}

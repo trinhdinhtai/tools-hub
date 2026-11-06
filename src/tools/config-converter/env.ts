@@ -3,7 +3,8 @@
 // are joined with `__`, as ASP.NET and many twelve-factor apps do.
 
 import { flatten, unflatten, type FlatEntry } from "./flat";
-import { InvalidConfig, position } from "./invalid";
+import { position } from "@/lib/position";
+import { InvalidConfig } from "./invalid";
 
 const SEPARATOR = "__";
 /** A key a .env file can hold. */

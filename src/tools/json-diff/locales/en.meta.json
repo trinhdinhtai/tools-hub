@@ -1,0 +1,4 @@
+{
+  "name": "JSON Diff",
+  "description": "Compare two JSON or YAML documents by value, list the changes by path and copy them as a JSON Patch"
+}

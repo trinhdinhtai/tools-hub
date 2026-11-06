@@ -37,7 +37,7 @@ Mọi thứ người dùng đưa cho một Tool xử lý: văn bản dán vào, 
 _Tránh_: Data, content, document, nội dung
 
 **Preference** (Tuỳ chỉnh):
-Lựa chọn của người dùng cho app hoặc cho một Tool: theme, ngôn ngữ, hotkey, favorites, danh sách Open Tool, layout hay price table của một Tool. Preference được lưu xuống đĩa.
+Lựa chọn của người dùng cho app hoặc cho một Tool: theme, ngôn ngữ, hotkey, favorites, danh sách Open Tool, layout hay price table của một Tool. Preference được lưu xuống đĩa. Một giá trị gõ vào cũng là Preference khi nó quy định cách Tool làm việc chứ không phải dữ liệu Tool xử lý, ví dụ key ghép phần tử mảng của JSON Diff.
 _Tránh_: Option, config, cài đặt, thiết lập
 
 **Recent** (Gần đây):
