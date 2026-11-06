@@ -4,7 +4,8 @@
 // Characters outside ASCII are kept as they are, not written as \u escapes: files are UTF-8 nowadays.
 
 import { flatten, unflatten, type FlatEntry, type Path } from "./flat";
-import { InvalidConfig, position } from "./invalid";
+import { position } from "@/lib/position";
+import { InvalidConfig } from "./invalid";
 
 const WHITESPACE = new Set([" ", "\t", "\f"]);
 const ESCAPES: Record<string, string> = { t: "\t", n: "\n", r: "\r", f: "\f" };
