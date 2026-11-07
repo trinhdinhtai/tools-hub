@@ -1,0 +1,43 @@
+{
+  "mode": "Chế độ",
+  "modes": {
+    "generate": "Tạo",
+    "inspect": "Xem chi tiết"
+  },
+  "generate": {
+    "version": "Phiên bản",
+    "count": "Số lượng",
+    "namespace": "Không gian tên",
+    "customNamespace": "Không gian tên tuỳ chọn",
+    "name": "Tên",
+    "nameHint": "v3 và v5 băm tên này cùng với không gian tên",
+    "output": "Kết quả",
+    "errors": {
+      "empty-name": "Nhập tên cho v3 và v5",
+      "bad-namespace": "Không gian tên tuỳ chọn phải là một UUID",
+      "time-out-of-range": "Đồng hồ hệ thống nằm ngoài phạm vi mà UUID hoặc ULID chứa được"
+    }
+  },
+  "inspect": {
+    "input": "UUID hoặc ULID",
+    "placeholder": "Dán hoặc nhập một ID, ví dụ 017f22e2-79b0-7cc3-98c4-dc0c0c07398f",
+    "details": "Chi tiết",
+    "kind": "Loại",
+    "kinds": {
+      "uuid": "UUID",
+      "ulid": "ULID"
+    },
+    "canonical": "Dạng chuẩn",
+    "version": "Phiên bản",
+    "variant": "Biến thể",
+    "variants": {
+      "ncs": "NCS (dành cho tính tương thích ngược)",
+      "rfc4122": "RFC 4122 / RFC 9562",
+      "microsoft": "Microsoft (dành cho tính tương thích ngược)",
+      "reserved": "Dành cho định nghĩa sau này"
+    },
+    "timestamp": "Thời điểm",
+    "noTimestamp": "Phiên bản này không chứa thời điểm",
+    "error": "Đây không phải là UUID hoặc ULID"
+  }
+}

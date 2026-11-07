@@ -1,0 +1,43 @@
+{
+  "mode": "Mode",
+  "modes": {
+    "generate": "Generate",
+    "inspect": "Inspect"
+  },
+  "generate": {
+    "version": "Version",
+    "count": "How many",
+    "namespace": "Namespace",
+    "customNamespace": "Custom namespace",
+    "name": "Name",
+    "nameHint": "v3 and v5 hash this name together with the namespace",
+    "output": "IDs",
+    "errors": {
+      "empty-name": "Enter a name for v3 and v5",
+      "bad-namespace": "The custom namespace must be a UUID",
+      "time-out-of-range": "The system clock is outside the range a UUID or ULID can hold"
+    }
+  },
+  "inspect": {
+    "input": "UUID or ULID",
+    "placeholder": "Paste or type an ID, e.g. 017f22e2-79b0-7cc3-98c4-dc0c0c07398f",
+    "details": "Details",
+    "kind": "Type",
+    "kinds": {
+      "uuid": "UUID",
+      "ulid": "ULID"
+    },
+    "canonical": "Canonical form",
+    "version": "Version",
+    "variant": "Variant",
+    "variants": {
+      "ncs": "NCS (reserved for backward compatibility)",
+      "rfc4122": "RFC 4122 / RFC 9562",
+      "microsoft": "Microsoft (reserved for backward compatibility)",
+      "reserved": "Reserved for future definition"
+    },
+    "timestamp": "Timestamp",
+    "noTimestamp": "This version carries no timestamp",
+    "error": "That is not a UUID or a ULID"
+  }
+}
