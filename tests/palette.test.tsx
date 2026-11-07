@@ -75,7 +75,7 @@ describe("Command palette", () => {
       "TickerUtilities",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
     expect(selected()).toHaveTextContent("Ticker");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
