@@ -65,6 +65,7 @@ describe("Command palette", () => {
     expect(within(palette).getByRole("combobox")).toHaveFocus();
     expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual([
       "Base64Converters",
+      "Code FormatterDevelopment",
       "Config ConverterConverters",
       "Hash GeneratorGenerators",
       "JSON DiffDevelopment",
@@ -132,6 +133,7 @@ describe("Command palette", () => {
     const group = (name: string) => within(within(palette).getByRole("group", { name })).getAllByRole("option");
     expect(group("Recent").map((option) => option.textContent)).toEqual(["Base64Converters", "TickerUtilities"]);
     expect(group("All Tools").map((option) => option.textContent)).toEqual([
+      "Code FormatterDevelopment",
       "Config ConverterConverters",
       "Hash GeneratorGenerators",
       "JSON DiffDevelopment",
