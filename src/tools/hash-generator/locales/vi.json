@@ -1,0 +1,18 @@
+{
+  "mode": "Chế độ",
+  "modes": {
+    "text": "Văn bản",
+    "file": "File"
+  },
+  "input": "Dữ liệu nhập",
+  "output": "Giá trị băm",
+  "key": {
+    "label": "Khoá HMAC",
+    "hint": "Để trống để băm không cần khoá"
+  },
+  "file": {
+    "zone": "File cần băm",
+    "hashing": "Đang băm…",
+    "failed": "Không băm được file: {{message}}"
+  }
+}

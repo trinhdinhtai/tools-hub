@@ -1,0 +1,4 @@
+{
+  "name": "Hash Generator",
+  "description": "Tính MD5, SHA-1, SHA-2, SHA-3, Keccak-256 và HMAC cho văn bản hoặc file"
+}

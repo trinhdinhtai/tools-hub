@@ -1,0 +1,4 @@
+{
+  "name": "Hash Generator",
+  "description": "Compute MD5, SHA-1, SHA-2, SHA-3 and Keccak-256 digests, with an optional HMAC key, of text or files"
+}

@@ -67,6 +67,7 @@ describe("Command palette", () => {
       "Base64Converters",
       "Code FormatterDevelopment",
       "Config ConverterConverters",
+      "Hash GeneratorGenerators",
       "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
       "NotesText",
@@ -74,7 +75,7 @@ describe("Command palette", () => {
       "TickerUtilities",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
     expect(selected()).toHaveTextContent("Ticker");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -134,6 +135,7 @@ describe("Command palette", () => {
     expect(group("All Tools").map((option) => option.textContent)).toEqual([
       "Code FormatterDevelopment",
       "Config ConverterConverters",
+      "Hash GeneratorGenerators",
       "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
       "NotesText",

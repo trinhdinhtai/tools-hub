@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Download } from "lucide-react";
 import { CodeEditor } from "@/components/code-editor";
@@ -8,8 +8,8 @@ import { FileDropZone } from "@/components/file-drop-zone";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useSaveFile } from "@/lib/files";
-import { runInWorker } from "@/lib/worker";
+import { useFormatSize, useSaveFile } from "@/lib/files";
+import { useWorkerJob } from "@/lib/worker";
 import type { FileJob, FileJobResult } from "./file-jobs";
 import { VARIANT_NAMES, fileExtension, type Variant } from "./logic";
 
@@ -20,33 +20,6 @@ const COPY_LIMIT_CHARS = 50_000_000;
 
 const spawn = () => new Worker(new URL("./file.worker.ts", import.meta.url), { type: "module" });
 const latin1 = new TextDecoder("latin1");
-
-type Run = { job: FileJob; progress: number; result?: FileJobResult; error?: string };
-
-/** Runs `job` in a worker whenever it changes, dropping the run of the job before. */
-function useFileJob(job: FileJob | null) {
-  const [run, setRun] = useState<Run | null>(null);
-  useEffect(() => {
-    if (!job) return;
-    const task = runInWorker<FileJob, FileJobResult>(spawn, job, (progress) => setRun({ job, progress }));
-    task.result.then(
-      (result) => setRun({ job, progress: 1, result }),
-      (error: Error) => error.name !== "AbortError" && setRun({ job, progress: 1, error: error.message }),
-    );
-    return task.cancel;
-  }, [job]);
-  if (!job) return null;
-  return run?.job === job ? run : { job, progress: 0 };
-}
-
-function useFormatSize() {
-  const { i18n } = useTranslation();
-  return (bytes: number) => {
-    const [value, unit] =
-      bytes >= 1e9 ? [bytes / 1e9, "gigabyte"] : bytes >= 1e6 ? [bytes / 1e6, "megabyte"] : bytes >= 1e3 ? [bytes / 1e3, "kilobyte"] : [bytes, "byte"];
-    return new Intl.NumberFormat(i18n.language, { style: "unit", unit, maximumFractionDigits: 1 }).format(value);
-  };
-}
 
 /** Shows the OS save dialog for `bytes`, reporting a failed write; cancelling is not a failure. */
 function SaveButton({ name, bytes }: { name: string; bytes: Uint8Array }) {
@@ -95,7 +68,7 @@ function EncodeFile({ file, onFile, variant, dataUri }: { file: File | null; onF
   const { i18n } = useTranslation();
   const formatCount = (n: number) => n.toLocaleString(i18n.language);
   const job = useMemo<FileJob | null>(() => file && { kind: "encode", file, variant, dataUri }, [file, variant, dataUri]);
-  const run = useFileJob(job);
+  const run = useWorkerJob<FileJob, FileJobResult>(spawn, job);
   const bytes = run?.result?.ok ? run.result.bytes : null;
   const encoded = run?.job.kind === "encode" ? run.job : null;
   const preview = useMemo(() => (bytes ? latin1.decode(bytes.subarray(0, PREVIEW_CHARS)) : ""), [bytes]);
@@ -139,7 +112,7 @@ function DecodeText({ text, onText, variant }: { text: string; onText: (text: st
   const { t } = useTranslation("base64");
   const formatSize = useFormatSize();
   const job = useMemo<FileJob | null>(() => (text.trim() ? { kind: "decode", text, variant } : null), [text, variant]);
-  const run = useFileJob(job);
+  const run = useWorkerJob<FileJob, FileJobResult>(spawn, job);
   const result = run?.result;
 
   return (
