@@ -53,9 +53,9 @@ function StrengthMeter({ bits }: { bits: number }) {
 
   return (
     <div className="flex items-center gap-3">
-      <span className="w-16 shrink-0 text-[13px] font-medium">{t("strength.label")}</span>
+      <span className="shrink-0 text-[13px] font-medium">{t("strength.label")}</span>
       <div
-        className="flex flex-1 gap-1"
+        className="flex min-w-0 flex-1 gap-1"
         role="meter"
         aria-label={t("strength.label")}
         aria-valuemin={0}
@@ -67,7 +67,7 @@ function StrengthMeter({ bits }: { bits: number }) {
           <span key={segment} className={`h-1.5 flex-1 rounded-full ${index <= levelIndex ? LEVEL_COLORS[level] : "bg-input"}`} />
         ))}
       </div>
-      <span className="w-44 shrink-0 text-right text-[13px] text-subtle-foreground">
+      <span className="shrink-0 text-right text-[13px] whitespace-nowrap text-subtle-foreground">
         {t(`strength.levels.${level}`)} · {t("strength.bits", { bits: Math.round(bits) })}
       </span>
     </div>
