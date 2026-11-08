@@ -1,0 +1,35 @@
+{
+  "mode": "Mode",
+  "modes": {
+    "convert": "Convert",
+    "expression": "Expression",
+    "bits": "Bits"
+  },
+  "input": "Input",
+  "inputBase": "Input base",
+  "autoBase": "Auto (0x, 0b, 0o prefixes)",
+  "bitWidth": "Bit width",
+  "outputs": {
+    "binary": "Binary",
+    "octal": "Octal",
+    "decimal": "Decimal",
+    "hexadecimal": "Hexadecimal",
+    "base": "Base {{base}}",
+    "roman": "Roman numerals"
+  },
+  "twoComplement": "Two's complement ({{width}}-bit)",
+  "bits": {
+    "value": "Value",
+    "signed": "Signed value",
+    "unsigned": "Unsigned value",
+    "bit": "Bit {{index}}"
+  },
+  "romanUnavailable": "Roman numerals write 1–3999 only",
+  "expressionPlaceholder": "0xff + 1 << 3",
+  "errors": {
+    "empty": "Type a number first",
+    "invalid": "This is not a valid integer in the chosen base",
+    "no-digits": "This number has no digits after its prefix",
+    "division-by-zero": "This expression divides by zero"
+  }
+}

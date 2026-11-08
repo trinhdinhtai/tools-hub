@@ -1,0 +1,35 @@
+{
+  "mode": "Chế độ",
+  "modes": {
+    "convert": "Chuyển cơ số",
+    "expression": "Biểu thức",
+    "bits": "Bit"
+  },
+  "input": "Đầu vào",
+  "inputBase": "Cơ số đầu vào",
+  "autoBase": "Tự động (tiền tố 0x, 0b, 0o)",
+  "bitWidth": "Bề rộng bit",
+  "outputs": {
+    "binary": "Nhị phân",
+    "octal": "Bát phân",
+    "decimal": "Thập phân",
+    "hexadecimal": "Thập lục phân",
+    "base": "Cơ số {{base}}",
+    "roman": "Chữ số La Mã"
+  },
+  "twoComplement": "Bù hai ({{width}} bit)",
+  "bits": {
+    "value": "Giá trị",
+    "signed": "Giá trị có dấu",
+    "unsigned": "Giá trị không dấu",
+    "bit": "Bit {{index}}"
+  },
+  "romanUnavailable": "Chữ số La Mã chỉ ghi được 1–3999",
+  "expressionPlaceholder": "0xff + 1 << 3",
+  "errors": {
+    "empty": "Hãy gõ một số trước",
+    "invalid": "Đây không phải số nguyên hợp lệ ở cơ số đã chọn",
+    "no-digits": "Số này không có chữ số nào sau tiền tố",
+    "division-by-zero": "Biểu thức này chia cho 0"
+  }
+}
