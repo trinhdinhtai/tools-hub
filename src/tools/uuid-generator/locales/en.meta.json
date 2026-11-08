@@ -1,0 +1,4 @@
+{
+  "name": "UUID Generator",
+  "description": "Generate UUID v1–v7 and ULID, and inspect a pasted UUID or ULID for its version, variant and timestamp"
+}

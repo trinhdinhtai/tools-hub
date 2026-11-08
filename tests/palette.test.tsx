@@ -73,14 +73,15 @@ describe("Command palette", () => {
       "NotesText",
       "Regex TesterDevelopment",
       "TickerUtilities",
+      "UUID GeneratorGenerators",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
-    expect(selected()).toHaveTextContent("Ticker");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
+    expect(selected()).toHaveTextContent("UUID Generator");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
     await user.keyboard("{ArrowUp}");
-    expect(selected()).toHaveTextContent("Ticker");
+    expect(selected()).toHaveTextContent("UUID Generator");
 
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -140,6 +141,7 @@ describe("Command palette", () => {
       "JSON ViewerDevelopment",
       "NotesText",
       "Regex TesterDevelopment",
+      "UUID GeneratorGenerators",
     ]);
     await user.keyboard("{Escape}");
 
