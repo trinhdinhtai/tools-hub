@@ -114,6 +114,12 @@ describe("generate custom", () => {
     expect([...string].every((char) => "😀😄😂".includes(char))).toBe(true);
   });
 
+  it("draws from a Vietnamese alphabet of precomposed letters", () => {
+    const string = generate({ ...CUSTOM, alphabet: "ếươđăâô", length: 20 }, random())[0]!;
+    expect([...string]).toHaveLength(20);
+    expect([...string].every((char) => "ếươđăâô".includes(char))).toBe(true);
+  });
+
   it("rejects an empty alphabet", () => {
     expect(() => generate({ ...CUSTOM, alphabet: "" }, random())).toThrow("empty-alphabet");
   });
