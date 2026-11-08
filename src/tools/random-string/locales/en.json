@@ -1,0 +1,20 @@
+{
+  "mode": "Mode",
+  "modes": {
+    "nano": "Nano ID",
+    "hex": "Token hex",
+    "base64url": "Token Base64URL",
+    "custom": "Custom alphabet"
+  },
+  "generate": "Generate",
+  "length": "Length",
+  "count": "Quantity",
+  "alphabet": "Custom alphabet",
+  "output": "Output",
+  "errors": {
+    "invalid-length": "Length must be a whole number from 1 to 1024",
+    "invalid-count": "Quantity must be a whole number from 1 to 100",
+    "empty-alphabet": "The alphabet cannot be empty",
+    "duplicate-characters": "The alphabet has duplicate characters"
+  }
+}
