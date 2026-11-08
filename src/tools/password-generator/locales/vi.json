@@ -1,0 +1,48 @@
+{
+  "mode": "Chế độ",
+  "modes": {
+    "password": "Mật khẩu",
+    "passphrase": "Cụm từ ghi nhớ"
+  },
+  "generate": "Tạo lại",
+  "password": {
+    "length": "Độ dài",
+    "groups": "Nhóm ký tự",
+    "lowercase": "a–z",
+    "uppercase": "A–Z",
+    "digits": "0–9",
+    "symbols": "!@#…",
+    "excludeAmbiguous": "Tránh ký tự dễ nhầm (I l 1 O 0 o)",
+    "output": "Mật khẩu"
+  },
+  "passphrase": {
+    "wordCount": "Số từ",
+    "separator": "Dấu phân tách",
+    "separators": {
+      "hyphen": "Gạch ngang",
+      "dot": "Chấm",
+      "underscore": "Gạch dưới",
+      "space": "Dấu cách",
+      "none": "Không"
+    },
+    "capitalize": "Viết hoa từng từ",
+    "includeNumber": "Thêm số có hai chữ số",
+    "output": "Cụm từ ghi nhớ"
+  },
+  "strength": {
+    "label": "Độ mạnh",
+    "bits": "{{bits}} bit ngẫu nhiên",
+    "levels": {
+      "very-weak": "Rất yếu",
+      "weak": "Yếu",
+      "fair": "Trung bình",
+      "strong": "Mạnh",
+      "very-strong": "Rất mạnh"
+    }
+  },
+  "errors": {
+    "invalid-length": "Độ dài phải là số nguyên từ 4 đến 256",
+    "no-groups": "Hãy chọn ít nhất một nhóm ký tự",
+    "invalid-word-count": "Số từ phải là số nguyên từ 3 đến 20"
+  }
+}

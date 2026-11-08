@@ -82,6 +82,10 @@ export function WorkspaceView({
     focusActive.current = false;
     document.getElementById(workspace.active ? tabId(workspace.active) : emptyId)?.focus();
   });
+  // A tab can be off the strip's edge when it is opened from the sidebar, the palette or a paste: bring it into view.
+  useEffect(() => {
+    if (workspace.active) document.getElementById(tabId(workspace.active))?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  });
   const changeAndFocus = (change: Change) => {
     focusActive.current = true;
     onChange(change);
@@ -189,7 +193,8 @@ function Tab({
         className={cn(
           // Editor-style tabs. The tab on screen takes the panel's background, with rounded top corners, a hairline round
           // its top and sides, and bottom corners that curve out into the panel; the others sit on the strip, muted.
-          "group/tab relative flex h-full max-w-56 shrink-0 items-center rounded-t-lg border-x border-t border-transparent text-[13px] text-muted-foreground transition-colors duration-150",
+          // Tabs shrink to fit the strip (the name truncates) down to a floor, and only then does the strip scroll.
+          "group/tab relative flex h-full max-w-56 min-w-24 items-center rounded-t-lg border-x border-t border-transparent text-[13px] text-muted-foreground transition-colors duration-150",
           active ? ACTIVE_TAB : "hover:bg-accent/60 hover:text-foreground",
         )}
       >
