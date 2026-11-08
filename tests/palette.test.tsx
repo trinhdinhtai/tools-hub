@@ -75,10 +75,11 @@ describe("Command palette", () => {
       "Random StringGenerators",
       "Regex TesterDevelopment",
       "TickerUtilities",
+      "URL EncoderConverters",
       "UUID GeneratorGenerators",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
     expect(selected()).toHaveTextContent("UUID Generator");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -116,7 +117,7 @@ describe("Command palette", () => {
     const palette = await openPalette(user, "Tìm Công cụ");
 
     await user.keyboard("DECODE");
-    expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual(["Base64Chuyển đổi"]);
+    expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual(["Base64Chuyển đổi", "URL EncoderChuyển đổi"]);
     await user.clear(within(palette).getByRole("combobox"));
     await user.keyboard("qwerty");
     expect(within(palette).queryAllByRole("option")).toEqual([]);
@@ -145,6 +146,7 @@ describe("Command palette", () => {
       "Password GeneratorGenerators",
       "Random StringGenerators",
       "Regex TesterDevelopment",
+      "URL EncoderConverters",
       "UUID GeneratorGenerators",
     ]);
     await user.keyboard("{Escape}");
