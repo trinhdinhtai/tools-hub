@@ -1,0 +1,20 @@
+{
+  "mode": "Mode",
+  "modes": {
+    "convert": "Convert",
+    "slug": "URL Slug"
+  },
+  "input": "Input",
+  "output": "Output",
+  "cases": {
+    "camel": "camelCase",
+    "pascal": "PascalCase",
+    "snake": "snake_case",
+    "kebab": "kebab-case",
+    "constant": "CONSTANT_CASE",
+    "title": "Title Case"
+  },
+  "errors": {
+    "no-alphanumeric": "This text has no letters or digits, so there is nothing to turn into a slug"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "name": "Case Converter",
+  "description": "Convert names between camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE and more, and build a URL slug with the Vietnamese diacritics removed"
+}

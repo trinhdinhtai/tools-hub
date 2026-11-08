@@ -1,0 +1,20 @@
+{
+  "mode": "Chế độ",
+  "modes": {
+    "convert": "Đổi kiểu chữ",
+    "slug": "URL Slug"
+  },
+  "input": "Đầu vào",
+  "output": "Kết quả",
+  "cases": {
+    "camel": "camelCase",
+    "pascal": "PascalCase",
+    "snake": "snake_case",
+    "kebab": "kebab-case",
+    "constant": "CONSTANT_CASE",
+    "title": "Title Case"
+  },
+  "errors": {
+    "no-alphanumeric": "Văn bản không có chữ cái hay chữ số nào nên không tạo được slug"
+  }
+}
