@@ -193,7 +193,8 @@ function Tab({
         className={cn(
           // Editor-style tabs. The tab on screen takes the panel's background, with rounded top corners, a hairline round
           // its top and sides, and bottom corners that curve out into the panel; the others sit on the strip, muted.
-          "group/tab relative flex h-full max-w-56 shrink-0 items-center rounded-t-lg border-x border-t border-transparent text-[13px] text-muted-foreground transition-colors duration-150",
+          // Tabs shrink to fit the strip (the name truncates) down to a floor, and only then does the strip scroll.
+          "group/tab relative flex h-full max-w-56 min-w-24 items-center rounded-t-lg border-x border-t border-transparent text-[13px] text-muted-foreground transition-colors duration-150",
           active ? ACTIVE_TAB : "hover:bg-accent/60 hover:text-foreground",
         )}
       >
