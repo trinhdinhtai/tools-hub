@@ -65,6 +65,7 @@ describe("Command palette", () => {
     expect(within(palette).getByRole("combobox")).toHaveFocus();
     expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual([
       "Base64Converters",
+      "Case ConverterText",
       "Code FormatterDevelopment",
       "Config ConverterConverters",
       "Hash GeneratorGenerators",
@@ -79,7 +80,7 @@ describe("Command palette", () => {
       "UUID GeneratorGenerators",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
     expect(selected()).toHaveTextContent("UUID Generator");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -137,6 +138,7 @@ describe("Command palette", () => {
     const group = (name: string) => within(within(palette).getByRole("group", { name })).getAllByRole("option");
     expect(group("Recent").map((option) => option.textContent)).toEqual(["Base64Converters", "TickerUtilities"]);
     expect(group("All Tools").map((option) => option.textContent)).toEqual([
+      "Case ConverterText",
       "Code FormatterDevelopment",
       "Config ConverterConverters",
       "Hash GeneratorGenerators",
