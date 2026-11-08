@@ -1,0 +1,37 @@
+{
+  "mode": "Chế độ",
+  "modes": {
+    "convert": "Mã hoá / Giải mã",
+    "split": "Tách URL"
+  },
+  "direction": {
+    "label": "Chiều",
+    "encode": "Mã hoá",
+    "decode": "Giải mã"
+  },
+  "scope": {
+    "label": "Phạm vi",
+    "full": "Cả URL",
+    "component": "Từng thành phần"
+  },
+  "input": "Đầu vào",
+  "output": "Kết quả",
+  "parts": {
+    "scheme": "Scheme",
+    "host": "Host",
+    "port": "Cổng",
+    "path": "Đường dẫn",
+    "fragment": "Fragment",
+    "params": "Tham số truy vấn",
+    "name": "Tên",
+    "value": "Giá trị",
+    "add": "Thêm tham số",
+    "remove": "Xoá tham số"
+  },
+  "errors": {
+    "lone-surrogate": "Văn bản chứa ký tự surrogate đơn lẻ nên không thể mã hoá",
+    "invalid-escape": "Không phải percent-encoding hợp lệ: chuỗi như %A hoặc %zz không thể giải mã",
+    "not-a-url": "Đây không phải URL: hãy nhập dạng https://example.com/path?query=1#fragment",
+    "missing-host": "URL này thiếu host: hãy nhập dạng https://example.com"
+  }
+}
