@@ -1,0 +1,4 @@
+{
+  "name": "Number Base",
+  "description": "Convert an integer between binary, octal, decimal, hex and any base up to 36, with Roman numerals, two's complement, integer expressions and a bit grid"
+}
