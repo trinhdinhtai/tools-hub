@@ -1,0 +1,20 @@
+{
+  "mode": "Chế độ",
+  "modes": {
+    "nano": "Nano ID",
+    "hex": "Token hex",
+    "base64url": "Token Base64URL",
+    "custom": "Bảng ký tự riêng"
+  },
+  "generate": "Tạo lại",
+  "length": "Độ dài",
+  "count": "Số lượng",
+  "alphabet": "Bảng ký tự",
+  "output": "Kết quả",
+  "errors": {
+    "invalid-length": "Độ dài phải là số nguyên từ 1 đến 1024",
+    "invalid-count": "Số lượng phải là số nguyên từ 1 đến 100",
+    "empty-alphabet": "Bảng ký tự không được để trống",
+    "duplicate-characters": "Bảng ký tự có ký tự bị lặp"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "name": "Random String",
+  "description": "Generate Nano IDs, hex and Base64URL tokens, and strings from a custom alphabet"
+}

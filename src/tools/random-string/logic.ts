@@ -36,6 +36,9 @@ export const HEX_ALPHABET = "0123456789abcdef";
 /** URL-safe Base64: the same 64 characters as Nano ID, in the Base64 order. */
 export const BASE64URL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
+/** The alphabet the custom mode starts with: every letter and digit, in no particular promise. */
+export const DEFAULT_CUSTOM_ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
 const ALPHABETS: Record<Mode, string> = {
   nano: NANO_ALPHABET,
   hex: HEX_ALPHABET,

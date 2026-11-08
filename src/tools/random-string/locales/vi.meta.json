@@ -1,0 +1,4 @@
+{
+  "name": "Random String",
+  "description": "Tạo Nano ID, token hex, token Base64URL và chuỗi từ bảng ký tự tuỳ chọn"
+}
