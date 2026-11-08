@@ -1,3 +1,4 @@
+import { cryptoRandomBytes, randomInt, type RandomBytes } from "@/lib/random";
 import { type Mode } from "./modes";
 
 /**
@@ -46,24 +47,6 @@ const ALPHABETS: Record<Mode, string> = {
   custom: "",
 };
 
-export type RandomBytes = (length: number) => Uint8Array;
-
-const defaultRandomBytes: RandomBytes = (length) => crypto.getRandomValues(new Uint8Array(length));
-
-/** A uniform integer in [0, max) out of the random bytes, by rejection sampling: no modulo bias. */
-function randomInt(max: number, randomBytes: RandomBytes): number {
-  if (max <= 1) return 0;
-  const bytesPerDraw = Math.max(Math.ceil(Math.log2(max) / 8), 1);
-  const drawSize = 256 ** bytesPerDraw;
-  const limit = drawSize - (drawSize % max);
-  for (;;) {
-    const bytes = randomBytes(bytesPerDraw);
-    let value = 0;
-    for (const byte of bytes) value = value * 256 + byte;
-    if (value < limit) return value % max;
-  }
-}
-
 function checkCount(count: number): void {
   if (!Number.isInteger(count) || count < MIN_COUNT || count > MAX_COUNT) throw new GenerateError("invalid-count");
 }
@@ -85,7 +68,7 @@ function stringsOf(chars: string[], length: number, count: number, randomBytes: 
 
 /** The random strings the user asked for, one entry per string. */
 export function generate(options: RandomStringOptions, random: { randomBytes?: RandomBytes } = {}): string[] {
-  const randomBytes = random.randomBytes ?? defaultRandomBytes;
+  const randomBytes = random.randomBytes ?? cryptoRandomBytes;
   if (!Number.isInteger(options.length) || options.length < MIN_LENGTH || options.length > MAX_LENGTH) {
     throw new GenerateError("invalid-length");
   }

@@ -1,3 +1,4 @@
+import { cryptoRandomBytes, randomInt, type RandomBytes } from "@/lib/random";
 import { WORDLIST } from "./wordlist";
 
 /**
@@ -58,24 +59,6 @@ const AMBIGUOUS = new Set("Il1O0o");
 /** The separators a passphrase can put between its words; the empty string runs them together. */
 export const SEPARATORS = ["-", ".", "_", " ", ""] as const;
 
-export type RandomBytes = (length: number) => Uint8Array;
-
-const defaultRandomBytes: RandomBytes = (length) => crypto.getRandomValues(new Uint8Array(length));
-
-/** A uniform integer in [0, max) out of the random bytes, by rejection sampling: no modulo bias. */
-function randomInt(max: number, randomBytes: RandomBytes): number {
-  if (max <= 1) return 0;
-  const bytesPerDraw = Math.max(Math.ceil(Math.log2(max) / 8), 1);
-  const drawSize = 256 ** bytesPerDraw;
-  const limit = drawSize - (drawSize % max);
-  for (;;) {
-    const bytes = randomBytes(bytesPerDraw);
-    let value = 0;
-    for (const byte of bytes) value = value * 256 + byte;
-    if (value < limit) return value % max;
-  }
-}
-
 /** A uniform member of `pool`; the pool must be non-empty. */
 function randomChar(pool: string, randomBytes: RandomBytes): string {
   return pool[randomInt(pool.length, randomBytes)]!;
@@ -104,7 +87,7 @@ function poolOf(options: PasswordOptions): string[] {
 
 /** A random password: at least one character per selected group, shuffled so their position gives nothing away. */
 export function generatePassword(options: PasswordOptions, random: { randomBytes?: RandomBytes } = {}): string {
-  const randomBytes = random.randomBytes ?? defaultRandomBytes;
+  const randomBytes = random.randomBytes ?? cryptoRandomBytes;
   if (!Number.isInteger(options.length) || options.length < MIN_LENGTH || options.length > MAX_LENGTH) {
     throw new GenerateError("invalid-length");
   }
@@ -123,7 +106,7 @@ export function generatePassphrase(
   random: { randomBytes?: RandomBytes } = {},
   wordlist: readonly string[] = WORDLIST,
 ): string {
-  const randomBytes = random.randomBytes ?? defaultRandomBytes;
+  const randomBytes = random.randomBytes ?? cryptoRandomBytes;
   if (!Number.isInteger(options.wordCount) || options.wordCount < MIN_WORDS || options.wordCount > MAX_WORDS) {
     throw new GenerateError("invalid-word-count");
   }
