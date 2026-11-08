@@ -1,0 +1,4 @@
+{
+  "name": "Case Converter",
+  "description": "Đổi tên giữa camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE và các kiểu khác, tạo URL slug bỏ dấu tiếng Việt"
+}
