@@ -72,6 +72,7 @@ describe("Command palette", () => {
       "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
       "NotesText",
+      "Number BaseConverters",
       "Password GeneratorGenerators",
       "Random StringGenerators",
       "Regex TesterDevelopment",
@@ -80,7 +81,7 @@ describe("Command palette", () => {
       "UUID GeneratorGenerators",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
     expect(selected()).toHaveTextContent("UUID Generator");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -145,6 +146,7 @@ describe("Command palette", () => {
       "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
       "NotesText",
+      "Number BaseConverters",
       "Password GeneratorGenerators",
       "Random StringGenerators",
       "Regex TesterDevelopment",
