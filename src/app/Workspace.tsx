@@ -82,6 +82,10 @@ export function WorkspaceView({
     focusActive.current = false;
     document.getElementById(workspace.active ? tabId(workspace.active) : emptyId)?.focus();
   });
+  // A tab can be off the strip's edge when it is opened from the sidebar, the palette or a paste: bring it into view.
+  useEffect(() => {
+    if (workspace.active) document.getElementById(tabId(workspace.active))?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
+  });
   const changeAndFocus = (change: Change) => {
     focusActive.current = true;
     onChange(change);
