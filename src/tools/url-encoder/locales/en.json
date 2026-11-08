@@ -1,0 +1,37 @@
+{
+  "mode": "Mode",
+  "modes": {
+    "convert": "Encode / Decode",
+    "split": "Split URL"
+  },
+  "direction": {
+    "label": "Direction",
+    "encode": "Encode",
+    "decode": "Decode"
+  },
+  "scope": {
+    "label": "Scope",
+    "full": "Whole URL",
+    "component": "Component"
+  },
+  "input": "Input",
+  "output": "Output",
+  "parts": {
+    "scheme": "Scheme",
+    "host": "Host",
+    "port": "Port",
+    "path": "Path",
+    "fragment": "Fragment",
+    "params": "Query params",
+    "name": "Name",
+    "value": "Value",
+    "add": "Add param",
+    "remove": "Remove param"
+  },
+  "errors": {
+    "lone-surrogate": "This text contains an unpaired surrogate character, which cannot be encoded",
+    "invalid-escape": "This is not valid percent-encoding: an escape like %A or %zz cannot be decoded",
+    "not-a-url": "This is not a URL: enter something like https://example.com/path?query=1#fragment",
+    "missing-host": "This URL is missing its host: enter something like https://example.com"
+  }
+}
