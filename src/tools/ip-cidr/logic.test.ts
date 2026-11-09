@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CidrError, describeNetwork, formatAddress, parseNetwork, splitNetwork } from "./logic";
+import { CidrError, describeNetwork, formatAddress, mergeNetworks, parseNetwork, splitNetwork } from "./logic";
 
 function reason(fn: () => unknown): string | undefined {
   try {
@@ -237,5 +237,55 @@ describe("splitNetwork", () => {
     ["10.0.0.0/24", 24.5],
   ])("refuses to split %j into /%s", (text, prefix) => {
     expect(reason(() => splitNetwork(parseNetwork(text), prefix))).toBe("invalid-split");
+  });
+});
+
+describe("mergeNetworks", () => {
+  it("joins adjacent halves into their parent", () => {
+    expect(mergeNetworks("192.168.0.0/24\n192.168.1.0/24")).toEqual(["192.168.0.0/23"]);
+  });
+
+  it("drops networks another one already holds, and duplicates", () => {
+    expect(mergeNetworks("10.0.0.0/8\n10.1.2.0/24\n10.0.0.0/8")).toEqual(["10.0.0.0/8"]);
+  });
+
+  it("keeps neighbours apart when they do not make an aligned parent", () => {
+    expect(mergeNetworks("192.168.1.0/24\n192.168.2.0/24")).toEqual(["192.168.1.0/24", "192.168.2.0/24"]);
+  });
+
+  it("merges a chain of four in any order, with commas, blank lines and bare addresses", () => {
+    expect(mergeNetworks("10.0.0.3, 10.0.0.1\n\n  10.0.0.0/32 ,10.0.0.2  \n")).toEqual(["10.0.0.0/30"]);
+  });
+
+  it("aligns networks written from an inner address", () => {
+    expect(mergeNetworks("10.0.0.77/25\n10.0.0.200/25")).toEqual(["10.0.0.0/24"]);
+  });
+
+  it("merges each version on its own, IPv4 first", () => {
+    expect(mergeNetworks("2001:db8:1::/48\n10.0.1.0/24\n2001:db8::/48\n10.0.0.0/24")).toEqual(["10.0.0.0/23", "2001:db8::/47"]);
+  });
+
+  it("merges the whole space", () => {
+    expect(mergeNetworks("0.0.0.0/1\n128.0.0.0/1")).toEqual(["0.0.0.0/0"]);
+  });
+
+  it("merges thousands of networks", () => {
+    const lines = Array.from({ length: 4096 }, (_, i) => `10.${i >> 8}.${i & 0xff}.0/24`).reverse();
+    expect(mergeNetworks(lines.join("\n"))).toEqual(["10.0.0.0/12"]);
+  });
+
+  it("says which line is wrong", () => {
+    let error: unknown;
+    try {
+      mergeNetworks("10.0.0.0/24\n\n10.0.1.0/33");
+    } catch (thrown) {
+      error = thrown;
+    }
+    expect(error).toBeInstanceOf(CidrError);
+    expect(error).toMatchObject({ reason: "invalid-prefix", line: 3 });
+  });
+
+  it("refuses a list with nothing in it", () => {
+    expect(reason(() => mergeNetworks(" \n , \n"))).toBe("empty");
   });
 });

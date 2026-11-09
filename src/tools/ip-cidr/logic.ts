@@ -295,3 +295,53 @@ export function splitNetwork(network: Network, prefix: number, limit = SPLIT_LIM
   const subnets = Array.from({ length: listed }, (_, i) => `${formatAddress(version, first + BigInt(i) * step)}/${prefix}`);
   return { count, subnets };
 }
+
+/** The fewest aligned networks that cover the addresses first..last exactly, in order. */
+function rangeToNetworks(version: Version, first: bigint, last: bigint): string[] {
+  const bits = BITS[version];
+  const networks: string[] = [];
+  let start = first;
+  while (start <= last) {
+    // The largest block aligned at start (its lowest set bit) that does not run past last.
+    let size = start === 0n ? 1n << BigInt(bits) : start & -start;
+    while (start + size - 1n > last) size >>= 1n;
+    const prefix = bits - (size.toString(2).length - 1);
+    networks.push(`${formatAddress(version, start)}/${prefix}`);
+    start += size;
+  }
+  return networks;
+}
+
+/**
+ * Merges a list of networks, one per line or comma, into the fewest networks that cover the same addresses:
+ * duplicates and networks inside others go, aligned neighbours join. IPv4 comes first, then IPv6.
+ */
+export function mergeNetworks(text: string): string[] {
+  const ranges: Record<Version, [bigint, bigint][]> = { 4: [], 6: [] };
+  text.split("\n").forEach((line, index) => {
+    for (const item of line.split(",")) {
+      if (item.trim() === "") continue;
+      let network: Network;
+      try {
+        network = parseNetwork(item);
+      } catch (error) {
+        if (error instanceof CidrError) throw new CidrError(error.reason, index + 1);
+        throw error;
+      }
+      ranges[network.version].push(bounds(network));
+    }
+  });
+  if (ranges[4].length === 0 && ranges[6].length === 0) throw new CidrError("empty");
+
+  return ([4, 6] as const).flatMap((version) => {
+    const sorted = ranges[version].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    // Coalesce ranges that overlap or touch, then cut each back into aligned networks.
+    const merged: [bigint, bigint][] = [];
+    for (const [first, last] of sorted) {
+      const previous = merged[merged.length - 1];
+      if (previous && first <= previous[1] + 1n) previous[1] = last > previous[1] ? last : previous[1];
+      else merged.push([first, last]);
+    }
+    return merged.flatMap(([first, last]) => rangeToNetworks(version, first, last));
+  });
+}
