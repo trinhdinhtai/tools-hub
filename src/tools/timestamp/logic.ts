@@ -327,3 +327,29 @@ export function canonicalZone(zone: string): string | null {
   const lower = trimmed.toLowerCase();
   return KNOWN_ZONES.find((known) => known.toLowerCase() === lower) ?? trimmed;
 }
+
+/** 2000-01-01 and 2100-01-01 in nanoseconds: a pasted number outside them is more likely just a number. */
+const PLAUSIBLE_FROM: Instant = 946_684_800n * NS_PER.s;
+const PLAUSIBLE_TO: Instant = 4_102_444_800n * NS_PER.s;
+
+/**
+ * Paste Detection: a date and time with an offset (ISO 8601, HTTP, email) is near certain; a bare timestamp of 10,
+ * 13, 16 or 19 digits from 2000 to 2100, or a date without an offset, is likely. One line only; `now` and sums are not
+ * pasted, they are typed.
+ */
+export function detectPaste(text: string): number {
+  const trimmed = text.trim();
+  if (trimmed.length > 40 || trimmed.includes("\n")) return 0;
+  if (/^(?:\d{10}|\d{13}|\d{16}|\d{19})$/.test(trimmed)) {
+    const { instant } = parseUnix(trimmed, "auto")!;
+    return instant >= PLAUSIBLE_FROM && instant < PLAUSIBLE_TO ? 0.7 : 0;
+  }
+  const fields = readFields(trimmed);
+  if (!fields) return 0;
+  try {
+    parseDate(trimmed, "UTC");
+  } catch {
+    return 0;
+  }
+  return fields.offset === null ? 0.7 : 0.9;
+}

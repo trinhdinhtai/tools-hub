@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canonicalZone, formatIso, parseInstant, relativeTime, TimestampError, unixValues, type ParseOptions } from "./logic";
+import { canonicalZone, detectPaste, formatIso, parseInstant, relativeTime, TimestampError, unixValues, type ParseOptions } from "./logic";
 
 // 2023-11-14T22:13:20Z, a known worked example.
 const NOW = Date.UTC(2023, 10, 14, 22, 13, 20);
@@ -257,4 +257,27 @@ describe("canonicalZone", () => {
     expect(canonicalZone("")).toBeNull();
     expect(canonicalZone("Á/日本")).toBeNull();
   });
+});
+
+describe("detectPaste", () => {
+  it.each(["2023-11-14T22:13:20Z", "2023-11-15T05:13:20.123+07:00", "Tue, 14 Nov 2023 22:13:20 GMT", " 2023-11-14T22:13:20Z\n"])(
+    "is sure of a date and time with an offset: %s",
+    (text) => {
+      expect(detectPaste(text)).toBe(0.9);
+    },
+  );
+
+  it.each(["1700000000", "1700000000123", "1700000000123456", "1700000000123456789", "2023-11-14", "2023-11-14 22:13"])(
+    "fairly likes a timestamp from 2000 to 2100, or a date without an offset: %s",
+    (text) => {
+      expect(detectPaste(text)).toBe(0.7);
+    },
+  );
+
+  it.each(["", "   ", "42", "123456", "99999999999", "-1700000000", "1700000000.5", "now", "now - 1d", "hello", "2023-02-30", "2023-11-14T22:13:20Z\n2023-11-14T22:13:20Z", "1".repeat(100_000), "😀"])(
+    "passes on %s",
+    (text) => {
+      expect(detectPaste(text)).toBe(0);
+    },
+  );
 });
