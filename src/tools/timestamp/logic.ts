@@ -256,3 +256,74 @@ export function parseInstant(text: string, options: ParseOptions): Parsed {
   const base = parseBase(rest, options);
   return shift === 0n ? base : { ...base, instant: checked(base.instant + shift) };
 }
+
+/** The instant in each unit, rounded down (toward the past) to a whole number. */
+export function unixValues(instant: Instant): Record<Unit, string> {
+  const floor = (scale: bigint) => {
+    const quotient = instant / scale;
+    return (instant % scale < 0n ? quotient - 1n : quotient).toString();
+  };
+  return { s: floor(NS_PER.s), ms: floor(NS_PER.ms), us: floor(NS_PER.us), ns: instant.toString() };
+}
+
+const pad = (value: number, size = 2) => String(value).padStart(size, "0");
+
+/**
+ * The instant as ISO 8601 in a zone: its wall-clock time and offset (`Z` for UTC), with milliseconds, and micro- or
+ * nanoseconds only when there are any. Years outside 0–9999 get six digits and a sign. Null if the zone's wall-clock
+ * time falls past what a calendar date can show (only at the very edge of the range).
+ */
+export function formatIso(instant: Instant, zone: string): string | null {
+  const ms = toMilliseconds(instant);
+  const offset = zone === "UTC" ? 0 : zoneOffset(zone, ms);
+  const wall = new Date(ms + offset * MS_PER_MINUTE);
+  if (Number.isNaN(wall.getTime())) return null;
+  const year = wall.getUTCFullYear();
+  const yearText = year >= 0 && year <= 9999 ? pad(year, 4) : (year < 0 ? "-" : "+") + pad(Math.abs(year), 6);
+  const nanos = pad(wall.getUTCMilliseconds(), 3) + pad(Number(instant - BigInt(ms) * NS_PER_MS), 6);
+  const fraction = nanos.replace(/(?:000){1,2}$/, "");
+  const zoneText =
+    zone === "UTC" ? "Z" : `${offset < 0 ? "-" : "+"}${pad(Math.floor(Math.abs(offset) / 60))}:${pad(Math.abs(offset) % 60)}`;
+  return `${yearText}-${pad(wall.getUTCMonth() + 1)}-${pad(wall.getUTCDate())}T${pad(wall.getUTCHours())}:${pad(wall.getUTCMinutes())}:${pad(wall.getUTCSeconds())}.${fraction}${zoneText}`;
+}
+
+const RELATIVE_STEPS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ["second", 1],
+  ["minute", 60],
+  ["hour", 3_600],
+  ["day", 86_400],
+  ["week", 604_800],
+  ["month", 2_629_746],
+  ["year", 31_556_952],
+];
+/** Where each unit stops fitting, in seconds: a minute, an hour, a day, a week, 30 days, 365 days. */
+const RELATIVE_LIMITS = [60, 3_600, 86_400, 604_800, 2_592_000, 31_536_000];
+
+/** How far the instant is from now, in the largest unit that fits, for `Intl.RelativeTimeFormat`. */
+export function relativeTime(instant: Instant, now: number): { value: number; unit: Intl.RelativeTimeFormatUnit } {
+  const seconds = (toMilliseconds(instant) - now) / 1000;
+  const index = RELATIVE_LIMITS.findIndex((limit) => Math.abs(seconds) < limit);
+  const [unit, size] = RELATIVE_STEPS[index === -1 ? RELATIVE_STEPS.length - 1 : index]!;
+  // `|| 0` turns -0 into 0, which RelativeTimeFormat would write as "0 seconds ago".
+  return { value: Math.round(seconds / size) || 0, unit };
+}
+
+/** Every zone the runtime lists, for suggestions and for spelling a typed zone; some runtimes list none. */
+export const KNOWN_ZONES: readonly string[] = typeof Intl.supportedValuesOf === "function" ? Intl.supportedValuesOf("timeZone") : [];
+
+/**
+ * The zone with the letter case the runtime lists it in (`asia/tokyo` is `Asia/Tokyo`), or as typed if it is known
+ * under another name; null if the runtime does not know it. Not the runtime's canonical name: that can be an old
+ * alias (`Asia/Saigon` for `Asia/Ho_Chi_Minh`).
+ */
+export function canonicalZone(zone: string): string | null {
+  const trimmed = zone.trim();
+  if (trimmed === "") return null;
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: trimmed });
+  } catch {
+    return null;
+  }
+  const lower = trimmed.toLowerCase();
+  return KNOWN_ZONES.find((known) => known.toLowerCase() === lower) ?? trimmed;
+}

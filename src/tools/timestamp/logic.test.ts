@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseInstant, TimestampError, type ParseOptions } from "./logic";
+import { canonicalZone, formatIso, parseInstant, relativeTime, TimestampError, unixValues, type ParseOptions } from "./logic";
 
 // 2023-11-14T22:13:20Z, a known worked example.
 const NOW = Date.UTC(2023, 10, 14, 22, 13, 20);
@@ -188,5 +188,73 @@ describe("parseInstant: expressions", () => {
 
   it("refuses a sum that leaves the range", () => {
     expect(() => parseInstant("now + 99999999999w", UTC)).toThrow(expect.objectContaining({ reason: "out-of-range" }));
+  });
+});
+
+describe("unixValues", () => {
+  it("gives the instant in every unit, rounding down", () => {
+    expect(unixValues(1_700_000_000_123_456_789n)).toEqual({ s: "1700000000", ms: "1700000000123", us: "1700000000123456", ns: "1700000000123456789" });
+  });
+
+  it("rounds down before 1970 too, so the value is never past the instant", () => {
+    expect(unixValues(-1n)).toEqual({ s: "-1", ms: "-1", us: "-1", ns: "-1" });
+    expect(unixValues(-1_000_000_000n)).toEqual({ s: "-1", ms: "-1000", us: "-1000000", ns: "-1000000000" });
+  });
+});
+
+describe("formatIso", () => {
+  const instant = 1_700_000_000_000_000_000n;
+
+  it("writes UTC with Z and milliseconds", () => {
+    expect(formatIso(instant, "UTC")).toBe("2023-11-14T22:13:20.000Z");
+  });
+
+  it("writes the wall-clock time and offset of a zone", () => {
+    expect(formatIso(instant, "Asia/Ho_Chi_Minh")).toBe("2023-11-15T05:13:20.000+07:00");
+    expect(formatIso(instant, "America/New_York")).toBe("2023-11-14T17:13:20.000-05:00");
+    expect(formatIso(at("2024-07-01T16:00:00Z"), "America/New_York")).toBe("2024-07-01T12:00:00.000-04:00");
+    expect(formatIso(instant, "Asia/Kolkata")).toBe("2023-11-15T03:43:20.000+05:30");
+  });
+
+  it("shows micro- and nanoseconds only when there are any", () => {
+    expect(formatIso(1_700_000_000_123_400_000n, "UTC")).toBe("2023-11-14T22:13:20.123400Z");
+    expect(formatIso(1_700_000_000_123_456_789n, "UTC")).toBe("2023-11-14T22:13:20.123456789Z");
+    expect(formatIso(-1n, "UTC")).toBe("1969-12-31T23:59:59.999999999Z");
+  });
+
+  it("writes years past 9999 and before year 0 with six digits and a sign", () => {
+    expect(formatIso(at("+010000-01-01T00:00:00Z"), "UTC")).toBe("+010000-01-01T00:00:00.000Z");
+    expect(formatIso(at("-000001-06-01T00:00:00Z"), "UTC")).toBe("-000001-06-01T00:00:00.000Z");
+  });
+});
+
+describe("relativeTime", () => {
+  const ns = (ms: number) => BigInt(ms) * 1_000_000n;
+
+  it.each([
+    [NOW, 0, "second"],
+    [NOW - 45_000, -45, "second"],
+    [NOW + 90_000, 2, "minute"],
+    [NOW - 3 * 3_600_000, -3, "hour"],
+    [NOW - 86_400_000, -1, "day"],
+    [NOW + 20 * 86_400_000, 3, "week"],
+    [NOW - 75 * 86_400_000, -2, "month"],
+    [NOW - 3 * 365 * 86_400_000, -3, "year"],
+  ] as const)("puts %d in the largest fitting unit", (ms, value, unit) => {
+    expect(relativeTime(ns(ms), NOW)).toEqual({ value, unit });
+  });
+});
+
+describe("canonicalZone", () => {
+  it("spells a known zone the runtime's way", () => {
+    expect(canonicalZone("Asia/Ho_Chi_Minh")).toBe("Asia/Ho_Chi_Minh");
+    expect(canonicalZone(" asia/tokyo ")).toBe("Asia/Tokyo");
+    expect(canonicalZone("UTC")).toBe("UTC");
+  });
+
+  it("refuses zones the runtime does not know", () => {
+    expect(canonicalZone("Mars/Olympus")).toBeNull();
+    expect(canonicalZone("")).toBeNull();
+    expect(canonicalZone("Á/日本")).toBeNull();
   });
 });
