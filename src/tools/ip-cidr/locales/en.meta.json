@@ -1,0 +1,4 @@
+{
+  "name": "IP / CIDR Calculator",
+  "description": "Work out the network, broadcast, host range, mask, wildcard and type of an IPv4 or IPv6 range; split, merge and compare ranges"
+}

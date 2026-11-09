@@ -1,0 +1,71 @@
+{
+  "mode": "Mode",
+  "modes": {
+    "calculate": "Calculate",
+    "split": "Split",
+    "merge": "Merge",
+    "compare": "Compare"
+  },
+  "input": "Input",
+  "placeholder": "192.168.1.10/24 or 2001:db8::/48",
+  "mergePlaceholder": "One network per line or comma, e.g.\n10.0.0.0/24\n10.0.1.0/24",
+  "fields": {
+    "cidr": "CIDR",
+    "network": "Network address",
+    "broadcast": "Broadcast address",
+    "firstHost": "First host",
+    "lastHost": "Last host",
+    "firstAddress": "First address",
+    "lastAddress": "Last address",
+    "hostCount": "Usable hosts",
+    "addressCount": "Addresses",
+    "mask": "Netmask",
+    "wildcard": "Wildcard mask",
+    "type": "Address type"
+  },
+  "types": {
+    "unspecified": "Unspecified",
+    "loopback": "Loopback",
+    "private": "Private",
+    "shared": "Shared (carrier-grade NAT)",
+    "link-local": "Link-local",
+    "documentation": "Documentation",
+    "benchmarking": "Benchmarking",
+    "multicast": "Multicast",
+    "broadcast": "Limited broadcast",
+    "reserved": "Reserved",
+    "ipv4-mapped": "IPv4-mapped",
+    "unique-local": "Unique local",
+    "global": "Global unicast",
+    "public": "Public",
+    "mixed": "Mixed: spans several kinds"
+  },
+  "split": {
+    "prefix": "New prefix",
+    "subnets": "Subnets",
+    "count": "{{total}} subnets of /{{prefix}}",
+    "truncated": "Showing the first {{shown}} of {{total}} subnets"
+  },
+  "merge": {
+    "result": "Merged networks",
+    "count": "{{from}} entries merged into {{to}}"
+  },
+  "compare": {
+    "a": "Network A",
+    "b": "Network B",
+    "result": "Result",
+    "equal": "{{a}} and {{b}} are the same network",
+    "contains": "{{a}} contains {{b}}",
+    "within": "{{a}} is inside {{b}}",
+    "disjoint": "{{a}} and {{b}} share no address"
+  },
+  "lineError": "Line {{line}}: {{message}}",
+  "errors": {
+    "empty": "Type an IP address or CIDR first",
+    "invalid-address": "This is not a valid IPv4 or IPv6 address",
+    "invalid-prefix": "The prefix must be a whole number from 0 to 32 for IPv4, or 0 to 128 for IPv6",
+    "invalid-mask": "This netmask is not valid: its one bits must be contiguous, like 255.255.255.0",
+    "invalid-split": "The new prefix must be at least the network's own and at most the address width",
+    "mixed-versions": "An IPv4 network and an IPv6 network cannot hold each other"
+  }
+}
