@@ -129,3 +129,37 @@ describe("Unicode", () => {
     expect(convert(convert(big, "unicode", "escape"), "unicode", "unescape")).toBe(big);
   });
 });
+
+describe("Hex", () => {
+  it("escapes every UTF-8 byte as \\xHH", () => {
+    expect(convert("Hi é😀", "hex", "escape")).toBe("\\x48\\x69\\x20\\xc3\\xa9\\xf0\\x9f\\x98\\x80");
+  });
+
+  it("unescapes \\xHH bytes as UTF-8, characters between them as they are", () => {
+    expect(convert("\\x48\\x69 \\xC3\\xA9 \\xe1\\xba\\xbf!", "hex", "unescape")).toBe("Hi é ế!");
+  });
+
+  it("round-trips any text", () => {
+    const text = "Tiếng Việt 😀 \\ \n end";
+    expect(convert(convert(text, "hex", "escape"), "hex", "unescape")).toBe(text);
+  });
+
+  it("rejects a \\x escape cut short", () => {
+    expect(failure(() => convert("\\x4", "hex", "unescape"))).toEqual({ reason: "incomplete-escape", sequence: "\\x4" });
+    expect(failure(() => convert("\\xzz", "hex", "unescape"))).toEqual({ reason: "incomplete-escape", sequence: "\\xz" });
+  });
+
+  it("rejects bytes that are not UTF-8", () => {
+    expect(failure(() => convert("\\xc3\\x28", "hex", "unescape"))).toEqual({ reason: "not-utf8", sequence: "" });
+    expect(failure(() => convert("ab\\xff", "hex", "unescape"))).toEqual({ reason: "not-utf8", sequence: "" });
+  });
+
+  it("handles empty and large Input", () => {
+    expect(convert("", "hex", "escape")).toBe("");
+    expect(convert("", "hex", "unescape")).toBe("");
+    const big = "aế😀".repeat(50_000);
+    expect(convert(convert(big, "hex", "escape"), "hex", "unescape")).toBe(big);
+    const plain = "ế".repeat(1_000_000);
+    expect(convert(plain, "hex", "unescape")).toBe(plain);
+  });
+});

@@ -3,7 +3,7 @@ import type { Mode } from "./modes";
 
 export type Direction = "escape" | "unescape";
 
-export type EscapeErrorReason = "unknown-entity" | "invalid-code-point" | "unknown-escape" | "incomplete-escape";
+export type EscapeErrorReason = "unknown-entity" | "invalid-code-point" | "unknown-escape" | "incomplete-escape" | "not-utf8";
 
 /** Input that cannot be unescaped; `sequence` is the part of it that is wrong, as written. */
 export class EscapeError extends Error {
@@ -146,6 +146,34 @@ function unescapeUnicode(text: string): string {
   return out + text.slice(i);
 }
 
+const utf8 = new TextEncoder();
+const HEX_BYTES = Array.from({ length: 256 }, (_, byte) => `\\x${byte.toString(16).padStart(2, "0")}`);
+
+/** Every UTF-8 byte of the text as `\xHH`. */
+function escapeHex(text: string): string {
+  return Array.from(utf8.encode(text), (byte) => HEX_BYTES[byte]).join("");
+}
+
+/** Reads `\xHH` escapes as bytes, the characters between them as their UTF-8 bytes, and all of it as UTF-8. */
+function unescapeHex(text: string): string {
+  // A UTF-16 code unit is at most 3 bytes of UTF-8, and an escape is shorter than its byte.
+  const bytes = new Uint8Array(text.length * 3);
+  let length = 0;
+  let i = 0;
+  for (let at = text.indexOf("\\x"); at >= 0; at = text.indexOf("\\x", i)) {
+    const { codePoint, end } = readHexEscape(text, at);
+    length += utf8.encodeInto(text.slice(i, at), bytes.subarray(length)).written;
+    bytes[length++] = codePoint;
+    i = end;
+  }
+  length += utf8.encodeInto(text.slice(i), bytes.subarray(length)).written;
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes.subarray(0, length));
+  } catch {
+    throw new EscapeError("not-utf8", "");
+  }
+}
+
 /** Escapes or unescapes `input` the way `mode` says. Throws an `EscapeError` for Input that does not unescape. */
 export function convert(input: string, mode: Mode, direction: Direction): string {
   switch (mode) {
@@ -155,6 +183,8 @@ export function convert(input: string, mode: Mode, direction: Direction): string
       return direction === "escape" ? escapeBackslash(input) : unescapeBackslash(input);
     case "unicode":
       return direction === "escape" ? escapeUnicode(input) : unescapeUnicode(input);
+    case "hex":
+      return direction === "escape" ? escapeHex(input) : unescapeHex(input);
     default:
       throw new Error(`Mode ${mode} is not implemented`);
   }
