@@ -28,7 +28,7 @@ export class ColorError extends Error {
   }
 }
 
-const clamp = (n: number, min = 0, max = 1) => Math.min(max, Math.max(min, n));
+export const clamp = (n: number, min = 0, max = 1) => Math.min(max, Math.max(min, n));
 const mod360 = (h: number) => ((h % 360) + 360) % 360;
 
 /** `n` rounded to `digits` decimals, trailing zeros dropped, never `-0`. */
@@ -48,23 +48,25 @@ function deg(h: number, digits: number): string {
 // ---------------------------------------------------------------------------------------------------------------------
 // Color spaces
 
-const toLinear = (c: number) => {
+/** A gamma-encoded sRGB channel as linear light. */
+export const toLinear = (c: number) => {
   const abs = Math.abs(c);
   return abs <= 0.04045 ? c / 12.92 : Math.sign(c) * ((abs + 0.055) / 1.055) ** 2.4;
 };
-const fromLinear = (c: number) => {
+/** A linear-light channel gamma-encoded as sRGB. */
+export const fromLinear = (c: number) => {
   const abs = Math.abs(c);
   return abs <= 0.0031308 ? c * 12.92 : Math.sign(c) * (1.055 * abs ** (1 / 2.4) - 0.055);
 };
 
-interface Oklab {
+export interface Oklab {
   L: number;
   a: number;
   b: number;
 }
 
 /** OKLab of a color, after Björn Ottosson's matrices. */
-function toOklab({ r, g, b }: Color): Oklab {
+export function toOklab({ r, g, b }: Color): Oklab {
   const [lr, lg, lb] = [toLinear(r), toLinear(g), toLinear(b)];
   const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
   const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
@@ -340,14 +342,14 @@ export function formatColor(color: Color, format: ColorFormat): string {
 const clip = (color: Color): Color => ({ r: clamp(color.r), g: clamp(color.g), b: clamp(color.b), alpha: color.alpha });
 
 /** `color` moved `t` (0–1) of the way to `target` in OKLab, where equal steps look equal. Alpha stays the color's. */
-function mix(color: Color, target: Color, t: number): Color {
+export function mix(color: Color, target: Color, t: number): Color {
   const [from, to] = [toOklab(color), toOklab(target)];
   const lerp = (x: number, y: number) => x + (y - x) * t;
   return clip(fromOklab({ L: lerp(from.L, to.L), a: lerp(from.a, to.a), b: lerp(from.b, to.b) }, color.alpha));
 }
 
-const WHITE: Color = { r: 1, g: 1, b: 1, alpha: 1 };
-const BLACK: Color = { r: 0, g: 0, b: 0, alpha: 1 };
+export const WHITE: Color = { r: 1, g: 1, b: 1, alpha: 1 };
+export const BLACK: Color = { r: 0, g: 0, b: 0, alpha: 1 };
 
 /** How far each step moves toward white (below 500) or black (above 500). */
 const SHADE_STEPS: readonly [step: number, toward: Color, t: number][] = [

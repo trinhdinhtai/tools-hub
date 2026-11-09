@@ -1,4 +1,4 @@
 {
   "name": "Color Palette",
-  "description": "Convert any CSS color to HEX, RGB, HSL, HWB, OKLCH and HSV with alpha, build shades and harmonies, and copy them as CSS variables or JSON"
+  "description": "Convert any CSS color to HEX, RGB, HSL, HWB, OKLCH and HSV with alpha, build shades and harmonies, check WCAG contrast, simulate color blindness, and copy them as CSS variables or JSON"
 }

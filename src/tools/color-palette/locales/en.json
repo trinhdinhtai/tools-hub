@@ -33,6 +33,45 @@
     "shades": "Shades as {{as}}",
     "harmony": "Harmony as {{as}}"
   },
+  "contrast": {
+    "title": "Contrast",
+    "background": "Background",
+    "backgroundPicker": "Pick a background color",
+    "swap": "Swap",
+    "sampleLarge": "Large text",
+    "sample": "Normal text reads like this on the background",
+    "ratio": "Contrast ratio",
+    "levels": "WCAG levels",
+    "checks": {
+      "aa-normal": "AA normal text ({{min}}:1)",
+      "aa-large": "AA large text ({{min}}:1)",
+      "aaa-normal": "AAA normal text ({{min}}:1)",
+      "aaa-large": "AAA large text ({{min}}:1)",
+      "non-text": "UI components ({{min}}:1)"
+    },
+    "pass": "Pass",
+    "fail": "Fail",
+    "suggest": {
+      "aa-normal": "Nearest color for AA",
+      "aaa-normal": "Nearest color for AAA"
+    },
+    "useSuggestion": "Use",
+    "passes": "The color already passes this level",
+    "reaches": "Reaches {{ratio}} on this background",
+    "none": "Not even black or white reaches this level on this background",
+    "noneTranslucent": "The text is too transparent to reach this level on this background; make it more opaque"
+  },
+  "vision": {
+    "title": "Color blindness",
+    "kinds": {
+      "normal": "Normal vision",
+      "protanopia": "Protanopia",
+      "deuteranopia": "Deuteranopia",
+      "tritanopia": "Tritanopia",
+      "achromatopsia": "Achromatopsia"
+    },
+    "note": "How the color looks without red cones (protanopia), green cones (deuteranopia), blue cones (tritanopia) or any color vision (achromatopsia)"
+  },
   "errors": {
     "unknown": "This is not a CSS color. Try a hex code like #3b82f6, a color function like rgb() or oklch(), or a color name",
     "syntax": "This color function is not written right: it needs three values, and an optional alpha after a slash",

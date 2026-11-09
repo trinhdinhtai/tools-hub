@@ -64,7 +64,7 @@ describe("IP / CIDR Calculator", () => {
     expect(screen.getByLabelText("Subnets")).toHaveValue("10.0.0.0/25\n10.0.0.128/25");
 
     await user.click(screen.getByRole("combobox", { name: "New prefix" }));
-    await user.click(screen.getByRole("option", { name: "/26" }));
+    await user.click(await screen.findByRole("option", { name: "/26" }));
     expect(screen.getByLabelText("Subnets")).toHaveValue("10.0.0.0/26\n10.0.0.64/26\n10.0.0.128/26\n10.0.0.192/26");
     expect(screen.getByText("4 subnets of /26")).toBeInTheDocument();
   });
@@ -74,7 +74,7 @@ describe("IP / CIDR Calculator", () => {
     await user.click(screen.getByRole("button", { name: "Split", pressed: false }));
     await user.type(screen.getByLabelText("Input"), "10.0.0.0/8");
     await user.click(screen.getByRole("combobox", { name: "New prefix" }));
-    await user.click(screen.getByRole("option", { name: "/32" }));
+    await user.click(await screen.findByRole("option", { name: "/32" }));
     expect(screen.getByText("Showing the first 1024 of 16777216 subnets")).toBeInTheDocument();
   });
 
