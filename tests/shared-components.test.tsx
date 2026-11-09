@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { CopyButton } from "@/components/copy-button";
 import { ErrorMessage } from "@/components/error-message";
 import { FileDropZone } from "@/components/file-drop-zone";
+import { ResultRow } from "@/components/result-row";
 import { createI18n } from "@/i18n";
 import type { Locale } from "@/lib/tool";
 
@@ -74,5 +75,30 @@ describe("ErrorMessage", () => {
   it("is announced as an alert", async () => {
     await renderWithI18n(<ErrorMessage>Input is not valid Base64</ErrorMessage>);
     expect(screen.getByRole("alert")).toHaveTextContent("Input is not valid Base64");
+  });
+});
+
+describe("ResultRow", () => {
+  it("shows a labelled read-only result that copies", async () => {
+    const { user } = await renderWithI18n(<ResultRow label="Netmask" value="255.255.255.0" note="A /24 network" />);
+    const field = screen.getByLabelText("Netmask");
+    expect(field).toHaveValue("255.255.255.0");
+    expect(field).toHaveAttribute("readonly");
+    expect(field.tagName).toBe("INPUT");
+    expect(screen.getByText("A /24 network")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Copy" }));
+    expect(await navigator.clipboard.readText()).toBe("255.255.255.0");
+  });
+
+  it("shows a dash with nothing to copy when there is no value", async () => {
+    await renderWithI18n(<ResultRow label="Roman numerals" value={null} />);
+    expect(screen.getByLabelText("Roman numerals")).toHaveValue("—");
+    expect(screen.getByRole("button", { name: "Copy" })).toBeDisabled();
+  });
+
+  it("puts a control beside the copy button, and spans lines when asked", async () => {
+    await renderWithI18n(<ResultRow label="Binary" value={"1010"} multiline action={<button type="button">Width</button>} />);
+    expect(screen.getByLabelText("Binary").tagName).toBe("TEXTAREA");
+    expect(screen.getByRole("button", { name: "Width" })).toBeInTheDocument();
   });
 });
