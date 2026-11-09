@@ -1,4 +1,9 @@
 {
+  "mode": "Chế độ",
+  "modes": {
+    "text": "Văn bản",
+    "builder": "Trình dựng"
+  },
   "input": "Biểu thức cron",
   "placeholder": "*/15 9-17 * * 1-5 hoặc @daily",
   "explanation": "Bằng lời",
@@ -14,6 +19,24 @@
     "day": "Ngày trong tháng",
     "month": "Tháng",
     "weekday": "Thứ"
+  },
+  "builder": {
+    "title": "Trình dựng",
+    "pick": "Chọn một",
+    "kinds": {
+      "every": "Bất kỳ",
+      "step": "Mỗi N",
+      "range": "Khoảng",
+      "values": "Giá trị cụ thể"
+    },
+    "every": "Mỗi",
+    "from": "Từ",
+    "to": "Đến",
+    "step": "Bước",
+    "everyStep": "mỗi {{step}}",
+    "values": "Giá trị",
+    "unreadable": "{{field}}: viết là {{written}}, trình dựng không đọc được. Hãy chọn một lựa chọn để thay thế",
+    "needsFive": "Trình dựng cần biểu thức có năm trường. Hãy sửa ở trên, hoặc xoá đi để bắt đầu lại"
   },
   "runs": {
     "title": "Các lần chạy kế tiếp",
