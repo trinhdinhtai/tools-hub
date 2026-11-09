@@ -133,3 +133,154 @@ export function parseCron(text: string): Cron {
   const fields = Object.fromEntries(FIELDS.map((name, i) => [name, readField(name, pieces[i]!)])) as Record<FieldName, Field>;
   return { fields };
 }
+
+export type Locale = "en" | "vi";
+
+const pad = (n: number) => String(n).padStart(2, "0");
+
+interface Words {
+  and: string;
+  or: string;
+  through: (from: string, to: string) => string;
+  between: (from: string, to: string) => string;
+  /** The span a step runs over, e.g. "from 8 through 18". */
+  span: (from: string, to: string) => string;
+  at: string;
+  everyMinute: string;
+  ofEveryHour: string;
+  every: (n: number, field: FieldName) => string;
+  /** Wraps a field's listed values, e.g. "on days 1 and 15 of the month". */
+  label: (field: FieldName, list: string, plural: boolean) => string;
+  name: (field: FieldName, value: number) => string;
+}
+
+const EN_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const EN_WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const VI_WEEKDAYS = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
+const EN_UNITS: Record<FieldName, [string, string]> = {
+  minute: ["minute", "minutes"],
+  hour: ["hour", "hours"],
+  day: ["day", "days"],
+  month: ["month", "months"],
+  weekday: ["day of the week", "days of the week"],
+};
+const VI_UNITS: Record<FieldName, string> = { minute: "phút", hour: "giờ", day: "ngày", month: "tháng", weekday: "ngày trong tuần" };
+
+const WORDS: Record<Locale, Words> = {
+  en: {
+    and: "and",
+    or: "or",
+    through: (from, to) => `${from} through ${to}`,
+    between: (from, to) => `between ${from} and ${to}`,
+    span: (from, to) => `from ${from} through ${to}`,
+    at: "at",
+    everyMinute: "every minute",
+    ofEveryHour: "of every hour",
+    every: (n, field) => (n === 1 ? `every ${EN_UNITS[field][0]}` : `every ${n} ${EN_UNITS[field][1]}`),
+    label: (field, list, plural) => {
+      switch (field) {
+        case "minute":
+          return `at ${plural ? "minutes" : "minute"} ${list}`;
+        case "hour":
+          return `during ${plural ? "hours" : "hour"} ${list}`;
+        case "day":
+          return `on ${plural ? "days" : "day"} ${list} of the month`;
+        case "month":
+          return `in ${list}`;
+        case "weekday":
+          return `on ${list}`;
+      }
+    },
+    name: (field, value) => (field === "month" ? EN_MONTHS[value - 1]! : field === "weekday" ? EN_WEEKDAYS[value]! : String(value)),
+  },
+  vi: {
+    and: "và",
+    or: "hoặc",
+    through: (from, to) => `từ ${from} đến ${to}`,
+    between: (from, to) => `từ ${from} đến ${to}`,
+    span: (from, to) => `từ ${from} đến ${to}`,
+    at: "lúc",
+    everyMinute: "mỗi phút",
+    ofEveryHour: "của mỗi giờ",
+    every: (n, field) => (n === 1 ? `mỗi ${VI_UNITS[field]}` : `mỗi ${n} ${VI_UNITS[field]}`),
+    label: (field, list) => {
+      switch (field) {
+        case "minute":
+          return `vào phút ${list}`;
+        case "hour":
+          return `trong giờ ${list}`;
+        case "day":
+          return `vào ngày ${list} của tháng`;
+        case "month":
+        case "weekday":
+          return `vào ${list}`;
+      }
+    },
+    name: (field, value) => (field === "month" ? `tháng ${value}` : field === "weekday" ? VI_WEEKDAYS[value]! : String(value)),
+  },
+};
+
+function join(items: string[], word: string): string {
+  return items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} ${word} ${items.at(-1)}`;
+}
+
+/** `*` with no step: the field allows every value. */
+const isAll = (field: Field) => field.parts.length === 1 && field.parts[0]!.all && field.parts[0]!.step === 1;
+/** Only single values, such as `0,30`. */
+const isSimple = (field: Field) => field.parts.every((part) => !part.all && part.start === part.end);
+/** One stepped piece, such as `*\/15` or `8-18/2`. */
+const stepped = (field: Field) => (field.parts.length === 1 && field.parts[0]!.step > 1 ? field.parts[0]! : null);
+
+/** Times are listed in full, "at 08:30 and 17:30", only while there are this few. */
+const MAX_LISTED_TIMES = 6;
+
+function every(field: Field, part: Part, w: Words): string {
+  const every = w.every(part.step, field.name);
+  return part.all ? every : `${every} ${w.span(w.name(field.name, part.start), w.name(field.name, part.end))}`;
+}
+
+/** The field as its listed values, ranges kept as ranges unless a step makes them read better expanded. */
+function listed(field: Field, w: Words): string {
+  const name = (value: number) => w.name(field.name, value);
+  if (field.parts.some((part) => part.step > 1)) return w.label(field.name, join(field.values.map(name), w.and), field.values.length > 1);
+  const items = field.parts.map((part) => (part.start === part.end ? name(part.start) : w.through(name(part.start), name(part.end))));
+  return w.label(field.name, join(items, w.and), field.parts.length > 1 || field.parts[0]!.start !== field.parts[0]!.end);
+}
+
+/** Every phrase of a field other than `*`. */
+function phrase(field: Field, w: Words): string {
+  const step = stepped(field);
+  if (step) return every(field, step, w);
+  const only = field.parts.length === 1 ? field.parts[0]! : null;
+  // "Monday through Friday" reads better without "on".
+  if (field.name === "weekday" && only && only.start !== only.end) return w.through(w.name("weekday", only.start), w.name("weekday", only.end));
+  return listed(field, w);
+}
+
+function time(minute: Field, hour: Field, w: Words): string {
+  if (isSimple(minute) && isSimple(hour) && minute.values.length * hour.values.length <= MAX_LISTED_TIMES) {
+    return `${w.at} ${join(
+      hour.values.flatMap((h) => minute.values.map((m) => `${pad(h)}:${pad(m)}`)),
+      w.and,
+    )}`;
+  }
+  const minuteText = isAll(minute) ? w.everyMinute : phrase(minute, w);
+  if (isAll(hour)) return stepped(minute) || isAll(minute) ? minuteText : `${minuteText} ${w.ofEveryHour}`;
+  const only = hour.parts.length === 1 ? hour.parts[0]! : null;
+  if (only && only.step === 1) return `${minuteText}, ${w.between(`${pad(only.start)}:00`, `${pad(only.end)}:59`)}`;
+  return `${minuteText}, ${phrase(hour, w)}`;
+}
+
+/** The schedule in words, in English or Vietnamese, e.g. "Every 15 minutes, between 09:00 and 17:59, Monday through Friday". */
+export function explain(cron: Cron, locale: Locale): string {
+  const w = WORDS[locale];
+  const { minute, hour, day, month, weekday } = cron.fields;
+  const clauses = [time(minute, hour, w)];
+  const dayText = isAll(day) ? null : phrase(day, w);
+  const weekdayText = isAll(weekday) ? null : phrase(weekday, w);
+  if (dayText && weekdayText && day.restricted && weekday.restricted) clauses.push(`${dayText} ${w.or} ${weekdayText}`);
+  else clauses.push(...[dayText, weekdayText].filter((text) => text !== null));
+  if (!isAll(month)) clauses.push(phrase(month, w));
+  const sentence = clauses.join(", ");
+  return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+}
