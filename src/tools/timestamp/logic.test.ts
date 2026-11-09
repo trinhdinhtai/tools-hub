@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseInstant } from "./logic";
+import { parseInstant, TimestampError, type ParseOptions } from "./logic";
 
 // 2023-11-14T22:13:20Z, a known worked example.
 const NOW = Date.UTC(2023, 10, 14, 22, 13, 20);
@@ -41,5 +41,115 @@ describe("parseInstant: Unix timestamps", () => {
   it("reads in the unit asked for instead of guessing", () => {
     expect(parseInstant("1700000000", { ...UTC, unit: "ms" })).toMatchObject({ instant: 1_700_000_000_000_000n, unit: "ms" });
     expect(parseInstant("1700000000", { ...UTC, unit: "auto" })).toMatchObject({ unit: "s" });
+  });
+});
+
+const at = (iso: string) => BigInt(Date.parse(iso)) * 1_000_000n;
+
+describe("parseInstant: date strings", () => {
+  it.each([
+    ["2023-11-14T22:13:20Z", "2023-11-14T22:13:20Z"],
+    ["2023-11-14T22:13:20.123Z", "2023-11-14T22:13:20.123Z"],
+    ["2023-11-14 22:13:20z", "2023-11-14T22:13:20Z"],
+    ["2023-11-15T05:13:20+07:00", "2023-11-14T22:13:20Z"],
+    ["2023-11-14T17:13:20-0500", "2023-11-14T22:13:20Z"],
+    ["2023-11-15T05:13+07", "2023-11-14T22:13:00Z"],
+  ])("reads ISO 8601 %s", (text, iso) => {
+    expect(parseInstant(text, UTC)).toEqual({ instant: at(iso), source: "date" });
+  });
+
+  it("keeps a fraction of a second down to the nanosecond", () => {
+    expect(parseInstant("1970-01-01T00:00:00.123456789Z", UTC).instant).toBe(123_456_789n);
+    expect(parseInstant("1970-01-01T00:00:01,5Z", UTC).instant).toBe(1_500_000_000n);
+  });
+
+  it("reads a date or time without an offset in the zone given", () => {
+    const hcm = { now: NOW, zone: "Asia/Ho_Chi_Minh" };
+    expect(parseInstant("2024-03-10 08:00", hcm).instant).toBe(at("2024-03-10T01:00:00Z"));
+    expect(parseInstant("2024-03-10", hcm).instant).toBe(at("2024-03-09T17:00:00Z"));
+    expect(parseInstant("2024-03-10", UTC).instant).toBe(at("2024-03-10T00:00:00Z"));
+  });
+
+  it("follows daylight saving time, reading a skipped hour forward and a repeated hour as the first", () => {
+    const ny = { now: NOW, zone: "America/New_York" };
+    expect(parseInstant("2024-07-01T12:00", ny).instant).toBe(at("2024-07-01T16:00:00Z"));
+    expect(parseInstant("2024-01-01T12:00", ny).instant).toBe(at("2024-01-01T17:00:00Z"));
+    // 02:30 does not exist on 10 March: it reads as 03:30 daylight time.
+    expect(parseInstant("2024-03-10T02:30", ny).instant).toBe(at("2024-03-10T07:30:00Z"));
+    // 01:30 happens twice on 3 November: the first, daylight time, is taken.
+    expect(parseInstant("2024-11-03T01:30", ny).instant).toBe(at("2024-11-03T05:30:00Z"));
+  });
+
+  it("follows daylight saving time the same way east of UTC", () => {
+    const berlin = { now: NOW, zone: "Europe/Berlin" };
+    // 02:30 does not exist on 31 March: it reads as 03:30 summer time.
+    expect(parseInstant("2024-03-31T02:30", berlin).instant).toBe(at("2024-03-31T01:30:00Z"));
+    // 02:30 happens twice on 27 October: the first, summer time, is taken.
+    expect(parseInstant("2024-10-27T02:30", berlin).instant).toBe(at("2024-10-27T00:30:00Z"));
+    const sydney = { now: NOW, zone: "Australia/Sydney" };
+    expect(parseInstant("2024-10-06T02:30", sydney).instant).toBe(at("2024-10-05T16:30:00Z"));
+    expect(parseInstant("2024-04-07T02:30", sydney).instant).toBe(at("2024-04-06T15:30:00Z"));
+  });
+
+  it("refuses text in other scripts and full-width digits", () => {
+    for (const text of ["１７００００００００", "२०२३-११-१४", "2023-11-14T22:13:20Ｚ", "now – 1d"]) {
+      expect(() => parseInstant(text, UTC)).toThrow(expect.objectContaining({ reason: "invalid" }));
+    }
+  });
+
+  it("reads HTTP and email dates (RFC 7231, RFC 2822)", () => {
+    expect(parseInstant("Tue, 14 Nov 2023 22:13:20 GMT", UTC).instant).toBe(at("2023-11-14T22:13:20Z"));
+    expect(parseInstant("14 Nov 2023 17:13:20 -0500", UTC).instant).toBe(at("2023-11-14T22:13:20Z"));
+  });
+
+  it("reads dates before 1970 and past 9999", () => {
+    expect(parseInstant("1969-12-31T23:59:59Z", UTC).instant).toBe(-1_000_000_000n);
+    expect(parseInstant("+010000-01-01T00:00:00Z", UTC).instant).toBe(at("+010000-01-01T00:00:00Z"));
+  });
+});
+
+describe("parseInstant: errors", () => {
+  const reason = (text: string, options: ParseOptions = UTC) => {
+    try {
+      parseInstant(text, options);
+    } catch (error) {
+      return error instanceof TimestampError ? error.reason : error;
+    }
+    return "parsed";
+  };
+
+  it("says the Input is empty", () => {
+    expect(reason("")).toBe("empty");
+    expect(reason("  \n\t")).toBe("empty");
+  });
+
+  it.each(["hello", "1700000000abc", "12.34.56", "2023-13-01", "2023-11-14T25:00Z", "2023-11-14T22:61Z", "1,2", "--5", "١٧٠٠٠٠٠٠٠٠", "１７００００００００", "2023-11-14T22:13:20+25:00", "😀"])(
+    "refuses %s as not a timestamp or date",
+    (text) => {
+      expect(reason(text)).toBe("invalid");
+    },
+  );
+
+  it("refuses a day the month does not have", () => {
+    expect(reason("2023-02-29")).toBe("invalid-date");
+    expect(reason("2023-04-31T00:00Z")).toBe("invalid-date");
+    expect(parseInstant("2024-02-29", UTC).instant).toBe(at("2024-02-29T00:00:00Z"));
+  });
+
+  it("refuses an instant beyond what a calendar date can show (±100 million days)", () => {
+    expect(reason("8640000000000001", { ...UTC, unit: "ms" })).toBe("out-of-range");
+    expect(reason("99999999999999999999999")).toBe("out-of-range");
+    expect(reason("+275760-09-14T00:00:01Z")).toBe("out-of-range");
+    expect(reason("+999999-01-01")).toBe("out-of-range");
+    expect(reason("-271821-04-19T00:00", { now: NOW, zone: "Asia/Ho_Chi_Minh" })).toBe("out-of-range");
+    expect(reason("-271821-04-20T00:00", { now: NOW, zone: "Asia/Ho_Chi_Minh" })).toBe("out-of-range");
+    expect(parseInstant("8640000000000000", { ...UTC, unit: "ms" }).instant).toBe(8_640_000_000_000_000_000_000n);
+  });
+
+  it("refuses a very long Input quickly", () => {
+    const start = performance.now();
+    expect(reason("1".repeat(1_000_000))).toBe("out-of-range");
+    expect(reason("x".repeat(1_000_000))).toBe("invalid");
+    expect(performance.now() - start).toBeLessThan(500);
   });
 });
