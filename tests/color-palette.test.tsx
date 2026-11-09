@@ -144,6 +144,98 @@ describe("Color Palette", () => {
     expect(screen.getByLabelText("HEX")).toHaveValue("#ff0000");
   });
 
+  it("checks WCAG contrast on a background and offers the nearest color that passes", async () => {
+    const { user, platform } = await openTool();
+    await typeColor(user, "#3b82f6");
+
+    const contrast = screen.getByRole("region", { name: "Contrast" });
+    expect(screen.getByLabelText("Background")).toHaveValue("#ffffff");
+    expect(screen.getByLabelText("Contrast ratio")).toHaveValue("3.67:1");
+    const levels = within(contrast).getByRole("list", { name: "WCAG levels" });
+    expect(within(levels).getByText("AA normal text (4.5:1) · Fail")).toBeInTheDocument();
+    expect(within(levels).getByText("AA large text (3:1) · Pass")).toBeInTheDocument();
+    expect(within(levels).getByText("UI components (3:1) · Pass")).toBeInTheDocument();
+
+    await user.click(within(contrast).getAllByRole("button", { name: /^Cop(y|ied)$/ })[0]!);
+    expect(await navigator.clipboard.readText()).toBe("3.67:1");
+
+    const suggestion = (screen.getByLabelText("Nearest color for AA") as HTMLInputElement).value;
+    expect(suggestion).toMatch(/^#[0-9a-f]{6}$/);
+    await user.click(within(contrast).getAllByRole("button", { name: /^Cop(y|ied)$/ })[1]!);
+    expect(await navigator.clipboard.readText()).toBe(suggestion);
+    expect(within(screen.getByRole("group", { name: "Recent" })).getByRole("button", { name: `Use ${suggestion}` })).toBeInTheDocument();
+
+    await user.click(within(contrast).getAllByRole("button", { name: "Use" })[0]!);
+    expect(screen.getByLabelText("Color")).toHaveValue(suggestion);
+    expect(within(levels).getByText("AA normal text (4.5:1) · Pass")).toBeInTheDocument();
+    expect(screen.getByLabelText("Nearest color for AA")).toHaveValue(suggestion);
+    expect(screen.getByText("The color already passes this level")).toBeInTheDocument();
+
+    // Neither color is ever written to the store.
+    await user.clear(screen.getByLabelText("Background"));
+    await user.type(screen.getByLabelText("Background"), "#fafafa");
+    expect(JSON.stringify(platform.dump())).not.toContain("fafafa");
+  });
+
+  it("swaps text and background, and says when no color reaches a level", async () => {
+    const { user } = await openTool();
+    await typeColor(user, "#777777");
+    await user.clear(screen.getByLabelText("Background"));
+    await user.paste("#777777");
+    expect(screen.getByLabelText("Contrast ratio")).toHaveValue("1:1");
+    expect(screen.getByLabelText("Nearest color for AAA")).toHaveValue("—");
+    expect(screen.getByText("Not even black or white reaches this level on this background")).toBeInTheDocument();
+
+    await user.clear(screen.getByLabelText("Background"));
+    await user.paste("navy");
+    await user.click(screen.getByRole("button", { name: "Swap" }));
+    expect(screen.getByLabelText("Color")).toHaveValue("navy");
+    expect(screen.getByLabelText("Background")).toHaveValue("#777777");
+
+    await typeColor(user, "rgb(0 0 0 / 0.1)");
+    await user.clear(screen.getByLabelText("Background"));
+    await user.paste("#ffffff");
+    expect(screen.getAllByText(/too transparent to reach this level/)).toHaveLength(2);
+  });
+
+  it("shows a clear error for an invalid background, without crashing", async () => {
+    const { user } = await openTool();
+    await typeColor(user, "#000000");
+    const background = screen.getByLabelText("Background");
+    await user.clear(background);
+    await user.paste("rgb(1 2)");
+    expect(screen.getByRole("alert")).toHaveTextContent("not written right");
+    expect(screen.queryByLabelText("Contrast ratio")).not.toBeInTheDocument();
+
+    await user.clear(background);
+    await user.paste("🎨".repeat(5000));
+    expect(screen.getByRole("alert")).toHaveTextContent("not a CSS color");
+
+    await user.clear(background);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Contrast ratio")).not.toBeInTheDocument();
+
+    await user.paste("white");
+    expect(screen.getByLabelText("Contrast ratio")).toHaveValue("21:1");
+  });
+
+  it("shows the color as people with color blindness see it", async () => {
+    const { user } = await openTool();
+    await typeColor(user, "#ff0000");
+    const vision = screen.getByRole("region", { name: "Color blindness" });
+    for (const [kind, hex] of [
+      ["Normal vision", "#ff0000"],
+      ["Protanopia", "#6d5f00"],
+      ["Deuteranopia", "#a39000"],
+      ["Achromatopsia", "#7f7f7f"],
+    ] as const) {
+      expect(within(vision).getByText(kind)).toBeInTheDocument();
+      expect(within(vision).getByText(hex)).toBeInTheDocument();
+    }
+    await user.click(within(vision).getByRole("button", { name: "Use #6d5f00" }));
+    expect(screen.getByLabelText("Color")).toHaveValue("#6d5f00");
+  });
+
   it("speaks Vietnamese", async () => {
     const user = userEvent.setup();
     render(<App platform={createMemoryPlatform({ osLocale: "vi-VN" })} />);
@@ -157,5 +249,8 @@ describe("Color Palette", () => {
     expect(screen.getByRole("region", { name: "Dải sắc độ" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Bổ túc", pressed: true })).toBeInTheDocument();
     expect(screen.getByLabelText("Dải sắc độ dạng Biến CSS")).toBeInTheDocument();
+    expect(screen.getByLabelText("Tỉ lệ tương phản")).toHaveValue("3.99:1");
+    expect(screen.getByText("AA chữ lớn (3:1) · Đạt")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Mù màu" })).toHaveTextContent("Mù màu đỏ");
   });
 });
