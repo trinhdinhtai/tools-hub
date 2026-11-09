@@ -1,4 +1,9 @@
 {
+  "mode": "Mode",
+  "modes": {
+    "decode": "Decode",
+    "sign": "Sign"
+  },
   "input": "Token",
   "placeholder": "eyJhbGciOi… A Bearer prefix or line breaks are fine",
   "header": "Header",
@@ -34,5 +39,44 @@
     "utf8": "The {{part}} does not decode to UTF-8 text",
     "json": "The {{part}} is not valid JSON",
     "not-object": "The {{part}} is JSON but not an object"
+  },
+  "verify": {
+    "title": "Verify signature",
+    "key": "Verification key",
+    "placeholder": "Secret, PEM public key or certificate, JWK or JWKS",
+    "hint": "Paste the key to check the signature. A JWKS is pasted, never fetched from a URL",
+    "valid": "Signature verified",
+    "validKid": "Signature verified with key {{kid}}",
+    "invalid": "Invalid signature: the token was not signed with this key, or was changed after signing"
+  },
+  "sign": {
+    "payload": "Payload",
+    "alg": "Algorithm",
+    "secret": "Secret",
+    "privateKey": "Private key",
+    "secretPlaceholder": "The shared secret, as text",
+    "privateKeyPlaceholder": "-----BEGIN PRIVATE KEY----- (PKCS#8 PEM) or a private JWK",
+    "hint": "Paste a key to sign the payload. Use test keys only",
+    "token": "Signed token",
+    "decode": "Open in Decode"
+  },
+  "jws": {
+    "key-empty": "Paste a key first",
+    "key-json": "The key starts like JSON but is not valid JSON",
+    "key-format": "This JSON is neither a JWK (it has no kty) nor a JWKS (it has no keys array)",
+    "pem-unsupported": "{{detail}} PEM is not supported: convert it to PKCS#8 or SPKI, e.g. openssl pkey -in key.pem",
+    "key-mismatch": "{{detail}} needs a different kind of key: HS algorithms take a secret, the others a public or private key",
+    "key-invalid": "This key can’t be used with {{detail}}: check its type, curve and encoding",
+    "jwks-no-match": "No key in the JWKS fits this token’s kid and alg",
+    "jwks-secret": "A JWKS holds public keys, not HMAC secrets: paste the secret itself to verify an HS token",
+    "jwks-invalid": "This JWKS is not valid: each entry in keys must be a JWK",
+    "jws-unsupported": "This token uses JWS features the Tool doesn’t verify, such as a crit or b64 header",
+    "jwks-sign": "Paste one private key to sign with, not a JWKS",
+    "alg-none": "The token is unsigned (alg none): there is no signature to verify",
+    "alg-unsupported": "The alg {{detail}} is not supported",
+    "private-needed": "Signing needs the private key, not the public one",
+    "payload-json": "The payload is not valid JSON",
+    "payload-not-object": "The payload must be a JSON object",
+    "failed": "Couldn’t complete: {{message}}"
   }
 }

@@ -4,6 +4,7 @@ import { EditorView } from "@codemirror/view";
 import { describe, expect, it } from "vitest";
 import { App } from "@/app/App";
 import { createMemoryPlatform, type MemoryPlatform } from "@/platform/memory";
+import * as keys from "@/tools/jwt-decoder/crypto.fixtures";
 
 /** Base64url of a text's UTF-8, without padding. */
 function b64url(text: string): string {
@@ -120,5 +121,101 @@ describe("JWT Decoder", () => {
     await enter(user, token({ exp: nowSeconds() - 3 * 86_400 }));
     expect(screen.getByText(/Đã hết hạn 3 ngày trước/)).toBeInTheDocument();
     expect(screen.getByLabelText("Hết hạn (exp)")).toBeInTheDocument();
+  });
+
+  it("verifies the signature with a pasted secret, PEM or JWKS, and says when it does not match", async () => {
+    const { user } = await openTool();
+    await enter(user, keys.tokens.HS512);
+    expect(screen.getByText("Decoded only: the signature is not verified")).toBeInTheDocument();
+
+    await enter(user, keys.hs512Secret, "Verification key");
+    expect(await screen.findByText("Signature verified")).toBeInTheDocument();
+    expect(screen.queryByText("Decoded only: the signature is not verified")).not.toBeInTheDocument();
+
+    await enter(user, "another secret", "Verification key");
+    expect(await screen.findByText(/^Invalid signature/)).toBeInTheDocument();
+
+    // A public key must never be taken as the HMAC secret.
+    await enter(user, keys.rsaPublicPem, "Verification key");
+    expect(await screen.findByRole("alert")).toHaveTextContent("HS512 needs a different kind of key");
+
+    await enter(user, keys.tokens.RS256);
+    await enter(user, JSON.stringify({ keys: [keys.ec256PublicJwk, keys.rsaPublicJwk] }), "Verification key");
+    expect(await screen.findByText("Signature verified with key rsa-1")).toBeInTheDocument();
+
+    await enter(user, keys.tokens.EdDSA);
+    expect(await screen.findByRole("alert")).toHaveTextContent("No key in the JWKS fits");
+    await enter(user, keys.edPublicPem, "Verification key");
+    expect(await screen.findByText("Signature verified")).toBeInTheDocument();
+  });
+
+  it("signs a test token with the user's key, with copy, and opens it in Decode", async () => {
+    const { user } = await openTool();
+    await user.click(screen.getByRole("button", { name: "Sign" }));
+    expect(screen.getByText(/Paste a key to sign the payload/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("combobox", { name: "Algorithm" }));
+    await user.click(await screen.findByRole("option", { name: "ES256" }));
+    await enter(user, keys.ec256PrivatePem, "Private key");
+    const signed = await screen.findByLabelText("Signed token");
+    await waitFor(() => expect(signed).not.toHaveValue("—"));
+    const token = (signed as HTMLTextAreaElement).value;
+
+    await user.click(within(signed.closest("div")!).getByRole("button", { name: "Copy" }));
+    expect(await navigator.clipboard.readText()).toBe(token);
+
+    await user.click(screen.getByRole("button", { name: "Open in Decode" }));
+    expect(screen.getByLabelText("Token")).toHaveValue(token);
+    expect(JSON.parse(editorText("Header"))).toEqual({ alg: "ES256", typ: "JWT" });
+    expect(JSON.parse(editorText("Payload"))).toMatchObject({ sub: "1234567890", name: "Dev" });
+    await enter(user, keys.ec256PublicPem, "Verification key");
+    expect(await screen.findByText("Signature verified")).toBeInTheDocument();
+
+    // The Sign Mode keeps its Input when the user comes back to it.
+    await user.click(screen.getByRole("button", { name: "Sign" }));
+    expect(screen.getByLabelText("Private key")).toHaveValue(keys.ec256PrivatePem);
+  });
+
+  it("shows why it cannot sign, without crashing", async () => {
+    const { user } = await openTool();
+    await user.click(screen.getByRole("button", { name: "Sign" }));
+    await enter(user, keys.rsaPublicPem, "Secret");
+    expect(await screen.findByRole("alert")).toHaveTextContent("HS256 needs a different kind of key");
+
+    await user.click(screen.getByRole("combobox", { name: "Algorithm" }));
+    await user.click(await screen.findByRole("option", { name: "RS256" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Signing needs the private key");
+
+    await enter(user, keys.rsaPrivatePem, "Private key");
+    await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
+    const payload = EditorView.findFromDOM(screen.getByRole("textbox", { name: "Payload" }))!;
+    act(() => payload.dispatch({ changes: { from: 0, to: payload.state.doc.length, insert: "[1, 2]" } }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("The payload must be a JSON object");
+  });
+
+  it("keeps no key: neither the verification key nor the signing key reaches the store", async () => {
+    const platform = createMemoryPlatform({ osLocale: "en-US" });
+    const { user, unmount } = await openTool(platform);
+    await enter(user, keys.tokens.HS512);
+    await enter(user, keys.hs512Secret, "Verification key");
+    await screen.findByText("Signature verified");
+    await user.click(screen.getByRole("button", { name: "Sign" }));
+    await enter(user, "sign-secret-do-not-store", "Secret");
+    await screen.findByLabelText("Signed token");
+    unmount();
+
+    const stored = JSON.stringify(platform.dump());
+    expect(stored).not.toContain("HS512");
+    expect(stored).not.toContain("sign-secret-do-not-store");
+  });
+
+  it("verifies and signs in Vietnamese", async () => {
+    const { user } = await openTool(createMemoryPlatform({ osLocale: "vi-VN" }), "Giải mã JWT", "Token");
+    await enter(user, keys.tokens.HS512);
+    await enter(user, "sai", "Khoá xác minh");
+    expect(await screen.findByText(/^Chữ ký không hợp lệ/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Ký" }));
+    await enter(user, keys.rsaPublicPem, "Secret");
+    expect(await screen.findByRole("alert")).toHaveTextContent("HS256 cần loại khoá khác");
   });
 });

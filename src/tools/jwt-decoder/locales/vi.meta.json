@@ -1,4 +1,4 @@
 {
   "name": "Giải mã JWT",
-  "description": "Giải mã header và payload của JWT, xem khi nào token hết hạn và còn dùng được không"
+  "description": "Giải mã JWT, xem khi nào hết hạn, xác minh chữ ký bằng khoá dán vào, hoặc ký token test"
 }

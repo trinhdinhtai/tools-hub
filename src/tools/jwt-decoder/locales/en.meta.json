@@ -1,4 +1,4 @@
 {
   "name": "JWT Decoder",
-  "description": "Decode a JWT's header and payload, and see when it expires and whether it still works"
+  "description": "Decode a JWT, see when it expires, verify its signature with a pasted key, or sign a test token"
 }

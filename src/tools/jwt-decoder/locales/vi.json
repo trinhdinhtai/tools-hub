@@ -1,4 +1,9 @@
 {
+  "mode": "Chế độ",
+  "modes": {
+    "decode": "Giải mã",
+    "sign": "Ký"
+  },
   "input": "Token",
   "placeholder": "eyJhbGciOi… Có tiền tố Bearer hay xuống dòng cũng được",
   "header": "Header",
@@ -34,5 +39,44 @@
     "utf8": "Phần {{part}} không giải mã ra văn bản UTF-8",
     "json": "Phần {{part}} không phải JSON hợp lệ",
     "not-object": "Phần {{part}} là JSON nhưng không phải object"
+  },
+  "verify": {
+    "title": "Xác minh chữ ký",
+    "key": "Khoá xác minh",
+    "placeholder": "Secret, PEM public key hoặc certificate, JWK hoặc JWKS",
+    "hint": "Dán khoá vào để kiểm tra chữ ký. JWKS chỉ được dán vào, không bao giờ tải từ URL",
+    "valid": "Chữ ký hợp lệ",
+    "validKid": "Chữ ký hợp lệ với khoá {{kid}}",
+    "invalid": "Chữ ký không hợp lệ: token không được ký bằng khoá này, hoặc đã bị sửa sau khi ký"
+  },
+  "sign": {
+    "payload": "Payload",
+    "alg": "Thuật toán",
+    "secret": "Secret",
+    "privateKey": "Private key",
+    "secretPlaceholder": "Secret dùng chung, dạng văn bản",
+    "privateKeyPlaceholder": "-----BEGIN PRIVATE KEY----- (PEM PKCS#8) hoặc JWK private",
+    "hint": "Dán khoá vào để ký payload. Chỉ dùng khoá test",
+    "token": "Token đã ký",
+    "decode": "Mở trong Giải mã"
+  },
+  "jws": {
+    "key-empty": "Hãy dán khoá trước",
+    "key-json": "Khoá bắt đầu giống JSON nhưng không phải JSON hợp lệ",
+    "key-format": "JSON này không phải JWK (không có kty) cũng không phải JWKS (không có mảng keys)",
+    "pem-unsupported": "Không hỗ trợ PEM {{detail}}: hãy đổi sang PKCS#8 hoặc SPKI, ví dụ openssl pkey -in key.pem",
+    "key-mismatch": "{{detail}} cần loại khoá khác: thuật toán HS dùng secret, các thuật toán khác dùng public key hoặc private key",
+    "key-invalid": "Không dùng được khoá này với {{detail}}: hãy kiểm tra loại khoá, curve và cách mã hoá",
+    "jwks-no-match": "JWKS không có khoá nào khớp kid và alg của token",
+    "jwks-secret": "JWKS chứa public key, không chứa secret HMAC: hãy dán chính secret để xác minh token HS",
+    "jwks-invalid": "JWKS này không hợp lệ: mỗi phần tử trong keys phải là một JWK",
+    "jws-unsupported": "Token dùng tính năng JWS mà Tool không xác minh, như header crit hoặc b64",
+    "jwks-sign": "Hãy dán một private key để ký, không phải JWKS",
+    "alg-none": "Token không ký (alg none): không có chữ ký để xác minh",
+    "alg-unsupported": "Không hỗ trợ alg {{detail}}",
+    "private-needed": "Để ký cần private key, không phải public key",
+    "payload-json": "Payload không phải JSON hợp lệ",
+    "payload-not-object": "Payload phải là một JSON object",
+    "failed": "Không thực hiện được: {{message}}"
   }
 }
