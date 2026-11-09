@@ -1,0 +1,4 @@
+{
+  "name": "Chuyển đổi Timestamp",
+  "description": "Đổi Unix timestamp, từ giây tới nano giây, hoặc một ngày sang mọi dạng khác, ở múi giờ bất kỳ; tính được biểu thức như now - 1d"
+}

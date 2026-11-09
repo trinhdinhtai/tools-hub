@@ -1,0 +1,42 @@
+{
+  "input": "Đầu vào",
+  "placeholder": "1700000000, 2023-11-14T22:13:20Z hoặc now - 1d",
+  "now": "Bây giờ",
+  "unit": "Đơn vị",
+  "units": {
+    "auto": "Tự động",
+    "s": "Giây",
+    "ms": "Mili giây",
+    "us": "Micro giây",
+    "ns": "Nano giây"
+  },
+  "readAs": {
+    "unix": "Đọc là Unix timestamp tính bằng {{unit}}",
+    "date": "Đọc là một ngày",
+    "now": "Đọc là thời điểm hiện tại"
+  },
+  "fields": {
+    "s": "Unix giây",
+    "ms": "Unix mili giây",
+    "us": "Unix micro giây",
+    "ns": "Unix nano giây",
+    "iso": "ISO 8601 (UTC)",
+    "relative": "Tương đối"
+  },
+  "zones": {
+    "title": "Múi giờ",
+    "local": "{{zone}} (máy này)",
+    "add": "Thêm",
+    "addLabel": "Múi giờ cần thêm",
+    "addPlaceholder": "Asia/Tokyo",
+    "remove": "Xoá {{zone}}",
+    "unknown": "Không có múi giờ nào tên {{zone}}",
+    "outOfRange": "Quá xa năm 1970 để hiện ở múi giờ này"
+  },
+  "errors": {
+    "empty": "Hãy nhập Unix timestamp hoặc một ngày trước",
+    "invalid": "Hãy nhập Unix timestamp, ngày ISO 8601 như 2023-11-14T22:13:20Z, hoặc now - 1d",
+    "invalid-date": "Tháng đó không có ngày này",
+    "out-of-range": "Thời điểm này cách năm 1970 hơn 100 triệu ngày, vượt quá giới hạn của một ngày"
+  }
+}

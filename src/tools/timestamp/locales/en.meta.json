@@ -1,0 +1,4 @@
+{
+  "name": "Timestamp Converter",
+  "description": "Turn a Unix timestamp, in seconds to nanoseconds, or a date into every other form, in any time zone; work out sums like now - 1d"
+}
