@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { convert, EscapeError } from "./logic";
+import { punycodeDecode, punycodeEncode } from "./punycode";
 
 /** The reason and offending sequence of the `EscapeError` that `run` throws. */
 function failure(run: () => unknown): { reason: string; sequence: string } {
@@ -161,5 +162,85 @@ describe("Hex", () => {
     expect(convert(convert(big, "hex", "escape"), "hex", "unescape")).toBe(big);
     const plain = "ế".repeat(1_000_000);
     expect(convert(plain, "hex", "unescape")).toBe(plain);
+  });
+});
+
+describe("Punycode (RFC 3492)", () => {
+  const cp = (...codePoints: number[]) => String.fromCodePoint(...codePoints);
+  // RFC 3492 §7.1 sample strings: Unicode → Punycode, case of basic code points kept.
+  const vectors: [string, string, string][] = [
+    ["A Arabic (Egyptian)", cp(0x644, 0x64a, 0x647, 0x645, 0x627, 0x628, 0x62a, 0x643, 0x644, 0x645, 0x648, 0x634, 0x639, 0x631, 0x628, 0x64a, 0x61f), "egbpdaj6bu4bxfgehfvwxn"],
+    ["B Chinese (simplified)", cp(0x4ed6, 0x4eec, 0x4e3a, 0x4ec0, 0x4e48, 0x4e0d, 0x8bf4, 0x4e2d, 0x6587), "ihqwcrb4cv8a8dqg056pqjye"],
+    ["C Chinese (traditional)", cp(0x4ed6, 0x5011, 0x7232, 0x4ec0, 0x9ebd, 0x4e0d, 0x8aaa, 0x4e2d, 0x6587), "ihqwctvzc91f659drss3x8bo0yb"],
+    ["D Czech", "Pročprostěnemluvíčesky", "Proprostnemluvesky-uyb24dma41a"],
+    ["J Spanish", "PorquénopuedensimplementehablarenEspañol", "PorqunopuedensimplementehablarenEspaol-fmd56a"],
+    ["K Vietnamese", "TạisaohọkhôngthểchỉnóitiếngViệt", "TisaohkhngthchnitingVit-kjcr8268qyxafd2f1b9g"],
+    ["L 3年B組金八先生", cp(0x33, 0x5e74, 0x42, 0x7d44, 0x91d1, 0x516b, 0x5148, 0x751f), "3B-ww4c5e180e575a65lsy2b"],
+    ["O ひとつ屋根の下2", cp(0x3072, 0x3068, 0x3064, 0x5c4b, 0x6839, 0x306e, 0x4e0b, 0x32), "2-u9tlzr9756bt3uc0v"],
+    ["R そのスピードで", cp(0x305d, 0x306e, 0x30b9, 0x30d4, 0x30fc, 0x30c9, 0x3067), "d9juau41awczczp"],
+    ["S all basic", "-> $1.00 <-", "-> $1.00 <--"],
+  ];
+
+  it.each(vectors)("encodes and decodes %s", (_, unicode, encoded) => {
+    expect(punycodeEncode(unicode)).toBe(encoded);
+    expect(punycodeDecode(encoded)).toBe(unicode);
+  });
+
+  it("decodes digits in either case", () => {
+    expect(punycodeDecode("IHQWCRB4CV8A8DQG056PQJYE")).toBe(cp(0x4ed6, 0x4eec, 0x4e3a, 0x4ec0, 0x4e48, 0x4e0d, 0x8bf4, 0x4e2d, 0x6587));
+  });
+
+  it("rejects text that is not Punycode", () => {
+    expect(() => punycodeDecode("abc-!")).toThrow(RangeError);
+    expect(() => punycodeDecode("é-abc")).toThrow(RangeError);
+    expect(() => punycodeDecode("99999999999999a")).toThrow(RangeError);
+  });
+});
+
+describe("Punycode domains", () => {
+  it("encodes each label that is not ASCII, lowercase, with the xn-- prefix", () => {
+    expect(convert("münchen.de", "punycode", "escape")).toBe("xn--mnchen-3ya.de");
+    expect(convert("MÜNCHEN.DE", "punycode", "escape")).toBe("xn--mnchen-3ya.de");
+    expect(convert("tiếngviệt.vn", "punycode", "escape")).toBe("xn--tingvit-5t4cyc.vn");
+    expect(convert("😀.ws", "punycode", "escape")).toBe("xn--e28h.ws");
+    expect(convert("例え。jp", "punycode", "escape")).toBe("xn--r8jz45g.jp");
+  });
+
+  it("decodes each xn-- label, leaving the others as they are", () => {
+    expect(convert("xn--mnchen-3ya.de", "punycode", "unescape")).toBe("münchen.de");
+    expect(convert("XN--MNCHEN-3YA.DE", "punycode", "unescape")).toBe("münchen.DE");
+    expect(convert("www.xn--tingvit-5t4cyc.vn", "punycode", "unescape")).toBe("www.tiếngviệt.vn");
+  });
+
+  it("converts one domain per line, ignoring spaces around it", () => {
+    expect(convert("  münchen.de \nexample.com\n日本語.jp", "punycode", "escape")).toBe("xn--mnchen-3ya.de\nexample.com\nxn--wgv71a119e.jp");
+  });
+
+  it("round-trips a domain", () => {
+    expect(convert(convert("bücher.tiếngviệt.example", "punycode", "escape"), "punycode", "unescape")).toBe("bücher.tiếngviệt.example");
+  });
+
+  it("rejects an xn-- label that is not Punycode", () => {
+    expect(failure(() => convert("a.xn--mnchen-3y!.de", "punycode", "unescape"))).toEqual({
+      reason: "invalid-punycode",
+      sequence: "xn--mnchen-3y!",
+    });
+  });
+
+  it("rejects a label longer than 63 characters once encoded", () => {
+    const long = "ü".repeat(60);
+    expect(failure(() => convert(`${long}.de`, "punycode", "escape"))).toEqual({ reason: "label-too-long", sequence: long });
+  });
+
+  it("rejects one huge label at once, without encoding it", () => {
+    const huge = "Tiếng Việt có dấu ".repeat(60_000);
+    expect(failure(() => convert(huge, "punycode", "escape")).reason).toBe("label-too-long");
+  });
+
+  it("handles empty and large Input", () => {
+    expect(convert("", "punycode", "escape")).toBe("");
+    expect(convert("", "punycode", "unescape")).toBe("");
+    const many = Array(20_000).fill("münchen.de").join("\n");
+    expect(convert(convert(many, "punycode", "escape"), "punycode", "unescape")).toBe(many);
   });
 });

@@ -1,9 +1,17 @@
 import { decodeHTMLStrict } from "entities";
 import type { Mode } from "./modes";
+import { punycodeDecode, punycodeEncode } from "./punycode";
 
 export type Direction = "escape" | "unescape";
 
-export type EscapeErrorReason = "unknown-entity" | "invalid-code-point" | "unknown-escape" | "incomplete-escape" | "not-utf8";
+export type EscapeErrorReason =
+  | "unknown-entity"
+  | "invalid-code-point"
+  | "unknown-escape"
+  | "incomplete-escape"
+  | "not-utf8"
+  | "invalid-punycode"
+  | "label-too-long";
 
 /** Input that cannot be unescaped; `sequence` is the part of it that is wrong, as written. */
 export class EscapeError extends Error {
@@ -174,6 +182,47 @@ function unescapeHex(text: string): string {
   }
 }
 
+/** Full stops that separate domain labels (IDNA): ASCII, ideographic, fullwidth and halfwidth. */
+const LABEL_SEPARATOR = /[.。．｡]/;
+const MAX_LABEL_LENGTH = 63;
+
+/** Lowercases each label and gives the ones that are not ASCII as `xn--` Punycode. */
+function domainToAscii(domain: string): string {
+  return domain
+    .split(LABEL_SEPARATOR)
+    .map((label) => {
+      const lower = label.normalize("NFC").toLowerCase();
+      // Punycode is never shorter than its code points: a label past the limit fails before it is encoded.
+      if ([...lower].length > MAX_LABEL_LENGTH) throw new EscapeError("label-too-long", label);
+      const ascii = /[\u0080-￿]/.test(lower) ? `xn--${punycodeEncode(lower)}` : lower;
+      if (ascii.length > MAX_LABEL_LENGTH) throw new EscapeError("label-too-long", label);
+      return ascii;
+    })
+    .join(".");
+}
+
+/** Decodes each `xn--` label; the others stay as they are. */
+function domainToUnicode(domain: string): string {
+  return domain
+    .split(LABEL_SEPARATOR)
+    .map((label) => {
+      if (!/^xn--/i.test(label)) return label;
+      try {
+        return punycodeDecode(label.slice(4).toLowerCase());
+      } catch {
+        throw new EscapeError("invalid-punycode", label);
+      }
+    })
+    .join(".");
+}
+
+/** One domain per line, without the spaces around it. */
+const eachLine = (text: string, convertLine: (line: string) => string) =>
+  text
+    .split("\n")
+    .map((line) => convertLine(line.trim()))
+    .join("\n");
+
 /** Escapes or unescapes `input` the way `mode` says. Throws an `EscapeError` for Input that does not unescape. */
 export function convert(input: string, mode: Mode, direction: Direction): string {
   switch (mode) {
@@ -185,7 +234,7 @@ export function convert(input: string, mode: Mode, direction: Direction): string
       return direction === "escape" ? escapeUnicode(input) : unescapeUnicode(input);
     case "hex":
       return direction === "escape" ? escapeHex(input) : unescapeHex(input);
-    default:
-      throw new Error(`Mode ${mode} is not implemented`);
+    case "punycode":
+      return eachLine(input, direction === "escape" ? domainToAscii : domainToUnicode);
   }
 }
