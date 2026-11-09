@@ -51,7 +51,7 @@ export class CronError extends Error {
   }
 }
 
-const BOUNDS: Record<FieldName, { min: number; max: number }> = {
+export const BOUNDS: Record<FieldName, { min: number; max: number }> = {
   minute: { min: 0, max: 59 },
   hour: { min: 0, max: 23 },
   day: { min: 1, max: 31 },
@@ -94,7 +94,8 @@ function readValue(name: FieldName, token: string, field: string): number {
   return name === "month" ? index + 1 : index;
 }
 
-function readField(name: FieldName, text: string): Field {
+/** Reads one field as written, e.g. `9-17` for the hour. */
+export function readField(name: FieldName, text: string): Field {
   const { min, max } = BOUNDS[name];
   const unrestricted = text === "?" && (name === "day" || name === "weekday");
   const parts = (unrestricted ? ["*"] : text.split(",")).map((piece): Part => {

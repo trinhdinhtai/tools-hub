@@ -4,9 +4,13 @@ import { ErrorMessage } from "@/components/error-message";
 import { ResultRow } from "@/components/result-row";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { usePaste } from "@/lib/paste";
 import { usePreference } from "@/lib/preferences";
+import { BuilderMode } from "./BuilderMode";
 import { CronError, explain, FIELDS, nextRuns, parseCron, type Cron, type Field, type Locale, type Run } from "./logic";
+import { MODES, type Mode } from "./modes";
+import { valueName } from "./value-name";
 
 /** How many runs are listed. */
 const RUN_COUNT = 10;
@@ -21,6 +25,7 @@ export default function CronTool() {
   const { t, i18n } = useTranslation("cron");
   const locale: Locale = i18n.language === "vi" ? "vi" : "en";
   const inputId = useId();
+  const [mode, setMode] = useState<Mode>("text");
   const [text, setText] = useState("");
   // `now` is read when the Input changes, so the runs hold still while they are being copied.
   const [now, setNow] = useState(() => Date.now());
@@ -43,6 +48,14 @@ export default function CronTool() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Single choice: Base UI ToggleGroup values are arrays; pressing the active item again keeps it. */}
+      <ToggleGroup variant="outline" size="sm" aria-label={t("mode")} value={[mode]} onValueChange={([value]) => value && setMode(value as Mode)}>
+        {MODES.map((m) => (
+          <ToggleGroupItem key={m} value={m} className="px-3 text-subtle-foreground aria-pressed:text-foreground">
+            {t(`modes.${m}`)}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
       <div className="flex max-w-xl flex-col gap-2">
         <Label htmlFor={inputId}>{t("input")}</Label>
         <Input
@@ -62,6 +75,7 @@ export default function CronTool() {
         )}
       </div>
       {error && <ErrorMessage>{errorText(t, error)}</ErrorMessage>}
+      {mode === "builder" && <BuilderMode text={text} locale={locale} onChange={edit} />}
       {cron && (
         <>
           <div className="max-w-xl">
@@ -85,12 +99,7 @@ function errorText(t: T, error: CronError): string {
 
 /** A field's values for people: runs of three or more as ranges, months and weekdays by name. */
 function valuesText(field: Field, locale: Locale): string {
-  const name = (value: number) => {
-    if (field.name === "month") return new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" }).format(Date.UTC(2000, value - 1, 1));
-    // 2000-01-02 was a Sunday.
-    if (field.name === "weekday") return new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" }).format(Date.UTC(2000, 0, 2 + value));
-    return String(value);
-  };
+  const name = (value: number) => valueName(field.name, value, locale);
   const pieces: string[] = [];
   const values = field.values;
   for (let i = 0; i < values.length; ) {

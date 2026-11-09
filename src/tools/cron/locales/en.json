@@ -1,4 +1,9 @@
 {
+  "mode": "Mode",
+  "modes": {
+    "text": "Text",
+    "builder": "Builder"
+  },
   "input": "Cron expression",
   "placeholder": "*/15 9-17 * * 1-5 or @daily",
   "explanation": "In words",
@@ -14,6 +19,24 @@
     "day": "Day of month",
     "month": "Month",
     "weekday": "Weekday"
+  },
+  "builder": {
+    "title": "Builder",
+    "pick": "Pick one",
+    "kinds": {
+      "every": "Any",
+      "step": "Every N",
+      "range": "Range",
+      "values": "Specific values"
+    },
+    "every": "Every",
+    "from": "From",
+    "to": "To",
+    "step": "Step",
+    "everyStep": "every {{step}}",
+    "values": "Values",
+    "unreadable": "{{field}}: written as {{written}}, which the builder cannot read. Pick a choice to replace it",
+    "needsFive": "The builder needs an expression of five fields. Fix it above, or clear it to start over"
   },
   "runs": {
     "title": "Next runs",
