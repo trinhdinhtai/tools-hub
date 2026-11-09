@@ -129,6 +129,23 @@ function unescapeBackslash(text: string): string {
   return out + text.slice(i);
 }
 
+/** Every UTF-16 code unit past ASCII as `\uHHHH`, the escape JSON, JavaScript, Java and C# share. */
+function escapeUnicode(text: string): string {
+  return text.replace(/[\u0080-￿]/g, (ch) => hex4(ch.charCodeAt(0)));
+}
+
+/** Reads `\uHHHH` and `\u{H…}` escapes; every other character, backslashes too, stays as it is. */
+function unescapeUnicode(text: string): string {
+  let out = "";
+  let i = 0;
+  for (let at = text.indexOf("\\u"); at >= 0; at = text.indexOf("\\u", i)) {
+    const { codePoint, end } = readHexEscape(text, at);
+    out += text.slice(i, at) + String.fromCodePoint(codePoint);
+    i = end;
+  }
+  return out + text.slice(i);
+}
+
 /** Escapes or unescapes `input` the way `mode` says. Throws an `EscapeError` for Input that does not unescape. */
 export function convert(input: string, mode: Mode, direction: Direction): string {
   switch (mode) {
@@ -136,6 +153,8 @@ export function convert(input: string, mode: Mode, direction: Direction): string
       return direction === "escape" ? escapeHtml(input) : unescapeHtml(input);
     case "backslash":
       return direction === "escape" ? escapeBackslash(input) : unescapeBackslash(input);
+    case "unicode":
+      return direction === "escape" ? escapeUnicode(input) : unescapeUnicode(input);
     default:
       throw new Error(`Mode ${mode} is not implemented`);
   }

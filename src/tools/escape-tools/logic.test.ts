@@ -92,8 +92,40 @@ describe("Backslash", () => {
   });
 
   it("handles empty and large Input", () => {
+    expect(convert("", "backslash", "escape")).toBe("");
     expect(convert("", "backslash", "unescape")).toBe("");
     const big = 'x"\n\\'.repeat(100_000);
     expect(convert(convert(big, "backslash", "escape"), "backslash", "unescape")).toBe(big);
+  });
+});
+
+describe("Unicode", () => {
+  it("escapes every non-ASCII character as \\uHHHH, characters past U+FFFF as a surrogate pair", () => {
+    expect(convert("Tiếng Việt\n😀 ©", "unicode", "escape")).toBe("Ti\\u1ebfng Vi\\u1ec7t\n\\ud83d\\ude00 \\u00a9");
+  });
+
+  it("unescapes \\uHHHH and \\u{H…}, leaving other backslashes as they are", () => {
+    expect(convert("Ti\\u1EBFng \\u{1F600}\\ud83d\\ude00 C:\\temp\\n", "unicode", "unescape")).toBe("Tiếng 😀😀 C:\\temp\\n");
+  });
+
+  it("round-trips any text", () => {
+    const text = "日本語 Tiếng Việt 😀 \\ plain";
+    expect(convert(convert(text, "unicode", "escape"), "unicode", "unescape")).toBe(text);
+  });
+
+  it("rejects a \\u escape cut short or past U+10FFFF", () => {
+    expect(failure(() => convert("x\\u00e", "unicode", "unescape"))).toEqual({ reason: "incomplete-escape", sequence: "\\u00e" });
+    expect(failure(() => convert("\\u{}", "unicode", "unescape"))).toEqual({ reason: "incomplete-escape", sequence: "\\u{}" });
+    expect(failure(() => convert("\\u{FFFFFF}", "unicode", "unescape"))).toEqual({
+      reason: "invalid-code-point",
+      sequence: "\\u{FFFFFF}",
+    });
+  });
+
+  it("handles empty and large Input", () => {
+    expect(convert("", "unicode", "escape")).toBe("");
+    expect(convert("", "unicode", "unescape")).toBe("");
+    const big = "ă😀a".repeat(100_000);
+    expect(convert(convert(big, "unicode", "escape"), "unicode", "unescape")).toBe(big);
   });
 });
