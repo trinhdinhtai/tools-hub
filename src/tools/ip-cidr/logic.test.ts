@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CidrError, describeNetwork, formatAddress, mergeNetworks, parseNetwork, splitNetwork } from "./logic";
+import { CidrError, compareNetworks, describeNetwork, formatAddress, mergeNetworks, parseNetwork, splitNetwork } from "./logic";
 
 function reason(fn: () => unknown): string | undefined {
   try {
@@ -287,5 +287,26 @@ describe("mergeNetworks", () => {
 
   it("refuses a list with nothing in it", () => {
     expect(reason(() => mergeNetworks(" \n , \n"))).toBe("empty");
+  });
+});
+
+describe("compareNetworks", () => {
+  const compare = (a: string, b: string) => compareNetworks(parseNetwork(a), parseNetwork(b));
+
+  it.each([
+    ["10.0.0.0/8", "10.20.0.0/16", "contains"],
+    ["10.20.0.0/16", "10.0.0.0/8", "within"],
+    ["10.0.0.0/8", "10.200.3.4", "contains"],
+    ["10.0.0.5/24", "10.0.0.200/24", "equal"],
+    ["10.0.0.0/24", "10.0.1.0/24", "disjoint"],
+    ["2001:db8::/32", "2001:db8:ffff::1", "contains"],
+    ["fe80::/10", "2001:db8::/32", "disjoint"],
+    ["::/0", "::/0", "equal"],
+  ])("%s against %s: %s", (a, b, relation) => {
+    expect(compare(a, b)).toBe(relation);
+  });
+
+  it("refuses to compare IPv4 with IPv6", () => {
+    expect(reason(() => compare("10.0.0.0/8", "::ffff:10.0.0.1"))).toBe("mixed-versions");
   });
 });

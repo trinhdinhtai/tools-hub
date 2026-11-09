@@ -8,7 +8,7 @@ export interface Network {
   prefix: number;
 }
 
-export type CidrErrorReason = "empty" | "invalid-address" | "invalid-prefix" | "invalid-mask" | "invalid-split";
+export type CidrErrorReason = "empty" | "invalid-address" | "invalid-prefix" | "invalid-mask" | "invalid-split" | "mixed-versions";
 
 /** Why a text is not a network; `line` (from 1) says which line of a list was wrong. */
 export class CidrError extends Error {
@@ -344,4 +344,17 @@ export function mergeNetworks(text: string): string[] {
     }
     return merged.flatMap(([first, last]) => rangeToNetworks(version, first, last));
   });
+}
+
+/** How network A relates to network B. CIDR networks never partly overlap: one holds the other, or they are apart. */
+export type Relation = "equal" | "contains" | "within" | "disjoint";
+
+export function compareNetworks(a: Network, b: Network): Relation {
+  if (a.version !== b.version) throw new CidrError("mixed-versions");
+  const [aFirst, aLast] = bounds(a);
+  const [bFirst, bLast] = bounds(b);
+  if (aFirst === bFirst && aLast === bLast) return "equal";
+  if (aFirst <= bFirst && bLast <= aLast) return "contains";
+  if (bFirst <= aFirst && aLast <= bLast) return "within";
+  return "disjoint";
 }
