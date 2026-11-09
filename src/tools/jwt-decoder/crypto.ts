@@ -1,4 +1,5 @@
 import {
+  CompactSign,
   compactVerify,
   createLocalJWKSet,
   errors,
@@ -37,7 +38,11 @@ export type JwsErrorReason =
   | "jwks-invalid"
   | "jws-unsupported"
   | "alg-none"
-  | "alg-unsupported";
+  | "alg-unsupported"
+  | "private-needed"
+  | "jwks-sign"
+  | "payload-json"
+  | "payload-not-object";
 
 /** Why a token cannot be verified or signed with what was pasted. `detail` is the PEM label or alg a message names. */
 export class JwsError extends Error {
@@ -195,3 +200,43 @@ export async function verifyJwt(text: string, keyText: string): Promise<Verifica
   return { valid: false };
 }
 
+/** The private key that signs with `alg`. */
+async function signingKey(key: ParsedKey, alg: Algorithm): Promise<Key> {
+  if (key.kind === "jwks") throw new JwsError("jwks-sign");
+  checkKind(key, alg);
+  if (key.kind === "secret") return key.bytes;
+  if (key.kind === "jwk" ? key.jwk.kty !== "oct" && key.jwk.d === undefined : key.label !== "PRIVATE KEY") {
+    throw new JwsError("private-needed");
+  }
+  try {
+    return key.kind === "jwk" ? ((await importJWK(key.jwk, alg)) as Key) : await importPKCS8(key.pem, alg);
+  } catch {
+    throw new JwsError("key-invalid", alg);
+  }
+}
+
+/** The payload text as a JSON object, ready to sign. */
+function payloadOf(text: string): Record<string, unknown> {
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    throw new JwsError("payload-json");
+  }
+  if (typeof value !== "object" || value === null || Array.isArray(value)) throw new JwsError("payload-not-object");
+  return value as Record<string, unknown>;
+}
+
+/**
+ * A JWS compact token of `payloadText` (a JSON object) signed with `alg` and a pasted secret, PKCS#8 PEM or private
+ * JWK. The header is `{ alg, typ: "JWT" }`, with the JWK's `kid` when it has one.
+ */
+export async function signJwt(alg: Algorithm, payloadText: string, keyText: string): Promise<string> {
+  const payload = payloadOf(payloadText);
+  const parsed = parseKey(keyText);
+  const key = await signingKey(parsed, alg);
+  const kid = parsed.kind === "jwk" && typeof parsed.jwk.kid === "string" ? parsed.jwk.kid : undefined;
+  return new CompactSign(bytesOf(JSON.stringify(payload)))
+    .setProtectedHeader(kid === undefined ? { alg, typ: "JWT" } : { alg, typ: "JWT", kid })
+    .sign(key);
+}

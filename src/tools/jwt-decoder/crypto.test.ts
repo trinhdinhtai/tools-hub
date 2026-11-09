@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { JwsError, verifyJwt } from "./crypto";
+import { JwsError, signJwt, verifyJwt } from "./crypto";
+import { decodeJwt } from "./logic";
 import * as f from "./crypto.fixtures";
 
 /** The token with its payload swapped for another one: the signature no longer matches it. */
@@ -112,5 +113,52 @@ describe("verifyJwt", () => {
     expect(await jwsError(verifyJwt(unsigned, "secret"))).toEqual({ reason: "alg-none" });
     const odd = `${btoa('{"alg":"XY256"}').replace(/=+$/, "")}.${btoa("{}").replace(/=+$/, "")}.c2ln`;
     expect(await jwsError(verifyJwt(odd, "secret"))).toEqual({ reason: "alg-unsupported", detail: "XY256" });
+  });
+});
+
+describe("signJwt", () => {
+  it("signs an HS256 token with a Unicode secret, exactly as any other HMAC signer would", async () => {
+    // Computed with Node's crypto: HMAC-SHA256 over base64url(header).base64url(payload), secret as UTF-8.
+    expect(await signJwt("HS256", '{"sub":"42","name":"Tài"}', "bí mật")).toBe(
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0MiIsIm5hbWUiOiJUw6BpIn0.J-q-tQoh3wcF_iCzu_XqeRT13S1rn-flSuXR-9vhyH4",
+    );
+  });
+
+  it.each([
+    ["RS256", "a PKCS#8 PEM", f.rsaPrivatePem, f.rsaPublicPem],
+    ["PS384", "a PKCS#8 PEM", f.rsaPrivatePem, f.rsaPublicPem],
+    ["ES256", "a PKCS#8 PEM", f.ec256PrivatePem, f.ec256PublicPem],
+    ["EdDSA", "a PKCS#8 PEM", f.edPrivatePem, f.edPublicPem],
+    ["EdDSA", "a private JWK", JSON.stringify(f.edPrivateJwk), JSON.stringify(f.edPublicJwk)],
+    ["HS512", "a secret", f.hs512Secret, f.hs512Secret],
+  ] as const)("signs %s with %s, and the public key verifies it", async (alg, _key, privateKey, publicKey) => {
+    const token = await signJwt(alg, '{"sub":"42"}', privateKey);
+    expect(decodeJwt(token).header).toEqual({ alg, typ: "JWT" });
+    expect(await verifyJwt(token, publicKey)).toEqual({ valid: true });
+  });
+
+  it("puts the kid of a JWK in the header, so a JWKS can find the key", async () => {
+    const token = await signJwt("RS512", "{}", JSON.stringify(f.rsaPrivateJwk));
+    expect(decodeJwt(token).header).toEqual({ alg: "RS512", typ: "JWT", kid: "rsa-1" });
+    expect(await verifyJwt(token, JSON.stringify({ keys: [f.ec256PublicJwk, f.rsaPublicJwk] }))).toEqual({ valid: true, kid: "rsa-1" });
+  });
+
+  it("signs a large payload, keeping its Unicode", async () => {
+    const big = "Trịnh Đình Tài 🚀 ".repeat(50_000);
+    const token = await signJwt("ES512", JSON.stringify({ big }), f.ec521PrivatePem);
+    expect(decodeJwt(token).payload).toEqual({ big });
+  });
+
+  it("says what is wrong with the payload or the key", async () => {
+    expect(await jwsError(signJwt("HS256", "", "secret"))).toEqual({ reason: "payload-json" });
+    expect(await jwsError(signJwt("HS256", "{oops", "secret"))).toEqual({ reason: "payload-json" });
+    expect(await jwsError(signJwt("HS256", "[1, 2]", "secret"))).toEqual({ reason: "payload-not-object" });
+    expect(await jwsError(signJwt("HS256", "{}", ""))).toEqual({ reason: "key-empty" });
+    expect(await jwsError(signJwt("RS256", "{}", f.rsaPublicPem))).toEqual({ reason: "private-needed" });
+    expect(await jwsError(signJwt("RS256", "{}", JSON.stringify(f.rsaPublicJwk)))).toEqual({ reason: "private-needed" });
+    expect(await jwsError(signJwt("RS256", "{}", f.rsaPkcs1PrivatePem))).toEqual({ reason: "pem-unsupported", detail: "RSA PRIVATE KEY" });
+    expect(await jwsError(signJwt("HS256", "{}", f.rsaPrivatePem))).toEqual({ reason: "key-mismatch", detail: "HS256" });
+    expect(await jwsError(signJwt("ES256", "{}", f.rsaPrivatePem))).toEqual({ reason: "key-invalid", detail: "ES256" });
+    expect(await jwsError(signJwt("ES256", "{}", JSON.stringify({ keys: [] })))).toEqual({ reason: "jwks-sign" });
   });
 });
