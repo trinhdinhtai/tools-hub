@@ -1,0 +1,42 @@
+{
+  "input": "Input",
+  "placeholder": "1700000000, 2023-11-14T22:13:20Z or now - 1d",
+  "now": "Now",
+  "unit": "Unit",
+  "units": {
+    "auto": "Auto",
+    "s": "Seconds",
+    "ms": "Milliseconds",
+    "us": "Microseconds",
+    "ns": "Nanoseconds"
+  },
+  "readAs": {
+    "unix": "Read as a Unix timestamp in {{unit}}",
+    "date": "Read as a date",
+    "now": "Read as the current time"
+  },
+  "fields": {
+    "s": "Unix seconds",
+    "ms": "Unix milliseconds",
+    "us": "Unix microseconds",
+    "ns": "Unix nanoseconds",
+    "iso": "ISO 8601 (UTC)",
+    "relative": "Relative"
+  },
+  "zones": {
+    "title": "Time zones",
+    "local": "{{zone}} (this computer)",
+    "add": "Add",
+    "addLabel": "Time zone to add",
+    "addPlaceholder": "Asia/Tokyo",
+    "remove": "Remove {{zone}}",
+    "unknown": "There is no time zone named {{zone}}",
+    "outOfRange": "Too far from 1970 to show in this zone"
+  },
+  "errors": {
+    "empty": "Type a Unix timestamp or a date first",
+    "invalid": "Type a Unix timestamp, an ISO 8601 date such as 2023-11-14T22:13:20Z, or now - 1d",
+    "invalid-date": "This day does not exist in that month",
+    "out-of-range": "This is more than 100 million days from 1970, past what a date can show"
+  }
+}

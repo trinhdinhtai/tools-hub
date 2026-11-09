@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { CopyButton } from "@/components/copy-button";
 import { ErrorMessage } from "@/components/error-message";
+import { ResultRow } from "@/components/result-row";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -36,21 +37,6 @@ function attempt<T>(text: string, run: () => T): { value: T | null; error: CidrE
 function errorText(t: TFunction<"ip-cidr">, error: CidrError): string {
   const message = t(`errors.${error.reason}`);
   return error.line === undefined ? message : t("lineError", { line: error.line, message });
-}
-
-/** One labelled, read-only result with its copy button; `value` null shows a dash and nothing to copy. */
-function ResultRow({ label, value }: { label: string; value: string | null }) {
-  const id = useId();
-  return (
-    <div className="flex min-w-0 flex-col gap-2">
-      {/* h-7 keeps the label row the height of the CopyButton, so the fields line up. */}
-      <div className="flex h-7 items-center justify-between gap-2">
-        <Label htmlFor={id}>{label}</Label>
-        <CopyButton value={value ?? ""} disabled={value === null} />
-      </div>
-      <Input id={id} value={value ?? "—"} readOnly spellCheck={false} className="bg-card font-mono text-[13px]" />
-    </div>
-  );
 }
 
 /** A labelled single-line field for a network, with an optional control at the end of the label row. */

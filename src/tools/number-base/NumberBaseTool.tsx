@@ -1,11 +1,10 @@
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { CopyButton } from "@/components/copy-button";
 import { ErrorMessage } from "@/components/error-message";
+import { ResultRow } from "@/components/result-row";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   BIT_WIDTHS,
@@ -41,31 +40,6 @@ function parse(text: string, evaluate: (text: string) => bigint): Parsed {
   }
 }
 
-/** One converted result: a labelled, read-only copy of the value, with an optional header control. */
-function ResultRow({ label, value, copyable = true, header, note }: { label: string; value: string; copyable?: boolean; header?: ReactNode; note?: string }) {
-  const id = useId();
-  return (
-    <div className="flex flex-col gap-2">
-      {/* h-7 keeps the label row the height of the CopyButton, so the textareas line up. */}
-      <div className="flex h-7 items-center justify-between gap-2">
-        <Label htmlFor={id}>{label}</Label>
-        <div className="flex items-center gap-2">
-          {header}
-          <CopyButton value={value} disabled={!copyable} />
-        </div>
-      </div>
-      <Textarea
-        id={id}
-        value={value}
-        readOnly
-        spellCheck={false}
-        className="min-h-14 resize-y bg-card font-mono text-[13px] leading-5 break-all"
-      />
-      {note && <p className="text-xs text-muted-foreground">{note}</p>}
-    </div>
-  );
-}
-
 /** Every base at once: the four usual ones, a base of the user's choice up to 36, and the Roman numerals. */
 function BaseResults({ value }: { value: bigint }) {
   const { t } = useTranslation("number-base");
@@ -89,15 +63,15 @@ function BaseResults({ value }: { value: bigint }) {
   );
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <ResultRow label={t("outputs.binary")} value={toBase(value, 2)} />
-      <ResultRow label={t("outputs.octal")} value={toBase(value, 8)} />
-      <ResultRow label={t("outputs.decimal")} value={value.toString()} />
-      <ResultRow label={t("outputs.hexadecimal")} value={toBase(value, 16)} />
-      <ResultRow label={t("outputs.base", { base: customBase })} value={toBase(value, customBase)} header={customSelect} />
+      <ResultRow label={t("outputs.binary")} value={toBase(value, 2)} multiline />
+      <ResultRow label={t("outputs.octal")} value={toBase(value, 8)} multiline />
+      <ResultRow label={t("outputs.decimal")} value={value.toString()} multiline />
+      <ResultRow label={t("outputs.hexadecimal")} value={toBase(value, 16)} multiline />
+      <ResultRow label={t("outputs.base", { base: customBase })} value={toBase(value, customBase)} multiline action={customSelect} />
       <ResultRow
         label={t("outputs.roman")}
-        value={roman ?? "—"}
-        copyable={roman !== null}
+        value={roman}
+        multiline
         note={roman === null ? t("romanUnavailable") : undefined}
       />
     </div>
@@ -126,7 +100,7 @@ function TwoComplement({ value }: { value: bigint }) {
   );
   return (
     <div className="flex max-w-xl flex-col gap-2">
-      <ResultRow label={t("twoComplement", { width })} value={toTwoComplement(value, width)} header={widthSelect} />
+      <ResultRow label={t("twoComplement", { width })} value={toTwoComplement(value, width)} multiline action={widthSelect} />
     </div>
   );
 }
@@ -304,9 +278,9 @@ function BitsMode() {
             onToggle={(index) => setText(toSigned(toggleBit(unsigned, index), width).toString())}
           />
           <div className="grid gap-4 lg:grid-cols-3">
-            <ResultRow label={t("bits.signed")} value={toSigned(unsigned, width).toString()} />
-            <ResultRow label={t("bits.unsigned")} value={unsigned.toString()} />
-            <ResultRow label={t("outputs.hexadecimal")} value={toBase(unsigned, 16)} />
+            <ResultRow label={t("bits.signed")} value={toSigned(unsigned, width).toString()} multiline />
+            <ResultRow label={t("bits.unsigned")} value={unsigned.toString()} multiline />
+            <ResultRow label={t("outputs.hexadecimal")} value={toBase(unsigned, 16)} multiline />
           </div>
         </>
       )}
