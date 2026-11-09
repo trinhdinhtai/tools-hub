@@ -99,3 +99,31 @@ export function setField(text: string, name: FieldName, spec: FieldSpec): string
   pieces[FIELDS.indexOf(name)] = specText(spec);
   return pieces.join(" ");
 }
+
+function expand(start: number, end: number, step: number): number[] {
+  const values: number[] = [];
+  for (let value = start; value <= end; value += step) values.push(value);
+  return values;
+}
+
+/** The field after the builder switches it to another kind, keeping what it can of the choice before (null: unreadable). */
+export function changeKind(name: FieldName, from: FieldSpec | null, kind: Kind): FieldSpec {
+  const { min } = BOUNDS[name];
+  const max = builderMax(name);
+  if (from?.kind === kind) return from;
+  switch (kind) {
+    case "every":
+      return { kind };
+    // Every 5 minutes, or every other hour, day, month or weekday, until another step is picked.
+    case "step":
+      return { kind, step: from?.kind === "range" && from.step > 1 ? from.step : name === "minute" ? 5 : 2 };
+    case "range":
+      if (from?.kind === "step") return { kind, start: min, end: max, step: from.step };
+      // Monday through Friday: the weekday range people want most.
+      return name === "weekday" ? { kind, start: 1, end: 5, step: 1 } : { kind, start: min, end: max, step: 1 };
+    case "values":
+      if (from?.kind === "step") return { kind, values: expand(min, max, from.step) };
+      if (from?.kind === "range") return { kind, values: expand(from.start, from.end, from.step) };
+      return { kind, values: [min] };
+  }
+}

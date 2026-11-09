@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readBuilder, setField } from "./builder";
+import { changeKind, readBuilder, setField } from "./builder";
 
 describe("readBuilder", () => {
   it("reads each field as the choice the builder offers for it", () => {
@@ -81,5 +81,23 @@ describe("setField", () => {
   it("returns null when the expression is not five fields, so nothing typed is thrown away", () => {
     expect(setField("* * * *", "minute", { kind: "every" })).toBeNull();
     expect(setField("@reboot", "minute", { kind: "every" })).toBeNull();
+  });
+});
+
+describe("changeKind", () => {
+  it("keeps the values a field allows when it can", () => {
+    expect(changeKind("hour", { kind: "range", start: 9, end: 17, step: 4 }, "values")).toEqual({ kind: "values", values: [9, 13, 17] });
+    expect(changeKind("minute", { kind: "step", step: 20 }, "values")).toEqual({ kind: "values", values: [0, 20, 40] });
+    expect(changeKind("hour", { kind: "range", start: 9, end: 17, step: 4 }, "step")).toEqual({ kind: "step", step: 4 });
+    expect(changeKind("hour", { kind: "step", step: 6 }, "range")).toEqual({ kind: "range", start: 0, end: 23, step: 6 });
+  });
+
+  it("starts from a sensible choice otherwise", () => {
+    expect(changeKind("minute", { kind: "every" }, "step")).toEqual({ kind: "step", step: 5 });
+    expect(changeKind("month", null, "step")).toEqual({ kind: "step", step: 2 });
+    expect(changeKind("weekday", { kind: "every" }, "range")).toEqual({ kind: "range", start: 1, end: 5, step: 1 });
+    expect(changeKind("day", { kind: "values", values: [1] }, "range")).toEqual({ kind: "range", start: 1, end: 31, step: 1 });
+    expect(changeKind("day", { kind: "every" }, "values")).toEqual({ kind: "values", values: [1] });
+    expect(changeKind("hour", { kind: "values", values: [9] }, "every")).toEqual({ kind: "every" });
   });
 });
