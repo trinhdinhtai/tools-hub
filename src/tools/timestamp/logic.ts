@@ -191,15 +191,68 @@ function checked(instant: Instant): Instant {
   return instant;
 }
 
-/** Reads a Unix timestamp or a date string as an instant; throws a TimestampError saying why it cannot. */
-export function parseInstant(text: string, options: ParseOptions): Parsed {
-  const trimmed = text.trim();
-  if (trimmed === "") throw new TimestampError("empty");
-  // Nothing valid is this long; refusing early keeps a huge paste from going through the patterns.
-  if (trimmed.length > 100) throw new TimestampError(/^[\d,_.+-]+$/.test(trimmed.slice(0, 100)) ? "out-of-range" : "invalid");
-  const unix = parseUnix(trimmed, options.unit ?? "auto");
+const NS_PER_DURATION_UNIT: Record<string, bigint> = {
+  ns: 1n,
+  us: 1_000n,
+  ms: 1_000_000n,
+  s: 1_000_000_000n,
+  m: 60_000_000_000n,
+  h: 3_600_000_000_000n,
+  d: 86_400_000_000_000n,
+  w: 604_800_000_000_000n,
+};
+/** Spelled-out names of the duration units. */
+const UNIT_NAMES: Record<string, string> = {
+  msec: "ms", millisecond: "ms", milliseconds: "ms",
+  sec: "s", secs: "s", second: "s", seconds: "s",
+  min: "m", mins: "m", minute: "m", minutes: "m",
+  hr: "h", hrs: "h", hour: "h", hours: "h",
+  day: "d", days: "d",
+  wk: "w", wks: "w", week: "w", weeks: "w",
+};
+
+/** The last `± duration` of an expression, e.g. ` - 1h30m`: a sign, then numbers each followed by a unit. */
+const TERM = /\s*([+-])\s*((?:\d+(?:\.\d+)?\s*[a-z]+\s*)+)$/i;
+const DURATION_PART = /(\d+)(?:\.(\d+))?\s*([a-z]+)/gi;
+
+/** A duration like `1h30m` or `2 hours 15 min` in nanoseconds; null if a unit is unknown. */
+function parseDuration(text: string): bigint | null {
+  let total = 0n;
+  for (const [, whole, fraction = "", name] of text.matchAll(DURATION_PART)) {
+    const lower = name!.toLowerCase();
+    const scale = NS_PER_DURATION_UNIT[UNIT_NAMES[lower] ?? lower];
+    if (scale === undefined) return null;
+    const tenths = 10n ** BigInt(fraction.length);
+    total += (BigInt(whole! + fraction) * scale) / tenths;
+  }
+  return total;
+}
+
+function parseBase(text: string, options: ParseOptions): Parsed {
+  if (text.toLowerCase() === "now") return { instant: BigInt(Math.trunc(options.now)) * NS_PER_MS, source: "now" };
+  const unix = parseUnix(text, options.unit ?? "auto");
   if (unix) return { ...unix, instant: checked(unix.instant) };
-  const date = parseDate(trimmed, options.zone);
+  const date = parseDate(text, options.zone);
   if (date) return date;
   throw new TimestampError("invalid");
+}
+
+/**
+ * Reads a Unix timestamp, a date string or `now`, followed by any number of `± duration` (`now - 1d`,
+ * `2024-01-01 + 1h30m`), as an instant. Throws a TimestampError saying why it cannot.
+ */
+export function parseInstant(text: string, options: ParseOptions): Parsed {
+  let rest = text.trim();
+  if (rest === "") throw new TimestampError("empty");
+  // Nothing valid is this long; refusing early keeps a huge paste from going through the patterns.
+  if (rest.length > 100) throw new TimestampError(/^[\d,_.+-]+$/.test(rest.slice(0, 100)) ? "out-of-range" : "invalid");
+  let shift = 0n;
+  for (let term = TERM.exec(rest); term && term.index > 0; term = TERM.exec(rest)) {
+    const duration = parseDuration(term[2]!);
+    if (duration === null) throw new TimestampError("invalid");
+    shift += term[1] === "-" ? -duration : duration;
+    rest = rest.slice(0, term.index);
+  }
+  const base = parseBase(rest, options);
+  return shift === 0n ? base : { ...base, instant: checked(base.instant + shift) };
 }

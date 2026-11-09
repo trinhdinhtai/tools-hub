@@ -153,3 +153,40 @@ describe("parseInstant: errors", () => {
     expect(performance.now() - start).toBeLessThan(500);
   });
 });
+
+describe("parseInstant: expressions", () => {
+  const ns = (ms: number) => BigInt(ms) * 1_000_000n;
+
+  it("reads now as the current time", () => {
+    expect(parseInstant("now", UTC)).toEqual({ instant: ns(NOW), source: "now" });
+    expect(parseInstant(" NOW ", UTC).instant).toBe(ns(NOW));
+  });
+
+  it.each([
+    ["now - 1d", NOW - 86_400_000],
+    ["now-1d", NOW - 86_400_000],
+    ["now + 2h", NOW + 7_200_000],
+    ["now + 1h30m", NOW + 5_400_000],
+    ["now - 1.5h", NOW - 5_400_000],
+    ["now + 1w", NOW + 7 * 86_400_000],
+    ["now - 90s + 500ms", NOW - 89_500],
+    ["now + 3 days", NOW + 3 * 86_400_000],
+    ["now - 2 hours 15 min", NOW - 8_100_000],
+  ])("works out %s", (text, ms) => {
+    expect(parseInstant(text, UTC)).toEqual({ instant: ns(ms), source: "now" });
+  });
+
+  it("adds a duration to a timestamp or a date as well", () => {
+    expect(parseInstant("1700000000 + 1d", UTC)).toEqual({ instant: 1_700_086_400_000_000_000n, source: "unix", unit: "s" });
+    expect(parseInstant("2024-01-01T00:00Z - 1d", UTC).instant).toBe(at("2023-12-31T00:00:00Z"));
+    expect(parseInstant("2024-01-01 - 1h", UTC).instant).toBe(at("2023-12-31T23:00:00Z"));
+  });
+
+  it.each(["now - 1x", "now -", "now - d", "now + 1d -", "now 1d", "tomorrow", "now - 1d2"])("refuses %s", (text) => {
+    expect(() => parseInstant(text, UTC)).toThrow(TimestampError);
+  });
+
+  it("refuses a sum that leaves the range", () => {
+    expect(() => parseInstant("now + 99999999999w", UTC)).toThrow(expect.objectContaining({ reason: "out-of-range" }));
+  });
+});
