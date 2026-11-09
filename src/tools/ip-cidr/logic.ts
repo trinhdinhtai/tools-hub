@@ -358,3 +358,21 @@ export function compareNetworks(a: Network, b: Network): Relation {
   if (bFirst <= aFirst && aLast <= bLast) return "within";
   return "disjoint";
 }
+
+/** Longer than any address with a mask (IPv6 with an IPv4 tail and /128 is 50): no need to parse a pasted block. */
+const PASTE_MAX = 64;
+
+/**
+ * Scores a pasted text as a network: 0.9 for an address with a prefix or netmask, 0.8 for a bare address. A single
+ * line only, and :: alone does not count: it is more often punctuation than the unspecified address.
+ */
+export function detectPaste(text: string): number {
+  const trimmed = text.trim();
+  if (trimmed.length > PASTE_MAX || trimmed.includes("\n") || !/[0-9a-f]/i.test(trimmed)) return 0;
+  try {
+    parseNetwork(trimmed);
+  } catch {
+    return 0;
+  }
+  return /[\s/]/.test(trimmed) ? 0.9 : 0.8;
+}

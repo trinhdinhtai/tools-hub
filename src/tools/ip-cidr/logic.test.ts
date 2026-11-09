@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CidrError, compareNetworks, describeNetwork, formatAddress, mergeNetworks, parseNetwork, splitNetwork } from "./logic";
+import { CidrError, compareNetworks, describeNetwork, detectPaste, formatAddress, mergeNetworks, parseNetwork, splitNetwork } from "./logic";
 
 function reason(fn: () => unknown): string | undefined {
   try {
@@ -308,5 +308,26 @@ describe("compareNetworks", () => {
 
   it("refuses to compare IPv4 with IPv6", () => {
     expect(reason(() => compare("10.0.0.0/8", "::ffff:10.0.0.1"))).toBe("mixed-versions");
+  });
+});
+
+describe("detectPaste", () => {
+  it.each(["10.0.0.0/8", " 192.168.1.10/24\n", "2001:db8::/32", "10.1.2.3 255.255.255.0"])("is sure of the CIDR %j", (text) => {
+    expect(detectPaste(text)).toBe(0.9);
+  });
+
+  it.each(["8.8.8.8", "2001:db8::1", "::ffff:192.0.2.1"])("recognizes the address %j", (text) => {
+    expect(detectPaste(text)).toBe(0.8);
+  });
+
+  it.each(["", "   ", "::", "hello", "1.2.3", "10.0.0.1/33", "256.1.1.1", "v1.2.3.4", "10.0.0.0/8\n10.1.0.0/16", "１.２.３.４"])(
+    "scores 0 for %j",
+    (text) => {
+      expect(detectPaste(text)).toBe(0);
+    },
+  );
+
+  it("scores 0 for a huge pasted block", () => {
+    expect(detectPaste(`${"10.0.0.1".repeat(100_000)}`)).toBe(0);
   });
 });
