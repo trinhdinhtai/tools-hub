@@ -1,0 +1,4 @@
+{
+  "name": "Tính lịch Cron",
+  "description": "Đọc biểu thức cron bằng lời, từng trường một, và xem các lần chạy kế tiếp ở múi giờ bất kỳ"
+}

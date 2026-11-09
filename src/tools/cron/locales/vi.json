@@ -1,0 +1,36 @@
+{
+  "input": "Biểu thức cron",
+  "placeholder": "*/15 9-17 * * 1-5 hoặc @daily",
+  "explanation": "Bằng lời",
+  "macro": "{{macro}} là cách viết tắt của {{expression}}",
+  "fields": {
+    "title": "Các trường",
+    "field": "Trường",
+    "written": "Viết là",
+    "values": "Giá trị",
+    "any": "Bất kỳ",
+    "minute": "Phút",
+    "hour": "Giờ",
+    "day": "Ngày trong tháng",
+    "month": "Tháng",
+    "weekday": "Thứ"
+  },
+  "runs": {
+    "title": "Các lần chạy kế tiếp",
+    "list": "{{count}} lần chạy kế tiếp",
+    "zone": "Múi giờ",
+    "local": "Để trống để dùng múi giờ máy này ({{zone}})",
+    "unknownZone": "Không có múi giờ nào tên {{zone}}",
+    "none": "Lịch này không chạy lần nào trong 50 năm tới"
+  },
+  "errors": {
+    "empty": "Hãy nhập biểu thức cron trước",
+    "field-count": "Biểu thức cron có 5 trường: phút, giờ, ngày trong tháng, tháng và thứ. Biểu thức này có {{count}}",
+    "invalid": "{{field}}: trường này không nhận {{value}}",
+    "out-of-range": "{{field}}: {{value}} nằm ngoài khoảng {{min}} đến {{max}}",
+    "backwards": "{{field}}: khoảng {{value}} bị ngược",
+    "zero-step": "{{field}}: bước nhảy trong {{value}} không thể là 0",
+    "reboot": "@reboot chỉ chạy một lần khi máy khởi động nên không có lịch",
+    "unknown-macro": "Không có macro {{value}}. Hãy dùng @yearly, @annually, @monthly, @weekly, @daily, @midnight hoặc @hourly"
+  }
+}

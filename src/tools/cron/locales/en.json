@@ -1,0 +1,36 @@
+{
+  "input": "Cron expression",
+  "placeholder": "*/15 9-17 * * 1-5 or @daily",
+  "explanation": "In words",
+  "macro": "{{macro}} is short for {{expression}}",
+  "fields": {
+    "title": "Fields",
+    "field": "Field",
+    "written": "Written",
+    "values": "Values",
+    "any": "Any",
+    "minute": "Minute",
+    "hour": "Hour",
+    "day": "Day of month",
+    "month": "Month",
+    "weekday": "Weekday"
+  },
+  "runs": {
+    "title": "Next runs",
+    "list": "Next {{count}} runs",
+    "zone": "Time zone",
+    "local": "Empty for this computer ({{zone}})",
+    "unknownZone": "There is no time zone named {{zone}}",
+    "none": "This schedule does not run in the next 50 years"
+  },
+  "errors": {
+    "empty": "Type a cron expression first",
+    "field-count": "A cron expression has 5 fields: minute, hour, day of month, month and weekday. This one has {{count}}",
+    "invalid": "{{field}}: {{value}} is not something this field takes",
+    "out-of-range": "{{field}}: {{value}} is outside {{min}} to {{max}}",
+    "backwards": "{{field}}: the range {{value}} goes backwards",
+    "zero-step": "{{field}}: the step in {{value}} cannot be 0",
+    "reboot": "@reboot runs once when the computer starts, so it has no schedule",
+    "unknown-macro": "There is no macro {{value}}. Use @yearly, @annually, @monthly, @weekly, @daily, @midnight or @hourly"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "name": "Cron Calculator",
+  "description": "Read a cron expression in plain words, field by field, and see when it runs next in any time zone"
+}
