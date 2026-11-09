@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { usePaste } from "@/lib/paste";
 import { usePreference } from "@/lib/preferences";
 import { CronError, explain, FIELDS, nextRuns, parseCron, type Cron, type Field, type Locale, type Run } from "./logic";
+import { valueName } from "./value-name";
 
 /** How many runs are listed. */
 const RUN_COUNT = 10;
@@ -85,12 +86,7 @@ function errorText(t: T, error: CronError): string {
 
 /** A field's values for people: runs of three or more as ranges, months and weekdays by name. */
 function valuesText(field: Field, locale: Locale): string {
-  const name = (value: number) => {
-    if (field.name === "month") return new Intl.DateTimeFormat(locale, { month: "short", timeZone: "UTC" }).format(Date.UTC(2000, value - 1, 1));
-    // 2000-01-02 was a Sunday.
-    if (field.name === "weekday") return new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" }).format(Date.UTC(2000, 0, 2 + value));
-    return String(value);
-  };
+  const name = (value: number) => valueName(field.name, value, locale);
   const pieces: string[] = [];
   const values = field.values;
   for (let i = 0; i < values.length; ) {
