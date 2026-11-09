@@ -8,25 +8,39 @@ import { ErrorMessage } from "@/components/error-message";
 import { ResultRow } from "@/components/result-row";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { usePaste } from "@/lib/paste";
 import { formatRelative } from "@/lib/relative-time";
 import { cn } from "@/lib/utils";
 import { decodeJwt, JwtError, timeClaims, tokenStatus, type DecodedJwt, type TimeClaimValue, type TokenStatus } from "./logic";
+import { MODES, type Mode } from "./modes";
+import { samplePayload, SignMode, type SignInput } from "./SignMode";
+import { Verify } from "./Verify";
 
 const JSON_LANGUAGE = json();
 
-/** JWT Decoder: a token's header, payload and times, and whether it works now. The token stays in memory. */
+/**
+ * JWT Decoder: a token's header, payload and times, whether it works now and whether its signature checks out; or a
+ * test token signed with the user's key. Tokens, payloads and keys are Input: they stay in memory (ADR-0004).
+ */
 export default function JwtDecoderTool() {
   const { t, i18n } = useTranslation("jwt-decoder");
   const inputId = useId();
+  const [mode, setMode] = useState<Mode>("decode");
   const [text, setText] = useState("");
+  const [verifyKey, setVerifyKey] = useState("");
+  const [sign, setSign] = useState<SignInput>(() => ({ alg: "HS256", payload: samplePayload(Date.now()), key: "" }));
   // `now` is read when the Input changes, then every second, so the status turns as the token expires.
   const [now, setNow] = useState(() => Date.now());
   const edit = (next: string) => {
     setText(next);
     setNow(Date.now());
   };
-  usePaste((pasted) => edit(pasted.trim()));
+  const decode = (token: string) => {
+    setMode("decode");
+    edit(token);
+  };
+  usePaste((pasted) => decode(pasted.trim()));
 
   const { decoded, error } = useMemo(() => {
     if (text.trim() === "") return { decoded: null, error: null };
@@ -37,15 +51,37 @@ export default function JwtDecoderTool() {
       throw error;
     }
   }, [text]);
-  const ticking = decoded !== null;
+  const ticking = mode === "decode" && decoded !== null;
   useEffect(() => {
     if (!ticking) return;
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, [ticking]);
 
+  const modes = (
+    <div>
+      <ToggleGroup variant="outline" size="sm" aria-label={t("mode")} value={[mode]} onValueChange={([value]) => value && setMode(value as Mode)}>
+        {MODES.map((m) => (
+          <ToggleGroupItem key={m} value={m} className="px-3 text-subtle-foreground aria-pressed:text-foreground">
+            {t(`modes.${m}`)}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+    </div>
+  );
+
+  if (mode === "sign") {
+    return (
+      <div className="flex flex-col gap-4">
+        {modes}
+        <SignMode input={sign} onInput={setSign} onDecode={decode} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      {modes}
       <div className="flex flex-col gap-2">
         <Label htmlFor={inputId}>{t("input")}</Label>
         <Textarea
@@ -60,12 +96,18 @@ export default function JwtDecoderTool() {
         />
         {error && <ErrorMessage>{t(`errors.${error.reason}`, { part: error.part && t(`parts.${error.part}`) })}</ErrorMessage>}
       </div>
-      {decoded && <Decoded decoded={decoded} now={now} locale={i18n.language} />}
+      {decoded && (
+        <>
+          <Decoded decoded={decoded} now={now} locale={i18n.language} keyPasted={verifyKey.trim() !== ""} />
+          <Verify token={text} keyText={verifyKey} onKeyText={setVerifyKey} />
+        </>
+      )}
     </div>
   );
 }
 
-function Decoded({ decoded, now, locale }: { decoded: DecodedJwt; now: number; locale: string }) {
+/** `keyPasted`: a key is pasted below to check the signature, whose outcome shows there instead of "decoded only". */
+function Decoded({ decoded, now, locale, keyPasted }: { decoded: DecodedJwt; now: number; locale: string; keyPasted: boolean }) {
   const { t } = useTranslation("jwt-decoder");
   const header = JSON.stringify(decoded.header, null, 2);
   const payload = JSON.stringify(decoded.payload, null, 2);
@@ -90,7 +132,7 @@ function Decoded({ decoded, now, locale }: { decoded: DecodedJwt; now: number; l
       <ResultRow
         label={t("signature")}
         value={decoded.signature === "" ? null : decoded.signature}
-        note={decoded.signature === "" ? t("unsigned") : t("notVerified")}
+        note={decoded.signature === "" ? t("unsigned") : keyPasted ? undefined : t("notVerified")}
         multiline
       />
     </>
