@@ -1,8 +1,8 @@
-import { memo, useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { memo, useId, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
-import { CopyButton } from "@/components/copy-button";
 import { ErrorMessage } from "@/components/error-message";
+import { ResultRow } from "@/components/result-row";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,27 +28,6 @@ const UNIX_FIELDS: readonly Unit[] = ["s", "ms", "us", "ns"];
 
 /** The zone this computer is set to. */
 const LOCAL_ZONE = new Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-/** One labelled, read-only result with its copy button, and an optional line under it. */
-function ResultRow({ label, value, note, action }: { label: string; value: string | null; note?: string; action?: ReactNode }) {
-  const id = useId();
-  return (
-    <div className="flex min-w-0 flex-col gap-2">
-      {/* h-7 keeps the label row the height of the CopyButton, so the fields line up. */}
-      <div className="flex h-7 items-center justify-between gap-2">
-        <Label htmlFor={id} className="min-w-0 truncate">
-          {label}
-        </Label>
-        <div className="flex items-center gap-1">
-          {action}
-          <CopyButton value={value ?? ""} disabled={value === null} />
-        </div>
-      </div>
-      <Input id={id} value={value ?? "—"} readOnly spellCheck={false} className="bg-card font-mono text-[13px]" />
-      {note && <p className="text-xs text-muted-foreground">{note}</p>}
-    </div>
-  );
-}
 
 /** Timestamp Converter: a timestamp, date or `now - 1d` in every form and zone. Input stays in memory. */
 export default function TimestampTool() {
