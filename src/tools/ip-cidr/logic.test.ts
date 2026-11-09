@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CidrError, describeNetwork, formatAddress, parseNetwork } from "./logic";
+import { CidrError, describeNetwork, formatAddress, parseNetwork, splitNetwork } from "./logic";
 
 function reason(fn: () => unknown): string | undefined {
   try {
@@ -205,5 +205,37 @@ describe("describeNetwork", () => {
     ["4000::1", "reserved"],
   ])("types %j as %s", (text, type) => {
     expect(describe_(text).type).toBe(type);
+  });
+});
+
+describe("splitNetwork", () => {
+  it("splits an IPv4 /24 into four /26", () => {
+    expect(splitNetwork(parseNetwork("192.168.1.77/24"), 26)).toEqual({
+      count: 4n,
+      subnets: ["192.168.1.0/26", "192.168.1.64/26", "192.168.1.128/26", "192.168.1.192/26"],
+    });
+  });
+
+  it("splits IPv6 on nibble and odd boundaries", () => {
+    expect(splitNetwork(parseNetwork("2001:db8::/47"), 48).subnets).toEqual(["2001:db8::/48", "2001:db8:1::/48"]);
+  });
+
+  it("keeps a network whole at its own prefix", () => {
+    expect(splitNetwork(parseNetwork("10.0.0.0/8"), 8)).toEqual({ count: 1n, subnets: ["10.0.0.0/8"] });
+  });
+
+  it("lists only the first subnets of a huge split, and counts them all exactly", () => {
+    const { count, subnets } = splitNetwork(parseNetwork("::/0"), 128, 3);
+    expect(count).toBe(2n ** 128n);
+    expect(subnets).toEqual(["::/128", "::1/128", "::2/128"]);
+  });
+
+  it.each([
+    ["10.0.0.0/24", 23],
+    ["10.0.0.0/24", 33],
+    ["2001:db8::/64", 129],
+    ["10.0.0.0/24", 24.5],
+  ])("refuses to split %j into /%s", (text, prefix) => {
+    expect(reason(() => splitNetwork(parseNetwork(text), prefix))).toBe("invalid-split");
   });
 });

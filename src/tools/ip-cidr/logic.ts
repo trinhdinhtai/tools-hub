@@ -8,7 +8,7 @@ export interface Network {
   prefix: number;
 }
 
-export type CidrErrorReason = "empty" | "invalid-address" | "invalid-prefix" | "invalid-mask";
+export type CidrErrorReason = "empty" | "invalid-address" | "invalid-prefix" | "invalid-mask" | "invalid-split";
 
 /** Why a text is not a network; `line` (from 1) says which line of a list was wrong. */
 export class CidrError extends Error {
@@ -276,4 +276,22 @@ export function describeNetwork(network: Network): NetworkDetails {
     wildcard: formatMask(version, wildcard),
     type: typeOf(network),
   };
+}
+
+/** How many subnets a split lists by default: enough to read, few enough to render; the count stays exact. */
+export const SPLIT_LIMIT = 1024;
+
+/**
+ * Splits a network into the subnets of a longer prefix, in order. Only the first `limit` are listed, since a split
+ * can hold up to 2^128 of them; `count` says how many there are in all.
+ */
+export function splitNetwork(network: Network, prefix: number, limit = SPLIT_LIMIT): { count: bigint; subnets: string[] } {
+  const { version } = network;
+  if (!Number.isInteger(prefix) || prefix < network.prefix || prefix > BITS[version]) throw new CidrError("invalid-split");
+  const [first] = bounds(network);
+  const count = 1n << BigInt(prefix - network.prefix);
+  const step = 1n << BigInt(BITS[version] - prefix);
+  const listed = count < BigInt(limit) ? Number(count) : limit;
+  const subnets = Array.from({ length: listed }, (_, i) => `${formatAddress(version, first + BigInt(i) * step)}/${prefix}`);
+  return { count, subnets };
 }
