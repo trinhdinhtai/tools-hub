@@ -88,6 +88,63 @@ describe("Cron Calculator", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("builds an expression field by field, in step with the text", async () => {
+    const { user } = await openTool();
+    const input = screen.getByLabelText("Cron expression");
+    await user.click(screen.getByRole("button", { name: "Builder" }));
+    const builder = screen.getByRole("region", { name: "Builder" });
+    // Rows are looked up afresh: while an expression is typed it is not five fields for a moment, and they go.
+    const group = (name: string) => within(builder).getByRole("group", { name });
+
+    const minute = group("Minute");
+    await user.click(within(minute).getByRole("combobox", { name: "Minute" }));
+    await user.click(await screen.findByRole("option", { name: "Every N" }));
+    expect(input).toHaveValue("*/5 * * * *");
+    await user.click(within(minute).getByRole("combobox", { name: "Every" }));
+    await user.click(await screen.findByRole("option", { name: "15" }));
+    expect(input).toHaveValue("*/15 * * * *");
+
+    const weekday = group("Weekday");
+    await user.click(within(weekday).getByRole("combobox", { name: "Weekday" }));
+    await user.click(await screen.findByRole("option", { name: "Range" }));
+    expect(input).toHaveValue("*/15 * * * 1-5");
+    expect(screen.getByLabelText("In words")).toHaveValue("Every 15 minutes, Monday through Friday");
+
+    const hour = group("Hour");
+    await user.click(within(hour).getByRole("combobox", { name: "Hour" }));
+    await user.click(await screen.findByRole("option", { name: "Specific values" }));
+    await user.click(within(hour).getByRole("button", { name: "9" }));
+    await user.click(within(hour).getByRole("button", { name: "0" }));
+    expect(input).toHaveValue("*/15 9 * * 1-5");
+
+    // And back: typing moves the builder.
+    await user.clear(input);
+    await user.type(input, "0 9-17 * JAN *");
+    expect(within(group("Hour")).getByRole("combobox", { name: "From" })).toHaveTextContent("9");
+    expect(within(group("Hour")).getByRole("combobox", { name: "To" })).toHaveTextContent("17");
+    const month = group("Month");
+    expect(within(month).getByRole("button", { name: "Jan" })).toHaveAttribute("aria-pressed", "true");
+    expect(within(month).getByRole("button", { name: "Feb" })).toHaveAttribute("aria-pressed", "false");
+
+    // A field it cannot read stays as typed, and the builder says so.
+    await user.clear(input);
+    await user.type(input, "0 99 * * *");
+    expect(within(builder).getByText(/Hour: written as 99/)).toBeInTheDocument();
+    await user.click(within(group("Minute")).getByRole("combobox", { name: "Minute" }));
+    await user.click(await screen.findByRole("option", { name: "Any" }));
+    expect(input).toHaveValue("* 99 * * *");
+
+    await user.clear(input);
+    await user.type(input, "* * *");
+    expect(within(builder).getByText("The builder needs an expression of five fields. Fix it above, or clear it to start over")).toBeInTheDocument();
+    expect(within(builder).queryByRole("group")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Text" }));
+    expect(screen.queryByRole("region", { name: "Builder" })).not.toBeInTheDocument();
+    expect(input).toHaveValue("* * *");
+    // Many clicks and two dozen popups: more than the default five seconds when the whole suite runs at once.
+  }, 15_000);
+
   it("opens with a pasted cron expression as its Input", async () => {
     const user = userEvent.setup();
     render(<App platform={createMemoryPlatform({ osLocale: "en-US" })} />);
@@ -115,5 +172,11 @@ describe("Cron Calculator", () => {
     expect(screen.getByLabelText("Bằng lời")).toHaveValue("Lúc 22:00, vào Thứ Hai, Thứ Tư và Thứ Sáu");
     expect(screen.getByRole("region", { name: "Các trường" })).toBeInTheDocument();
     expect(screen.getByLabelText("10 lần chạy kế tiếp")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Trình dựng" }));
+    const weekday = within(screen.getByRole("region", { name: "Trình dựng" })).getByRole("group", { name: "Thứ" });
+    expect(within(weekday).getByRole("combobox", { name: "Thứ" })).toHaveTextContent("Giá trị cụ thể");
+    await user.click(within(weekday).getByRole("button", { name: "Thứ 2" }));
+    expect(input).toHaveValue("0 22 * * 3,5");
   });
 });
