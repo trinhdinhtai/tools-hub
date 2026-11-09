@@ -9,12 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePaste } from "@/lib/paste";
 import { usePreference } from "@/lib/preferences";
+import { formatRelative } from "@/lib/relative-time";
 import {
   canonicalZone,
   formatIso,
   KNOWN_ZONES,
   parseInstant,
-  relativeTime,
   TimestampError,
   toMilliseconds,
   unixValues,
@@ -108,8 +108,7 @@ function readAs(t: ReturnType<typeof useTranslation<"timestamp">>["t"], parsed: 
 function Results({ instant, now, locale }: { instant: Instant; now: number; locale: string }) {
   const { t } = useTranslation("timestamp");
   const values = unixValues(instant);
-  const { value, unit } = relativeTime(instant, now);
-  const relative = new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(value, unit);
+  const relative = formatRelative(toMilliseconds(instant), now, locale);
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       {UNIX_FIELDS.map((u) => (

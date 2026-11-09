@@ -1,0 +1,38 @@
+{
+  "input": "Token",
+  "placeholder": "eyJhbGciOi… Có tiền tố Bearer hay xuống dòng cũng được",
+  "header": "Header",
+  "payload": "Payload",
+  "signature": "Chữ ký",
+  "unsigned": "Không ký: token không có chữ ký",
+  "notVerified": "Chỉ giải mã: chữ ký chưa được xác minh",
+  "status": {
+    "active": "Còn hạn, hết hạn {{relative}}",
+    "no-expiry": "Còn hạn, không bao giờ hết hạn: token không có claim exp",
+    "expired": "Đã hết hạn {{relative}}",
+    "not-yet-valid": "Chưa hiệu lực, có hiệu lực {{relative}}",
+    "invalid": "Không biết token còn dùng được không: {{claim}} không phải NumericDate (số giây tính từ 1970)"
+  },
+  "claims": {
+    "title": "Thời gian",
+    "exp": "Hết hạn (exp)",
+    "nbf": "Hiệu lực từ (nbf)",
+    "iat": "Phát hành lúc (iat)",
+    "notDate": "Không phải NumericDate: cần một số giây tính từ 1970"
+  },
+  "parts": {
+    "header": "header",
+    "payload": "payload",
+    "signature": "chữ ký"
+  },
+  "errors": {
+    "empty": "Hãy dán một JWT trước",
+    "whitespace": "Token có khoảng trắng ở giữa, trong khi JWT không có. Hãy dán riêng token",
+    "parts": "JWT gồm ba phần cách nhau bởi dấu chấm: header.payload.signature",
+    "encrypted": "Đây là token đã mã hoá (JWE, năm phần): không đọc được nếu không có khoá",
+    "base64": "Phần {{part}} không phải base64url hợp lệ",
+    "utf8": "Phần {{part}} không giải mã ra văn bản UTF-8",
+    "json": "Phần {{part}} không phải JSON hợp lệ",
+    "not-object": "Phần {{part}} là JSON nhưng không phải object"
+  }
+}
