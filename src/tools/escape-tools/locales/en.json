@@ -1,0 +1,35 @@
+{
+  "mode": "Mode",
+  "modes": {
+    "html": "HTML",
+    "backslash": "Backslash",
+    "unicode": "Unicode",
+    "hex": "Hex",
+    "punycode": "Punycode"
+  },
+  "direction": {
+    "label": "Direction",
+    "escape": "Escape",
+    "unescape": "Unescape",
+    "toPunycode": "To Punycode",
+    "toUnicode": "To Unicode"
+  },
+  "about": {
+    "html": "Escapes & < > \" ' as entities. Unescapes named (&copy;), decimal (&#169;) and hex (&#xA9;) entities.",
+    "backslash": "String escapes that JSON, JavaScript, Java and C# share: \\n, \\t, \\\", \\\\, \\uHHHH. Unescapes every JavaScript escape.",
+    "unicode": "Every character past ASCII as \\uHHHH, emoji as a surrogate pair. Unescapes \\uHHHH and \\u{H…}.",
+    "hex": "Every UTF-8 byte as \\xHH. Unescapes \\xHH bytes as UTF-8 text.",
+    "punycode": "Domain names, one per line: each label that is not ASCII becomes xn--…, and back."
+  },
+  "input": "Input",
+  "output": "Output",
+  "errors": {
+    "unknown-entity": "There is no HTML entity named {{sequence}}",
+    "invalid-code-point": "{{sequence}} is not a Unicode character",
+    "unknown-escape": "{{sequence}} is not an escape sequence. A backslash on its own is written \\\\",
+    "incomplete-escape": "The escape {{sequence}} is cut short",
+    "not-utf8": "The bytes are not valid UTF-8 text",
+    "invalid-punycode": "{{sequence}} is not valid Punycode",
+    "label-too-long": "The label {{sequence}} is longer than 63 characters once encoded"
+  }
+}

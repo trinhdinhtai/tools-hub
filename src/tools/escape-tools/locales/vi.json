@@ -1,0 +1,35 @@
+{
+  "mode": "Chế độ",
+  "modes": {
+    "html": "HTML",
+    "backslash": "Backslash",
+    "unicode": "Unicode",
+    "hex": "Hex",
+    "punycode": "Punycode"
+  },
+  "direction": {
+    "label": "Chiều chuyển đổi",
+    "escape": "Escape",
+    "unescape": "Unescape",
+    "toPunycode": "Sang Punycode",
+    "toUnicode": "Sang Unicode"
+  },
+  "about": {
+    "html": "Escape & < > \" ' thành entity. Unescape entity dạng tên (&copy;), thập phân (&#169;) và hex (&#xA9;).",
+    "backslash": "Các escape chuỗi mà JSON, JavaScript, Java và C# đều đọc được: \\n, \\t, \\\", \\\\, \\uHHHH. Unescape mọi escape của JavaScript.",
+    "unicode": "Mọi ký tự ngoài ASCII thành \\uHHHH, emoji thành cặp surrogate. Unescape \\uHHHH và \\u{H…}.",
+    "hex": "Mọi byte UTF-8 thành \\xHH. Unescape các byte \\xHH thành văn bản UTF-8.",
+    "punycode": "Tên miền, mỗi dòng một tên: label nào không phải ASCII thành xn--…, và ngược lại."
+  },
+  "input": "Dữ liệu nhập",
+  "output": "Kết quả",
+  "errors": {
+    "unknown-entity": "Không có HTML entity nào tên {{sequence}}",
+    "invalid-code-point": "{{sequence}} không phải một ký tự Unicode",
+    "unknown-escape": "{{sequence}} không phải escape sequence. Muốn ghi một dấu backslash thì viết \\\\",
+    "incomplete-escape": "Escape {{sequence}} bị thiếu",
+    "not-utf8": "Các byte này không phải văn bản UTF-8 hợp lệ",
+    "invalid-punycode": "{{sequence}} không phải Punycode hợp lệ",
+    "label-too-long": "Label {{sequence}} dài quá 63 ký tự sau khi mã hoá"
+  }
+}
