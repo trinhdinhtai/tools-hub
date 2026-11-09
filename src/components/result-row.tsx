@@ -11,6 +11,7 @@ export function ResultRow({
   note,
   action,
   multiline,
+  onCopied,
 }: {
   label: string;
   /** Null shows a dash, with nothing to copy. */
@@ -20,6 +21,8 @@ export function ResultRow({
   action?: ReactNode;
   /** A textarea that wraps anywhere, for long values; a one-line field by default. */
   multiline?: boolean;
+  /** Called once the value is on the clipboard. */
+  onCopied?: () => void;
 }) {
   const id = useId();
   const shown = value ?? "—";
@@ -32,7 +35,7 @@ export function ResultRow({
         </Label>
         <div className="flex items-center gap-2">
           {action}
-          <CopyButton value={value ?? ""} disabled={value === null} />
+          <CopyButton value={value ?? ""} disabled={value === null} onCopied={onCopied} />
         </div>
       </div>
       {multiline ? (

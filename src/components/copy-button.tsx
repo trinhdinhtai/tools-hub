@@ -19,12 +19,15 @@ export function CopyButton({
   label,
   disabled,
   className,
+  onCopied,
 }: {
   value: string | (() => string);
   /** The button's text; "Copy" by default. */
   label?: string;
   disabled?: boolean;
   className?: string;
+  /** Called once the text is on the clipboard, not when the copy failed. */
+  onCopied?: () => void;
 }) {
   const { t } = useTranslation(APP_NS);
   const [state, setState] = useState<CopyState>("idle");
@@ -41,7 +44,9 @@ export function CopyButton({
       setState("done");
     } catch {
       setState("failed");
+      return;
     }
+    onCopied?.();
   }
 
   return (
