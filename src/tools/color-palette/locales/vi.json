@@ -1,0 +1,41 @@
+{
+  "color": "Màu",
+  "placeholder": "#3b82f6, rgb(59 130 246), oklch(62% 0.19 260), tomato",
+  "picker": "Chọn màu",
+  "recent": "Gần đây",
+  "use": "Dùng {{color}}",
+  "formats": {
+    "title": "Định dạng",
+    "hsvNote": "HSV không phải hàm CSS; dùng trong các công cụ thiết kế",
+    "outOfGamut": "Màu này nằm ngoài sRGB: mọi định dạng trừ OKLCH là màu gần nhất bên trong sRGB"
+  },
+  "shades": {
+    "title": "Dải sắc độ"
+  },
+  "harmonies": {
+    "title": "Màu hài hoà",
+    "kind": "Kiểu hài hoà",
+    "kinds": {
+      "complementary": "Bổ túc",
+      "analogous": "Tương đồng",
+      "triadic": "Bộ ba",
+      "split-complementary": "Bổ túc tách đôi",
+      "tetradic": "Bộ bốn"
+    }
+  },
+  "export": {
+    "title": "Xuất",
+    "format": "Định dạng",
+    "as": "Xuất dạng",
+    "css": "Biến CSS",
+    "json": "JSON",
+    "name": "Tên biến",
+    "shades": "Dải sắc độ dạng {{as}}",
+    "harmony": "Màu hài hoà dạng {{as}}"
+  },
+  "errors": {
+    "unknown": "Đây không phải màu CSS. Thử mã hex như #3b82f6, hàm màu như rgb() hay oklch(), hoặc tên màu",
+    "syntax": "Hàm màu này viết chưa đúng: cần ba giá trị, và alpha tuỳ chọn sau dấu gạch chéo",
+    "unsupported": "Chưa hỗ trợ color(), color-mix() và màu tương đối"
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "name": "Bảng màu",
+  "description": "Chuyển một màu CSS bất kỳ sang HEX, RGB, HSL, HWB, OKLCH và HSV có alpha, tạo dải sắc độ và màu hài hoà, rồi copy dạng biến CSS hoặc JSON"
+}

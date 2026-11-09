@@ -67,6 +67,7 @@ describe("Command palette", () => {
       "Base64Converters",
       "Case ConverterText",
       "Code FormatterDevelopment",
+      "Color PaletteMedia",
       "Config ConverterConverters",
       "Cron CalculatorTime & Date",
       "Escape ToolsConverters",
@@ -85,7 +86,7 @@ describe("Command palette", () => {
       "UUID GeneratorGenerators",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}".repeat(19));
     expect(selected()).toHaveTextContent("UUID Generator");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -145,6 +146,7 @@ describe("Command palette", () => {
     expect(group("All Tools").map((option) => option.textContent)).toEqual([
       "Case ConverterText",
       "Code FormatterDevelopment",
+      "Color PaletteMedia",
       "Config ConverterConverters",
       "Cron CalculatorTime & Date",
       "Escape ToolsConverters",
