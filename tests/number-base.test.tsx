@@ -44,7 +44,7 @@ describe("Number Base", () => {
 
     await user.clear(screen.getByLabelText("Input"));
     await user.click(screen.getByRole("combobox", { name: "Input base" }));
-    await user.click(screen.getByRole("option", { name: "Base 36" }));
+    await user.click(await screen.findByRole("option", { name: "Base 36" }));
     await user.type(screen.getByLabelText("Input"), "zz");
     expect(screen.getByLabelText("Decimal")).toHaveValue("1295");
   });
@@ -54,7 +54,7 @@ describe("Number Base", () => {
     await user.type(screen.getByLabelText("Input"), "-1");
     expect(screen.getByLabelText("Two's complement (32-bit)")).toHaveValue("11111111111111111111111111111111");
     await user.click(screen.getByRole("combobox", { name: "Bit width" }));
-    await user.click(screen.getByRole("option", { name: "8" }));
+    await user.click(await screen.findByRole("option", { name: "8" }));
     expect(screen.getByLabelText("Two's complement (8-bit)")).toHaveValue("11111111");
   });
 
