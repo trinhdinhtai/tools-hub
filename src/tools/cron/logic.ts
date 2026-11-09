@@ -376,3 +376,21 @@ export function nextRuns(cron: Cron, from: number, zone: string, count: number):
   }
   return runs;
 }
+
+/** Longer than any cron line written by hand; a longer paste is something else. */
+const PASTE_MAX = 120;
+
+/**
+ * Paste Detection: one line that reads as a cron expression. Near certain with a `*`, `?`, `/`, a name or a macro; five
+ * plain numbers only maybe, as they could be anything.
+ */
+export function detectPaste(text: string): number {
+  const trimmed = text.trim();
+  if (trimmed.length > PASTE_MAX || trimmed.includes("\n")) return 0;
+  try {
+    parseCron(trimmed);
+  } catch {
+    return 0;
+  }
+  return /^[\d\s,-]+$/.test(trimmed) ? 0.4 : 0.9;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CronError, explain, nextRuns, parseCron } from "./logic";
+import { CronError, detectPaste, explain, nextRuns, parseCron } from "./logic";
 
 const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
@@ -215,4 +215,21 @@ describe("nextRuns", () => {
   it("rejects a zone the runtime does not know", () => {
     expect(() => nextRuns(parseCron("* * * * *"), 0, "Mars/Olympus", 1)).toThrow(expect.objectContaining({ reason: "unknown-zone" }));
   });
+});
+
+describe("detectPaste", () => {
+  it.each(["*/5 * * * *", "0 9 * * MON-FRI", "  30 2 1 * ?  ", "@daily", "@Weekly"])("is near certain of %j", (text) => {
+    expect(detectPaste(text)).toBe(0.9);
+  });
+
+  it("is less sure of five plain numbers, which could be anything", () => {
+    expect(detectPaste("1 2 3 4 5")).toBe(0.4);
+  });
+
+  it.each(["", "hello world foo bar baz", "* * * *", "60 * * * *", "1700000000", "@reboot", "0 9 * * *\n0 10 * * *", "*/5 * * * * ".repeat(20)])(
+    "does not match %j",
+    (text) => {
+      expect(detectPaste(text)).toBe(0);
+    },
+  );
 });
