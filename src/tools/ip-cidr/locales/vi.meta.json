@@ -1,0 +1,4 @@
+{
+  "name": "Tính IP / CIDR",
+  "description": "Tính địa chỉ mạng, broadcast, dải host, mask, wildcard và loại của một dải IPv4 hoặc IPv6; chia, gộp và so sánh các dải"
+}

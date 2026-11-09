@@ -1,0 +1,71 @@
+{
+  "mode": "Chế độ",
+  "modes": {
+    "calculate": "Tính toán",
+    "split": "Chia",
+    "merge": "Gộp",
+    "compare": "So sánh"
+  },
+  "input": "Đầu vào",
+  "placeholder": "192.168.1.10/24 hoặc 2001:db8::/48",
+  "mergePlaceholder": "Mỗi dải một dòng hoặc cách nhau bằng dấu phẩy, ví dụ\n10.0.0.0/24\n10.0.1.0/24",
+  "fields": {
+    "cidr": "CIDR",
+    "network": "Địa chỉ mạng",
+    "broadcast": "Địa chỉ broadcast",
+    "firstHost": "Host đầu tiên",
+    "lastHost": "Host cuối cùng",
+    "firstAddress": "Địa chỉ đầu tiên",
+    "lastAddress": "Địa chỉ cuối cùng",
+    "hostCount": "Số host dùng được",
+    "addressCount": "Số địa chỉ",
+    "mask": "Netmask",
+    "wildcard": "Wildcard mask",
+    "type": "Loại địa chỉ"
+  },
+  "types": {
+    "unspecified": "Chưa xác định",
+    "loopback": "Loopback",
+    "private": "Riêng (private)",
+    "shared": "Dùng chung (NAT cấp nhà mạng)",
+    "link-local": "Link-local",
+    "documentation": "Dành cho tài liệu",
+    "benchmarking": "Dành cho đo kiểm",
+    "multicast": "Multicast",
+    "broadcast": "Broadcast giới hạn",
+    "reserved": "Dành riêng",
+    "ipv4-mapped": "Ánh xạ IPv4",
+    "unique-local": "Unique local",
+    "global": "Unicast toàn cầu",
+    "public": "Công khai (public)",
+    "mixed": "Hỗn hợp: trải qua nhiều loại"
+  },
+  "split": {
+    "prefix": "Prefix mới",
+    "subnets": "Mạng con",
+    "count": "{{total}} mạng con /{{prefix}}",
+    "truncated": "Đang hiện {{shown}} mạng con đầu tiên trên tổng {{total}}"
+  },
+  "merge": {
+    "result": "Các dải sau khi gộp",
+    "count": "Gộp {{from}} mục thành {{to}}"
+  },
+  "compare": {
+    "a": "Dải A",
+    "b": "Dải B",
+    "result": "Kết quả",
+    "equal": "{{a}} và {{b}} là cùng một dải",
+    "contains": "{{a}} chứa {{b}}",
+    "within": "{{a}} nằm trong {{b}}",
+    "disjoint": "{{a}} và {{b}} không có địa chỉ chung"
+  },
+  "lineError": "Dòng {{line}}: {{message}}",
+  "errors": {
+    "empty": "Hãy gõ một địa chỉ IP hoặc CIDR trước",
+    "invalid-address": "Đây không phải địa chỉ IPv4 hoặc IPv6 hợp lệ",
+    "invalid-prefix": "Prefix phải là số nguyên từ 0 đến 32 với IPv4, hoặc 0 đến 128 với IPv6",
+    "invalid-mask": "Netmask không hợp lệ: các bit 1 phải liền nhau, ví dụ 255.255.255.0",
+    "invalid-split": "Prefix mới phải không nhỏ hơn prefix của dải và không vượt quá độ rộng địa chỉ",
+    "mixed-versions": "Một dải IPv4 và một dải IPv6 không thể chứa nhau"
+  }
+}

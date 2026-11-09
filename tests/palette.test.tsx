@@ -70,6 +70,7 @@ describe("Command palette", () => {
       "Config ConverterConverters",
       "Escape ToolsConverters",
       "Hash GeneratorGenerators",
+      "IP / CIDR CalculatorNetwork",
       "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
       "NotesText",
@@ -82,7 +83,7 @@ describe("Command palette", () => {
       "UUID GeneratorGenerators",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
+    await user.keyboard("{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}");
     expect(selected()).toHaveTextContent("UUID Generator");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -145,6 +146,7 @@ describe("Command palette", () => {
       "Config ConverterConverters",
       "Escape ToolsConverters",
       "Hash GeneratorGenerators",
+      "IP / CIDR CalculatorNetwork",
       "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
       "NotesText",
