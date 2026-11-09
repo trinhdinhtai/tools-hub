@@ -41,6 +41,18 @@ describe("CopyButton", () => {
     await user.click(screen.getByRole("button", { name: "Sao chép" }));
     expect(await screen.findByRole("status")).toHaveTextContent("Không sao chép được");
   });
+
+  it("tells its owner once the text is on the clipboard, and not when the copy failed", async () => {
+    const onCopied = vi.fn();
+    const { user } = await renderWithI18n(<ResultRow label="Hex" value="#ff0000" onCopied={onCopied} />);
+    vi.spyOn(navigator.clipboard, "writeText").mockRejectedValueOnce(new Error("denied"));
+    await user.click(screen.getByRole("button", { name: "Copy" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("the clipboard refused it");
+    expect(onCopied).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Copy" }));
+    expect(onCopied).toHaveBeenCalledOnce();
+  });
 });
 
 describe("FileDropZone", () => {

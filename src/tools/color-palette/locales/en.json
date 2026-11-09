@@ -1,0 +1,41 @@
+{
+  "color": "Color",
+  "placeholder": "#3b82f6, rgb(59 130 246), oklch(62% 0.19 260), tomato",
+  "picker": "Pick a color",
+  "recent": "Recent",
+  "use": "Use {{color}}",
+  "formats": {
+    "title": "Formats",
+    "hsvNote": "HSV is not a CSS function; use it in design tools",
+    "outOfGamut": "This color lies outside sRGB: every format but OKLCH is the nearest color inside it"
+  },
+  "shades": {
+    "title": "Shades"
+  },
+  "harmonies": {
+    "title": "Harmonies",
+    "kind": "Harmony",
+    "kinds": {
+      "complementary": "Complementary",
+      "analogous": "Analogous",
+      "triadic": "Triadic",
+      "split-complementary": "Split complementary",
+      "tetradic": "Tetradic"
+    }
+  },
+  "export": {
+    "title": "Export",
+    "format": "Format",
+    "as": "As",
+    "css": "CSS variables",
+    "json": "JSON",
+    "name": "Variable name",
+    "shades": "Shades as {{as}}",
+    "harmony": "Harmony as {{as}}"
+  },
+  "errors": {
+    "unknown": "This is not a CSS color. Try a hex code like #3b82f6, a color function like rgb() or oklch(), or a color name",
+    "syntax": "This color function is not written right: it needs three values, and an optional alpha after a slash",
+    "unsupported": "color(), color-mix() and relative colors are not supported yet"
+  }
+}
