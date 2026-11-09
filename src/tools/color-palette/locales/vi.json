@@ -33,6 +33,45 @@
     "shades": "Dải sắc độ dạng {{as}}",
     "harmony": "Màu hài hoà dạng {{as}}"
   },
+  "contrast": {
+    "title": "Độ tương phản",
+    "background": "Màu nền",
+    "backgroundPicker": "Chọn màu nền",
+    "swap": "Đổi chỗ",
+    "sampleLarge": "Chữ lớn",
+    "sample": "Chữ cỡ thường trông như thế này trên màu nền",
+    "ratio": "Tỉ lệ tương phản",
+    "levels": "Mức WCAG",
+    "checks": {
+      "aa-normal": "AA chữ thường ({{min}}:1)",
+      "aa-large": "AA chữ lớn ({{min}}:1)",
+      "aaa-normal": "AAA chữ thường ({{min}}:1)",
+      "aaa-large": "AAA chữ lớn ({{min}}:1)",
+      "non-text": "Thành phần giao diện ({{min}}:1)"
+    },
+    "pass": "Đạt",
+    "fail": "Không đạt",
+    "suggest": {
+      "aa-normal": "Màu gần nhất đạt AA",
+      "aaa-normal": "Màu gần nhất đạt AAA"
+    },
+    "useSuggestion": "Dùng",
+    "passes": "Màu này đã đạt mức này",
+    "reaches": "Đạt {{ratio}} trên màu nền này",
+    "none": "Kể cả đen hay trắng cũng không đạt mức này trên màu nền này",
+    "noneTranslucent": "Màu chữ quá trong suốt nên không đạt mức này trên màu nền này; hãy giảm độ trong suốt"
+  },
+  "vision": {
+    "title": "Mù màu",
+    "kinds": {
+      "normal": "Thị lực bình thường",
+      "protanopia": "Mù màu đỏ",
+      "deuteranopia": "Mù màu lục",
+      "tritanopia": "Mù màu lam",
+      "achromatopsia": "Mù màu toàn phần"
+    },
+    "note": "Màu trông thế nào khi thiếu tế bào nón đỏ (protanopia), nón lục (deuteranopia), nón lam (tritanopia) hoặc không còn thấy màu (achromatopsia)"
+  },
   "errors": {
     "unknown": "Đây không phải màu CSS. Thử mã hex như #3b82f6, hàm màu như rgb() hay oklch(), hoặc tên màu",
     "syntax": "Hàm màu này viết chưa đúng: cần ba giá trị, và alpha tuỳ chọn sau dấu gạch chéo",

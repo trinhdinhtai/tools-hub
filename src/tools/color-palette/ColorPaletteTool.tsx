@@ -1,12 +1,16 @@
 import { useId, useMemo, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
+import { ArrowUpDown, Check, X } from "lucide-react";
 import { ErrorMessage } from "@/components/error-message";
 import { ResultRow } from "@/components/result-row";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { usePaste } from "@/lib/paste";
 import { usePreference, useRecent } from "@/lib/preferences";
+import { VISION_KINDS, simulateVision } from "./color-vision";
+import { CONTRAST_LEVELS, contrastChecks, contrastRatio, formatRatio, suggestText, type ContrastLevel } from "./contrast";
 import {
   COLOR_FORMATS,
   ColorError,
@@ -85,12 +89,17 @@ export default function ColorPaletteTool() {
   const { t } = useTranslation("color-palette");
   const id = useId();
   const [text, setText] = useState("");
+  const [background, setBackground] = useState("#ffffff");
   const [recent, addRecent] = useRecent();
   usePaste(setText);
   const parsed = useMemo(() => parse(text), [text]);
   const color = parsed.color;
   /** A color the user copied goes into the Recent, as hex: never the text they typed. */
   const remember = () => color && addRecent(formatColor(color, "hex"));
+  const swap = () => {
+    setText(background);
+    setBackground(text);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -129,6 +138,8 @@ export default function ColorPaletteTool() {
         <>
           <Formats color={color} onCopied={remember} />
           <Palettes color={color} onUse={setText} onCopied={remember} />
+          <Contrast color={color} background={background} onBackground={setBackground} onSwap={swap} onUse={setText} onCopied={addRecent} />
+          <ColorVision color={color} onUse={setText} />
         </>
       )}
     </div>
@@ -207,6 +218,168 @@ function Palettes({ color, onUse, onCopied }: { color: Color; onUse: (hex: strin
         </div>
       </section>
     </>
+  );
+}
+
+/** The levels a nearest passing color is offered for: normal text at AA and at AAA. */
+const SUGGEST_LEVELS = CONTRAST_LEVELS.filter((level) => level.id === "aa-normal" || level.id === "aaa-normal");
+
+/** WCAG contrast of the color, as text, on a second color: the ratio, the levels it passes, and colors that pass. */
+function Contrast({
+  color,
+  background,
+  onBackground,
+  onSwap,
+  onUse,
+  onCopied,
+}: {
+  color: Color;
+  background: string;
+  onBackground: (text: string) => void;
+  onSwap: () => void;
+  onUse: (hex: string) => void;
+  /** Called with the hex of a color the user copied. */
+  onCopied: (hex: string) => void;
+}) {
+  const { t } = useTranslation("color-palette");
+  const id = useId();
+  const parsed = parse(background);
+  const bg = parsed.color;
+
+  return (
+    <section aria-label={t("contrast.title")} className="flex flex-col gap-3">
+      <h3 className="text-sm font-medium">{t("contrast.title")}</h3>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={id}>{t("contrast.background")}</Label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            aria-label={t("contrast.backgroundPicker")}
+            value={bg ? formatColor({ ...bg, alpha: 1 }, "hex") : "#ffffff"}
+            onChange={(event) => onBackground(event.target.value)}
+            className="size-9 shrink-0 cursor-pointer rounded-md border bg-transparent p-1"
+          />
+          <Input
+            id={id}
+            value={background}
+            onChange={(event) => onBackground(event.target.value)}
+            spellCheck={false}
+            autoComplete="off"
+            className="font-mono text-[13px]"
+          />
+          <Button variant="outline" size="sm" onClick={onSwap}>
+            <ArrowUpDown aria-hidden />
+            {t("contrast.swap")}
+          </Button>
+        </div>
+      </div>
+      {parsed.error && <ErrorMessage>{t(`errors.${parsed.error}`)}</ErrorMessage>}
+      {bg && <ContrastResult color={color} background={bg} onUse={onUse} onCopied={onCopied} />}
+    </section>
+  );
+}
+
+function ContrastResult({
+  color,
+  background,
+  onUse,
+  onCopied,
+}: {
+  color: Color;
+  background: Color;
+  onUse: (hex: string) => void;
+  onCopied: (hex: string) => void;
+}) {
+  const { t } = useTranslation("color-palette");
+  const ratio = contrastRatio(color, background);
+  return (
+    <>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div
+          aria-hidden
+          style={{ ...paint(background), color: formatColor(color, "rgb") }}
+          className="flex flex-col justify-center gap-1 rounded-md border border-foreground/10 px-4 py-3"
+        >
+          <span className="text-2xl font-semibold">{t("contrast.sampleLarge")}</span>
+          <span className="text-sm">{t("contrast.sample")}</span>
+        </div>
+        <div className="flex flex-col gap-3">
+          <ResultRow label={t("contrast.ratio")} value={formatRatio(ratio)} />
+          <ul aria-label={t("contrast.levels")} className="grid grid-cols-2 gap-x-4 gap-y-1 text-[13px]">
+            {contrastChecks(ratio).map((check) => (
+              <li key={check.id} className={`flex items-center gap-1.5 ${check.pass ? "" : "text-destructive"}`}>
+                {check.pass ? <Check aria-hidden className="size-3.5" /> : <X aria-hidden className="size-3.5" />}
+                {t(`contrast.checks.${check.id}`, { min: check.min })} · {t(check.pass ? "contrast.pass" : "contrast.fail")}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {SUGGEST_LEVELS.map(({ id, min }) => (
+          <Suggestion key={id} level={id} min={min} color={color} background={background} onUse={onUse} onCopied={onCopied} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+/** The nearest text color that reaches one level, to copy or use; or why there is none. */
+function Suggestion({
+  level,
+  min,
+  color,
+  background,
+  onUse,
+  onCopied,
+}: {
+  level: ContrastLevel;
+  min: number;
+  color: Color;
+  background: Color;
+  onUse: (hex: string) => void;
+  onCopied: (hex: string) => void;
+}) {
+  const { t } = useTranslation("color-palette");
+  const found = suggestText(color, background, min);
+  const passes = contrastRatio(color, background) >= min;
+  const hex = found && formatColor(found, "hex");
+  const note = passes
+    ? t("contrast.passes")
+    : found
+      ? t("contrast.reaches", { ratio: formatRatio(contrastRatio(found, background)) })
+      : t(color.alpha < 1 ? "contrast.noneTranslucent" : "contrast.none");
+  return (
+    <ResultRow
+      label={t(`contrast.suggest.${level}`)}
+      value={hex}
+      note={note}
+      onCopied={() => hex && onCopied(hex)}
+      action={
+        hex &&
+        !passes && (
+          <Button variant="ghost" size="sm" onClick={() => onUse(hex)}>
+            {t("contrast.useSuggestion")}
+          </Button>
+        )
+      }
+    />
+  );
+}
+
+/** The color as people with each kind of color blindness see it. */
+function ColorVision({ color, onUse }: { color: Color; onUse: (hex: string) => void }) {
+  const { t } = useTranslation("color-palette");
+  const items = [
+    { name: t("vision.kinds.normal"), color },
+    ...VISION_KINDS.map((kind) => ({ name: t(`vision.kinds.${kind}`), color: simulateVision(color, kind) })),
+  ];
+  return (
+    <section aria-label={t("vision.title")} className="flex flex-col gap-3">
+      <h3 className="text-sm font-medium">{t("vision.title")}</h3>
+      <SwatchStrip items={items} onUse={onUse} />
+      <p className="text-xs text-muted-foreground">{t("vision.note")}</p>
+    </section>
   );
 }
 
