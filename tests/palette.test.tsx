@@ -75,6 +75,7 @@ describe("Command palette", () => {
       "IP / CIDR CalculatorNetwork",
       "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
+      "JWT DecoderText",
       "NotesText",
       "Number BaseConverters",
       "Password GeneratorGenerators",
@@ -86,7 +87,7 @@ describe("Command palette", () => {
       "UUID GeneratorGenerators",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}".repeat(19));
+    await user.keyboard("{ArrowDown}".repeat(20));
     expect(selected()).toHaveTextContent("UUID Generator");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -124,7 +125,7 @@ describe("Command palette", () => {
     const palette = await openPalette(user, "Tìm Công cụ");
 
     await user.keyboard("DECODE");
-    expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual(["Base64Chuyển đổi", "URL EncoderChuyển đổi"]);
+    expect(within(palette).getAllByRole("option").map((option) => option.textContent)).toEqual(["Giải mã JWTVăn bản", "Base64Chuyển đổi", "URL EncoderChuyển đổi"]);
     await user.clear(within(palette).getByRole("combobox"));
     await user.keyboard("qwerty");
     expect(within(palette).queryAllByRole("option")).toEqual([]);
@@ -154,6 +155,7 @@ describe("Command palette", () => {
       "IP / CIDR CalculatorNetwork",
       "JSON DiffDevelopment",
       "JSON ViewerDevelopment",
+      "JWT DecoderText",
       "NotesText",
       "Number BaseConverters",
       "Password GeneratorGenerators",

@@ -1,0 +1,38 @@
+{
+  "input": "Token",
+  "placeholder": "eyJhbGciOi… A Bearer prefix or line breaks are fine",
+  "header": "Header",
+  "payload": "Payload",
+  "signature": "Signature",
+  "unsigned": "Unsigned: the token has no signature",
+  "notVerified": "Decoded only: the signature is not verified",
+  "status": {
+    "active": "Active, expires {{relative}}",
+    "no-expiry": "Active, never expires: it has no exp claim",
+    "expired": "Expired {{relative}}",
+    "not-yet-valid": "Not valid yet, starts {{relative}}",
+    "invalid": "Can’t tell whether it works: {{claim}} is not a NumericDate (seconds since 1970)"
+  },
+  "claims": {
+    "title": "Times",
+    "exp": "Expires (exp)",
+    "nbf": "Not before (nbf)",
+    "iat": "Issued at (iat)",
+    "notDate": "Not a NumericDate: a number of seconds since 1970 was expected"
+  },
+  "parts": {
+    "header": "header",
+    "payload": "payload",
+    "signature": "signature"
+  },
+  "errors": {
+    "empty": "Paste a JWT first",
+    "whitespace": "The token has a space in it: a JWT has none. Paste the token on its own",
+    "parts": "A JWT has three parts separated by dots: header.payload.signature",
+    "encrypted": "This is an encrypted token (JWE, five parts): it can’t be read without its key",
+    "base64": "The {{part}} is not valid base64url",
+    "utf8": "The {{part}} does not decode to UTF-8 text",
+    "json": "The {{part}} is not valid JSON",
+    "not-object": "The {{part}} is JSON but not an object"
+  }
+}

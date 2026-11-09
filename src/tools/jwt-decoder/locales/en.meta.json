@@ -1,0 +1,4 @@
+{
+  "name": "JWT Decoder",
+  "description": "Decode a JWT's header and payload, and see when it expires and whether it still works"
+}
