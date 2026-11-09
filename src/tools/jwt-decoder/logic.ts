@@ -58,7 +58,7 @@ const BEARER = /^(?:authorization:\s*)?bearer\s+/i;
  * The token in a pasted text: without a Bearer prefix, and joined back where it was wrapped over lines. A space left
  * within a line is refused: gluing the words after a token onto its signature would hide that they are there.
  */
-function tokenOf(text: string): string {
+export function tokenOf(text: string): string {
   const token = text.trim().replace(BEARER, "").replace(/\s*[\r\n]\s*/g, "");
   if (/\s/.test(token)) throw new JwtError("whitespace");
   return token;
