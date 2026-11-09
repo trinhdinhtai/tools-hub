@@ -30,7 +30,7 @@ export interface Cron {
   macro?: string;
 }
 
-export type CronErrorReason = "empty" | "field-count" | "invalid" | "out-of-range" | "backwards" | "zero-step" | "reboot" | "unknown-macro";
+export type CronErrorReason = "empty" | "field-count" | "invalid" | "out-of-range" | "backwards" | "zero-step" | "reboot" | "unknown-macro" | "unknown-zone";
 
 export interface CronErrorDetails {
   field?: FieldName;
@@ -283,4 +283,96 @@ export function explain(cron: Cron, locale: Locale): string {
   if (!isAll(month)) clauses.push(phrase(month, w));
   const sentence = clauses.join(", ");
   return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+}
+
+/** One run of the schedule: the instant, and the wall time, weekday (0 is Sunday) and UTC offset in minutes in its zone. */
+export interface Run {
+  at: number;
+  /** `YYYY-MM-DD HH:MM` on the zone's clock. */
+  wall: string;
+  weekday: number;
+  offset: number;
+}
+
+const MS_PER_MINUTE = 60_000;
+const MS_PER_DAY = 86_400_000;
+/** How far ahead runs are looked for: past the longest wait a schedule can have, a leap day on given weekdays across 2100. */
+const SEARCH_DAYS = 366 * 50;
+
+const formatters = new Map<string, Intl.DateTimeFormat>();
+
+function formatter(zone: string): Intl.DateTimeFormat {
+  let format = formatters.get(zone);
+  if (!format) {
+    try {
+      format = new Intl.DateTimeFormat("en-US", {
+        timeZone: zone,
+        hourCycle: "h23",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+      });
+    } catch {
+      throw new CronError("unknown-zone", { value: zone });
+    }
+    formatters.set(zone, format);
+  }
+  return format;
+}
+
+/** The zone's wall clock at an instant, as if that clock were UTC, to the minute. */
+function wallClock(at: number, zone: string): number {
+  const parts: Record<string, number> = {};
+  for (const { type, value } of formatter(zone).formatToParts(at)) parts[type] = Number(value);
+  return Date.UTC(parts.year!, parts.month! - 1, parts.day!, parts.hour!, parts.minute!);
+}
+
+const offsetAt = (at: number, zone: string) => (wallClock(at, zone) - Math.floor(at / MS_PER_MINUTE) * MS_PER_MINUTE) / MS_PER_MINUTE;
+
+/**
+ * The instant the zone's clock shows a wall time (given as if it were UTC), or null when the clocks skip it. Of a time
+ * that happens twice, the first.
+ */
+function instantOf(wall: number, zone: string): number | null {
+  const guess = wall - offsetAt(wall, zone) * MS_PER_MINUTE;
+  const at = wall - offsetAt(guess, zone) * MS_PER_MINUTE;
+  return wallClock(at, zone) === wall ? at : null;
+}
+
+const allows = (field: Field) => {
+  const allowed = new Set(field.values);
+  return (value: number) => allowed.has(value);
+};
+
+/** The next `count` runs strictly after `from` (milliseconds since 1970), on the clock of the IANA zone given. */
+export function nextRuns(cron: Cron, from: number, zone: string, count: number): Run[] {
+  const runs: Run[] = [];
+  if (count <= 0) return runs;
+  const { minute, hour, day, month, weekday } = cron.fields;
+  const [inMonth, onDay, onWeekday] = [allows(month), allows(day), allows(weekday)];
+  const either = day.restricted && weekday.restricted;
+  const start = wallClock(from, zone);
+  const firstDay = Math.floor(start / MS_PER_DAY) * MS_PER_DAY;
+
+  for (let i = 0; i < SEARCH_DAYS; i++) {
+    const date = new Date(firstDay + i * MS_PER_DAY);
+    if (!inMonth(date.getUTCMonth() + 1)) continue;
+    const [dayOk, weekdayOk] = [onDay(date.getUTCDate()), onWeekday(date.getUTCDay())];
+    if (either ? !dayOk && !weekdayOk : !dayOk || !weekdayOk) continue;
+    for (const h of hour.values) {
+      for (const m of minute.values) {
+        const wall = date.getTime() + (h * 60 + m) * MS_PER_MINUTE;
+        // Earlier the first day is long past; the instant check below settles the minute itself.
+        if (wall < start) continue;
+        const at = instantOf(wall, zone);
+        if (at === null || at <= from || at <= (runs.at(-1)?.at ?? -Infinity)) continue;
+        const iso = new Date(wall).toISOString();
+        runs.push({ at, wall: `${iso.slice(0, 10)} ${iso.slice(11, 16)}`, weekday: date.getUTCDay(), offset: offsetAt(at, zone) });
+        if (runs.length === count) return runs;
+      }
+    }
+  }
+  return runs;
 }

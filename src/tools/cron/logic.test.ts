@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CronError, explain, parseCron } from "./logic";
+import { CronError, explain, nextRuns, parseCron } from "./logic";
 
 const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
@@ -141,5 +141,78 @@ describe("explain", () => {
   it("lists minutes rather than times when there are too many times to read", () => {
     expect(explain(parseCron("0,10,20,30,40,50 9,17 * * *"), "en")).toBe("At minutes 0, 10, 20, 30, 40 and 50, during hours 9 and 17");
     expect(explain(parseCron("0,10,20,30,40,50 9,17 * * *"), "vi")).toBe("Vào phút 0, 10, 20, 30, 40 và 50, trong giờ 9 và 17");
+  });
+});
+
+const utc = (iso: string) => Date.parse(iso);
+const runsAt = (text: string, from: string, zone = "UTC", count = 5) =>
+  nextRuns(parseCron(text), utc(from), zone, count).map((run) => new Date(run.at).toISOString());
+
+describe("nextRuns", () => {
+  it("lists the next runs after the given instant", () => {
+    expect(runsAt("*/15 * * * *", "2026-11-09T12:07:30Z", "UTC", 3)).toEqual([
+      "2026-11-09T12:15:00.000Z",
+      "2026-11-09T12:30:00.000Z",
+      "2026-11-09T12:45:00.000Z",
+    ]);
+  });
+
+  it("leaves out a run at the very instant given", () => {
+    expect(runsAt("*/15 * * * *", "2026-11-09T12:15:00Z", "UTC", 1)).toEqual(["2026-11-09T12:30:00.000Z"]);
+  });
+
+  it("works out the times in the zone given, with its wall time and offset", () => {
+    const [run] = nextRuns(parseCron("0 9 * * *"), utc("2026-11-09T03:00:00Z"), "Asia/Ho_Chi_Minh", 1);
+    expect(run).toEqual({ at: utc("2026-11-10T02:00:00Z"), wall: "2026-11-10 09:00", weekday: 2, offset: 420 });
+  });
+
+  it("runs on either the day of the month or the weekday when both are restricted", () => {
+    expect(runsAt("0 0 13 * 5", "2026-01-01T00:00:00Z", "UTC", 4)).toEqual([
+      "2026-01-02T00:00:00.000Z",
+      "2026-01-09T00:00:00.000Z",
+      "2026-01-13T00:00:00.000Z",
+      "2026-01-16T00:00:00.000Z",
+    ]);
+  });
+
+  it("runs only on days both allow when one of them starts with *", () => {
+    expect(runsAt("0 0 */2 * 1", "2026-01-01T00:00:00Z", "UTC", 3)).toEqual([
+      "2026-01-05T00:00:00.000Z",
+      "2026-01-19T00:00:00.000Z",
+      "2026-02-09T00:00:00.000Z",
+    ]);
+  });
+
+  it("finds a leap day years ahead, skipping 2100", () => {
+    expect(runsAt("0 0 29 2 *", "2026-01-01T00:00:00Z", "UTC", 1)).toEqual(["2028-02-29T00:00:00.000Z"]);
+    expect(runsAt("0 0 29 2 *", "2097-01-01T00:00:00Z", "UTC", 1)).toEqual(["2104-02-29T00:00:00.000Z"]);
+  });
+
+  it("finds no runs for a day that never comes", () => {
+    expect(runsAt("0 0 31 4,6 *", "2026-01-01T00:00:00Z")).toEqual([]);
+  });
+
+  it("skips a time that does not exist when the clocks go forward", () => {
+    // New York moves from 02:00 to 03:00 on 2026-03-08.
+    expect(runsAt("30 2 * * *", "2026-03-07T12:00:00Z", "America/New_York", 2)).toEqual([
+      "2026-03-09T06:30:00.000Z",
+      "2026-03-10T06:30:00.000Z",
+    ]);
+  });
+
+  it("runs once at a time that happens twice when the clocks go back", () => {
+    // New York goes from 02:00 back to 01:00 on 2026-11-01.
+    expect(runsAt("30 1 * * *", "2026-10-31T12:00:00Z", "America/New_York", 2)).toEqual([
+      "2026-11-01T05:30:00.000Z",
+      "2026-11-02T06:30:00.000Z",
+    ]);
+  });
+
+  it("gives back nothing for a count of 0", () => {
+    expect(runsAt("* * * * *", "2026-01-01T00:00:00Z", "UTC", 0)).toEqual([]);
+  });
+
+  it("rejects a zone the runtime does not know", () => {
+    expect(() => nextRuns(parseCron("* * * * *"), 0, "Mars/Olympus", 1)).toThrow(expect.objectContaining({ reason: "unknown-zone" }));
   });
 });
