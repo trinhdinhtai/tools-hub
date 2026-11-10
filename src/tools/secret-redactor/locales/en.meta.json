@@ -1,0 +1,4 @@
+{
+  "name": "Secret & PII Redactor",
+  "description": "Hide API keys, tokens, passwords, emails and personal data behind placeholders before pasting into an AI chat, then put them back in its reply"
+}

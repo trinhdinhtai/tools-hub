@@ -81,6 +81,7 @@ describe("Command palette", () => {
       "Password GeneratorGenerators",
       "Random StringGenerators",
       "Regex TesterDevelopment",
+      "Secret & PII RedactorAI",
       "Text CompareText",
       "TickerUtilities",
       "Timestamp ConverterTime & Date",
@@ -88,7 +89,7 @@ describe("Command palette", () => {
       "UUID GeneratorGenerators",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}".repeat(21));
+    await user.keyboard("{ArrowDown}".repeat(22));
     expect(selected()).toHaveTextContent("UUID Generator");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -162,6 +163,7 @@ describe("Command palette", () => {
       "Password GeneratorGenerators",
       "Random StringGenerators",
       "Regex TesterDevelopment",
+      "Secret & PII RedactorAI",
       "Text CompareText",
       "Timestamp ConverterTime & Date",
       "URL EncoderConverters",

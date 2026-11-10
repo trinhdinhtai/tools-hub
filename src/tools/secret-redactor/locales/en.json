@@ -1,0 +1,38 @@
+{
+  "steps": {
+    "redact": "1. Hide",
+    "restore": "2. Restore"
+  },
+  "input": "Text",
+  "redacted": "Redacted",
+  "copyRedacted": "Copy redacted text",
+  "reply": "AI reply",
+  "restored": "Restored",
+  "copyRestored": "Copy restored text",
+  "found": "Hidden values",
+  "nothingFound": "Nothing to hide was found",
+  "hiddenCount": "Hidden: {{count}}",
+  "restoredCount": "Restored: {{count}}",
+  "memoryOnly": "Which placeholder stands for which value is kept in memory only, and forgotten when you close this Tool.",
+  "scanning": "Scanning…",
+  "kinds": {
+    "private-key": "Private key",
+    "jwt": "JWT",
+    "aws-key": "AWS key",
+    "github-token": "GitHub token",
+    "stripe-key": "Stripe key",
+    "api-key": "API key",
+    "password": "Password",
+    "secret": "Secret",
+    "email": "Email",
+    "card": "Card number",
+    "phone": "Phone number",
+    "ip": "IP address"
+  },
+  "errors": {
+    "too-large": "The text is too large to scan: at most {{characters}} characters.",
+    "failed": "The text could not be scanned: {{message}}",
+    "nothing-to-restore": "Nothing to restore yet: paste a text with secrets in step 1 first.",
+    "unknown": "These placeholders were not made from the text in step 1 and are left as they are: {{placeholders}}"
+  }
+}
