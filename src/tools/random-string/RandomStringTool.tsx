@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attempt } from "@/lib/attempt";
 import { usePreference } from "@/lib/preferences";
 import { DEFAULT_CUSTOM_ALPHABET, generate, GenerateError } from "./logic";
 import { MODES, type Mode } from "./modes";
@@ -61,12 +62,8 @@ export default function RandomStringTool() {
   const [nonce, setNonce] = useState(0);
   const result = useMemo<{ output: string; error: string | null }>(() => {
     void nonce;
-    try {
-      return { output: generate(options).join("\n"), error: null };
-    } catch (caught) {
-      if (caught instanceof GenerateError) return { output: "", error: caught.reason };
-      throw caught;
-    }
+    const { value, error } = attempt(() => generate(options).join("\n"), GenerateError);
+    return { output: value ?? "", error };
   }, [options, nonce]);
 
   return (

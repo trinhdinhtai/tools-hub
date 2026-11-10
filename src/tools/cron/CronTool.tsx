@@ -5,6 +5,7 @@ import { ResultRow } from "@/components/result-row";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attemptError } from "@/lib/attempt";
 import { usePaste } from "@/lib/paste";
 import { usePreference } from "@/lib/preferences";
 import { BuilderMode } from "./BuilderMode";
@@ -38,12 +39,8 @@ export default function CronTool() {
 
   const { cron, error } = useMemo(() => {
     if (text.trim() === "") return { cron: null, error: null };
-    try {
-      return { cron: parseCron(text), error: null };
-    } catch (error) {
-      if (error instanceof CronError) return { cron: null, error };
-      throw error;
-    }
+    const { value, error } = attemptError(() => parseCron(text), CronError);
+    return { cron: value, error };
   }, [text]);
 
   return (
@@ -178,14 +175,7 @@ function Runs({ cron, now, locale }: { cron: Cron; now: number; locale: Locale }
   const [draft, setDraft] = useState(saved);
   const zone = draft.trim() === "" ? LOCAL_ZONE : draft.trim();
 
-  const runs = useMemo(() => {
-    try {
-      return nextRuns(cron, now, zone, RUN_COUNT);
-    } catch (error) {
-      if (error instanceof CronError) return null;
-      throw error;
-    }
-  }, [cron, now, zone]);
+  const runs = useMemo(() => attemptError(() => nextRuns(cron, now, zone, RUN_COUNT), CronError).value, [cron, now, zone]);
 
   const changeZone = (next: string) => {
     setDraft(next);

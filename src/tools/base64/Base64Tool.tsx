@@ -4,6 +4,7 @@ import { ErrorMessage } from "@/components/error-message";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attempt } from "@/lib/attempt";
 import { usePaste } from "@/lib/paste";
 import { usePreference } from "@/lib/preferences";
 import { DataUriSwitch, FileMode } from "./FileMode";
@@ -17,12 +18,8 @@ const VARIANTS: Variant[] = ["standard", "url-safe", "base32"];
 
 function convert(input: string, direction: Direction, variant: Variant) {
   if (direction === "encode") return { output: encode(input, variant) };
-  try {
-    return { output: decode(input, variant) };
-  } catch (error) {
-    if (error instanceof DecodeError) return { output: "", error: error.reason };
-    throw error;
-  }
+  const { value, error } = attempt(() => decode(input, variant), DecodeError);
+  return { output: value ?? "", error };
 }
 
 const utf8 = new TextEncoder();

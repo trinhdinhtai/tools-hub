@@ -1,3 +1,4 @@
+import { attemptError } from "@/lib/attempt";
 import { BOUNDS, CronError, FIELDS, parseCron, readField, type Field, type FieldName } from "./logic";
 
 /** What the builder offers for a field: any value, every N, a range (with a step), or values picked one by one. */
@@ -34,14 +35,7 @@ export function readBuilder(text: string): Record<FieldName, FieldSpec | null> |
   const pieces = splitFields(text);
   if (!pieces) return null;
   return Object.fromEntries(
-    FIELDS.map((name, i) => {
-      try {
-        return [name, specOf(readField(name, pieces[i]!))];
-      } catch (error) {
-        if (error instanceof CronError) return [name, null];
-        throw error;
-      }
-    }),
+    FIELDS.map((name, i) => [name, attemptError(() => specOf(readField(name, pieces[i]!)), CronError).value]),
   ) as Record<FieldName, FieldSpec | null>;
 }
 
@@ -50,13 +44,8 @@ export function splitFields(text: string): string[] | null {
   const trimmed = text.trim();
   if (trimmed === "") return FIELDS.map(() => "*");
   if (trimmed.startsWith("@")) {
-    try {
-      const { fields } = parseCron(trimmed);
-      return FIELDS.map((name) => fields[name].text);
-    } catch (error) {
-      if (error instanceof CronError) return null;
-      throw error;
-    }
+    const { value } = attemptError(() => parseCron(trimmed), CronError);
+    return value && FIELDS.map((name) => value.fields[name].text);
   }
   const pieces = trimmed.split(/\s+/);
   return pieces.length === FIELDS.length ? pieces : null;

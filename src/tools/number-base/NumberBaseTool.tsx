@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attempt } from "@/lib/attempt";
 import {
   BIT_WIDTHS,
   NumberBaseError,
@@ -32,12 +33,7 @@ interface Parsed {
 
 function parse(text: string, evaluate: (text: string) => bigint): Parsed {
   if (text.trim() === "") return { value: null, error: null };
-  try {
-    return { value: evaluate(text), error: null };
-  } catch (error) {
-    if (error instanceof NumberBaseError) return { value: null, error: error.reason };
-    throw error;
-  }
+  return attempt(() => evaluate(text), NumberBaseError);
 }
 
 /** Every base at once: the four usual ones, a base of the user's choice up to 36, and the Roman numerals. */

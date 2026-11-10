@@ -1,3 +1,4 @@
+import { attemptError } from "@/lib/attempt";
 import type { WorkerHandler } from "@/lib/worker";
 import { DecodeError, type DecodeErrorReason, type Variant, dataUriPrefix, decodeBytes, encodeBytes, parseDataUri } from "./logic";
 
@@ -40,12 +41,9 @@ export const handleFileJob: WorkerHandler<FileJob, FileJobResult> = async (job, 
   if (job.kind === "encode") {
     return { ok: true, bytes: await encodeFile(job.file, job.variant, job.dataUri, progress), mime: null };
   }
-  try {
+  const { value, error } = attemptError(() => {
     const uri = parseDataUri(job.text);
-    if (uri) return { ok: true, bytes: uri.bytes, mime: uri.mime };
-    return { ok: true, bytes: decodeBytes(job.text, job.variant), mime: null };
-  } catch (error) {
-    if (error instanceof DecodeError) return { ok: false, reason: error.reason };
-    throw error;
-  }
+    return uri ? { bytes: uri.bytes, mime: uri.mime } : { bytes: decodeBytes(job.text, job.variant), mime: null };
+  }, DecodeError);
+  return error ? { ok: false, reason: error.reason } : { ok: true, ...value };
 };

@@ -9,6 +9,7 @@ import { ResultRow } from "@/components/result-row";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attemptError } from "@/lib/attempt";
 import { usePaste } from "@/lib/paste";
 import { formatRelative } from "@/lib/relative-time";
 import { cn } from "@/lib/utils";
@@ -44,12 +45,8 @@ export default function JwtDecoderTool() {
 
   const { decoded, error } = useMemo(() => {
     if (text.trim() === "") return { decoded: null, error: null };
-    try {
-      return { decoded: decodeJwt(text), error: null };
-    } catch (error) {
-      if (error instanceof JwtError) return { decoded: null, error };
-      throw error;
-    }
+    const { value, error } = attemptError(() => decodeJwt(text), JwtError);
+    return { decoded: value, error };
   }, [text]);
   const ticking = mode === "decode" && decoded !== null;
   useEffect(() => {

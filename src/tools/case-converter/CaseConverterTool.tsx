@@ -5,6 +5,7 @@ import { ErrorMessage } from "@/components/error-message";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attempt } from "@/lib/attempt";
 import { CASES, SlugError, slugify, toCase } from "./logic";
 import { MODES, type Mode } from "./modes";
 
@@ -37,14 +38,7 @@ export default function CaseConverterTool() {
   const id = useId();
 
   const cases = useMemo(() => CASES.map((style) => [style, toCase(text, style)] as const), [text]);
-  const slug = useMemo(() => {
-    try {
-      return { slug: slugify(text), error: null };
-    } catch (error) {
-      if (error instanceof SlugError) return { slug: "", error: error.reason };
-      throw error;
-    }
-  }, [text]);
+  const slug = useMemo(() => attempt(() => slugify(text), SlugError), [text]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -84,7 +78,7 @@ export default function CaseConverterTool() {
         </div>
       ) : (
         <div className="flex max-w-xl flex-col gap-2">
-          <Result label={t("output")} value={slug.slug} />
+          <Result label={t("output")} value={slug.value ?? ""} />
           {slug.error && <ErrorMessage>{t(`errors.${slug.error}`)}</ErrorMessage>}
         </div>
       )}

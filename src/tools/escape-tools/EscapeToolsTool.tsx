@@ -5,18 +5,15 @@ import { ErrorMessage } from "@/components/error-message";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attemptError } from "@/lib/attempt";
 import { convert, EscapeError, type Direction } from "./logic";
 import { MODES, type Mode } from "./modes";
 
 const DIRECTIONS: Direction[] = ["escape", "unescape"];
 
 function run(input: string, mode: Mode, direction: Direction): { output: string; error?: EscapeError } {
-  try {
-    return { output: convert(input, mode, direction) };
-  } catch (error) {
-    if (error instanceof EscapeError) return { output: "", error };
-    throw error;
-  }
+  const { value, error } = attemptError(() => convert(input, mode, direction), EscapeError);
+  return error ? { output: "", error } : { output: value };
 }
 
 export default function EscapeToolsTool() {

@@ -85,11 +85,12 @@ describe("Command palette", () => {
       "Text CompareText",
       "TickerUtilities",
       "Timestamp ConverterTime & Date",
+      "Unit ConverterConverters",
       "URL EncoderConverters",
       "UUID GeneratorGenerators",
     ]);
     expect(selected()).toHaveTextContent("Base64");
-    await user.keyboard("{ArrowDown}".repeat(22));
+    await user.keyboard("{ArrowDown}".repeat(23));
     expect(selected()).toHaveTextContent("UUID Generator");
     await user.keyboard("{ArrowDown}");
     expect(selected()).toHaveTextContent("Base64");
@@ -166,6 +167,7 @@ describe("Command palette", () => {
       "Secret & PII RedactorAI",
       "Text CompareText",
       "Timestamp ConverterTime & Date",
+      "Unit ConverterConverters",
       "URL EncoderConverters",
       "UUID GeneratorGenerators",
     ]);

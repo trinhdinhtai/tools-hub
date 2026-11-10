@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attempt } from "@/lib/attempt";
 import { usePreference } from "@/lib/preferences";
 import {
   generatePassphrase,
@@ -278,13 +279,8 @@ export default function PasswordGeneratorTool() {
   const [nonce, setNonce] = useState(0);
   const result = useMemo<{ output: string; error: string | null }>(() => {
     void nonce;
-    try {
-      const output = mode === "password" ? generatePassword(options) : generatePassphrase(options);
-      return { output, error: null };
-    } catch (caught) {
-      if (caught instanceof GenerateError) return { output: "", error: caught.reason };
-      throw caught;
-    }
+    const { value, error } = attempt(() => (mode === "password" ? generatePassword(options) : generatePassphrase(options)), GenerateError);
+    return { output: value ?? "", error };
   }, [mode, options, nonce]);
 
   const bits = mode === "password" ? passwordEntropyBits(options) : passphraseEntropyBits(options);

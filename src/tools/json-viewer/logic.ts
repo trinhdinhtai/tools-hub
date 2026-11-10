@@ -3,6 +3,8 @@
 // keep their escapes, and errors carry a reason the UI can translate. Parsing and printing use explicit stacks, so
 // deeply nested Input cannot overflow the call stack.
 
+import { attemptError } from "@/lib/attempt";
+
 export type Indent = 2 | 4 | "tab";
 export const INDENTS: readonly Indent[] = [2, 4, "tab"];
 
@@ -269,13 +271,10 @@ export function parseJson(text: string): ParseResult {
 }
 
 function tryParse(text: string): JsonNode | JsonError {
-  try {
-    return parse(text);
-  } catch (error) {
-    if (!(error instanceof ParseError)) throw error;
-    const found = error.offset < text.length ? String.fromCodePoint(text.codePointAt(error.offset)!) : undefined;
-    return { reason: error.reason, ...position(text, error.offset), ...(found !== undefined && { found }) };
-  }
+  const { value, error } = attemptError(() => parse(text), ParseError);
+  if (error === null) return value;
+  const found = error.offset < text.length ? String.fromCodePoint(text.codePointAt(error.offset)!) : undefined;
+  return { reason: error.reason, ...position(text, error.offset), ...(found !== undefined && { found }) };
 }
 
 /** Formats or minifies JSON, or says where and why it is not valid JSON. Only whitespace and key order change. */

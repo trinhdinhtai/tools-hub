@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attempt, attemptError } from "@/lib/attempt";
 import { usePaste } from "@/lib/paste";
 import {
   generate,
@@ -84,12 +85,9 @@ function DetailsCard({ details }: { details: IdDetails }) {
 function InspectMode({ text, onText }: { text: string; onText: (text: string) => void }) {
   const { t } = useTranslation("uuid-generator");
   const details = useMemo(() => {
-    try {
-      return text.trim() ? inspect(text) : null;
-    } catch (error) {
-      if (error instanceof InspectError) return "not-an-id" as const;
-      throw error;
-    }
+    if (!text.trim()) return null;
+    const { value, error } = attemptError(() => inspect(text), InspectError);
+    return error ? ("not-an-id" as const) : value;
   }, [text]);
 
   return (
@@ -232,15 +230,11 @@ export default function UuidGeneratorTool() {
   // Generation is live, like every other Tool's output: it remakes the IDs whenever an Input changes.
   const result = useMemo<GenerateResult>(() => {
     const count = Math.min(Math.max(Number.parseInt(inputs.countText, 10) || 1, 1), MAX_COUNT);
-    try {
-      const input = isNamedVersion(inputs.version)
-        ? { namespace: inputs.namespace === "custom" ? inputs.customNamespace : inputs.namespace, name: inputs.name }
-        : null;
-      return { ids: Array.from({ length: count }, () => generate(inputs.version, input, {})), error: null };
-    } catch (caught) {
-      if (caught instanceof GeneratorError) return { ids: [], error: caught.reason };
-      throw caught;
-    }
+    const input = isNamedVersion(inputs.version)
+      ? { namespace: inputs.namespace === "custom" ? inputs.customNamespace : inputs.namespace, name: inputs.name }
+      : null;
+    const { value, error } = attempt(() => Array.from({ length: count }, () => generate(inputs.version, input, {})), GeneratorError);
+    return { ids: value ?? [], error };
   }, [inputs]);
 
   // Paste Detection opens this Tool with a pasted ID: inspect it right away.

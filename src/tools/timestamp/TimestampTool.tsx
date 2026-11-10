@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { attemptError } from "@/lib/attempt";
 import { usePaste } from "@/lib/paste";
 import { usePreference } from "@/lib/preferences";
 import { formatRelative } from "@/lib/relative-time";
@@ -47,12 +48,8 @@ export default function TimestampTool() {
 
   const { parsed, error } = useMemo(() => {
     if (text.trim() === "") return { parsed: null, error: null };
-    try {
-      return { parsed: parseInstant(text, { now, zone: LOCAL_ZONE, unit }), error: null };
-    } catch (error) {
-      if (error instanceof TimestampError) return { parsed: null, error };
-      throw error;
-    }
+    const { value, error } = attemptError(() => parseInstant(text, { now, zone: LOCAL_ZONE, unit }), TimestampError);
+    return { parsed: value, error };
   }, [text, unit, now]);
 
   return (
