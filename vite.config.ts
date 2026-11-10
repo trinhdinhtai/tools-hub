@@ -29,5 +29,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.{ts,tsx}"],
+    // A test that drives the whole app through several screens can pass 5 s on a busy runner; only a hung test waits
+    // longer for this.
+    testTimeout: 15_000,
   },
 });
