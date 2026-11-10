@@ -1,0 +1,38 @@
+{
+  "steps": {
+    "redact": "1. Che",
+    "restore": "2. Khôi phục"
+  },
+  "input": "Văn bản",
+  "redacted": "Đã che",
+  "copyRedacted": "Sao chép văn bản đã che",
+  "reply": "Câu trả lời của AI",
+  "restored": "Đã khôi phục",
+  "copyRestored": "Sao chép văn bản đã khôi phục",
+  "found": "Giá trị đã che",
+  "nothingFound": "Không tìm thấy gì cần che",
+  "hiddenCount": "Đã che: {{count}}",
+  "restoredCount": "Đã khôi phục: {{count}}",
+  "memoryOnly": "Bảng placeholder nào ứng với giá trị nào chỉ nằm trong bộ nhớ và bị xoá khi bạn đóng công cụ này.",
+  "scanning": "Đang quét…",
+  "kinds": {
+    "private-key": "Private key",
+    "jwt": "JWT",
+    "aws-key": "Khoá AWS",
+    "github-token": "Token GitHub",
+    "stripe-key": "Khoá Stripe",
+    "api-key": "API key",
+    "password": "Mật khẩu",
+    "secret": "Secret",
+    "email": "Email",
+    "card": "Số thẻ",
+    "phone": "Số điện thoại",
+    "ip": "Địa chỉ IP"
+  },
+  "errors": {
+    "too-large": "Văn bản quá lớn để quét: tối đa {{characters}} ký tự.",
+    "failed": "Không quét được văn bản: {{message}}",
+    "nothing-to-restore": "Chưa có gì để khôi phục: hãy dán văn bản có secret ở bước 1 trước.",
+    "unknown": "Các placeholder này không được tạo từ văn bản ở bước 1 nên được giữ nguyên: {{placeholders}}"
+  }
+}

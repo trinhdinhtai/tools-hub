@@ -1,0 +1,4 @@
+{
+  "name": "Che secret & dữ liệu cá nhân",
+  "description": "Che API key, token, mật khẩu, email và dữ liệu cá nhân bằng placeholder trước khi dán vào chat AI, rồi khôi phục chúng trong câu trả lời"
+}

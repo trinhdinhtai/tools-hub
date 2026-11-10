@@ -113,3 +113,34 @@ export function useWorkerJob<I, O>(spawn: () => Worker, job: I | null): (WorkerR
   if (!job) return null;
   return run?.job === job ? run : { job, progress: 0 };
 }
+
+/** The last settled run of `useWorkerRun`: the job it was for, and its result or why it failed. */
+export type SettledRun<I, O> = { job: I } & ({ state: "done"; result: O } | { state: "failed"; message: string });
+
+/**
+ * Runs `job` in a fresh worker from `spawn` once it has stayed the same for `debounceMs`, so typing does not start a
+ * worker on every key; a change of job cancels the run before. The last settled run stays returned until the next one
+ * settles, so a result does not flicker while typing: compare its `job` with the current one to tell if it is fresh.
+ */
+export function useWorkerRun<I, O>(spawn: () => Worker, job: I | null, debounceMs: number): SettledRun<I, O> | null {
+  const [run, setRun] = useState<SettledRun<I, O> | null>(null);
+  useEffect(() => {
+    if (!job) return;
+    let cancel = () => {};
+    const timer = setTimeout(() => {
+      const task = runInWorker<I, O>(spawn, job);
+      cancel = task.cancel;
+      task.result.then(
+        (result) => setRun({ job, state: "done", result }),
+        (error: Error) => {
+          if (error.name !== "AbortError") setRun({ job, state: "failed", message: error.message });
+        },
+      );
+    }, debounceMs);
+    return () => {
+      clearTimeout(timer);
+      cancel();
+    };
+  }, [spawn, job, debounceMs]);
+  return job ? run : null;
+}
