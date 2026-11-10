@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attemptError } from "@/lib/attempt";
 import { usePaste } from "@/lib/paste";
 import {
   CidrError,
@@ -23,14 +24,9 @@ import {
 import { MODES, type Mode } from "./modes";
 
 /** Runs a calculation on the Input: its result, the CidrError that stopped it, or neither while the Input is empty. */
-function attempt<T>(text: string, run: () => T): { value: T | null; error: CidrError | null } {
+function calculate<T>(text: string, run: () => T): { value: T | null; error: CidrError | null } {
   if (text.trim() === "") return { value: null, error: null };
-  try {
-    return { value: run(), error: null };
-  } catch (error) {
-    if (error instanceof CidrError) return { value: null, error };
-    throw error;
-  }
+  return attemptError(run, CidrError);
 }
 
 /** The error in the interface language, naming the line when it came from a list. */
@@ -98,7 +94,7 @@ export default function IpCidrTool() {
 
 function CalculateMode({ text, onChange }: { text: string; onChange: (text: string) => void }) {
   const { t } = useTranslation("ip-cidr");
-  const { value: details, error } = useMemo(() => attempt(text, () => describeNetwork(parseNetwork(text))), [text]);
+  const { value: details, error } = useMemo(() => calculate(text, () => describeNetwork(parseNetwork(text))), [text]);
   // IPv6 has no broadcast and every address is a host: name the range by its addresses instead.
   const v6 = details?.version === 6;
   return (
@@ -137,7 +133,7 @@ function SplitMode() {
   const id = useId();
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<number | null>(null);
-  const parsed = useMemo(() => attempt(text, () => parseNetwork(text)), [text]);
+  const parsed = useMemo(() => calculate(text, () => parseNetwork(text)), [text]);
   const network = parsed.value;
   const prefix = network ? splitPrefix(network, picked) : null;
   const split = useMemo(() => (network && prefix !== null ? splitNetwork(network, prefix) : null), [network, prefix]);
@@ -190,7 +186,7 @@ function MergeMode() {
   const [text, setText] = useState("");
   // Typing stays responsive on a long list: the merge catches up when React has time.
   const deferred = useDeferredValue(text);
-  const { value: merged, error } = useMemo(() => attempt(deferred, () => mergeNetworks(deferred)), [deferred]);
+  const { value: merged, error } = useMemo(() => calculate(deferred, () => mergeNetworks(deferred)), [deferred]);
   const entries = useMemo(() => deferred.split(/[\n,]/).filter((item) => item.trim() !== "").length, [deferred]);
   const output = merged?.join("\n") ?? "";
   return (
@@ -225,20 +221,13 @@ function CompareMode() {
   const { t } = useTranslation("ip-cidr");
   const [a, setA] = useState("");
   const [b, setB] = useState("");
-  const first = useMemo(() => attempt(a, () => parseNetwork(a)), [a]);
-  const second = useMemo(() => attempt(b, () => parseNetwork(b)), [b]);
-  let sentence: string | null = null;
-  let mixed: CidrError | null = null;
-  if (first.value && second.value) {
-    const cidr = (network: Network) => describeNetwork(network).cidr;
-    try {
-      const relation = compareNetworks(first.value, second.value);
-      sentence = t(`compare.${relation}`, { a: cidr(first.value), b: cidr(second.value) });
-    } catch (error) {
-      if (!(error instanceof CidrError)) throw error;
-      mixed = error;
-    }
-  }
+  const first = useMemo(() => calculate(a, () => parseNetwork(a)), [a]);
+  const second = useMemo(() => calculate(b, () => parseNetwork(b)), [b]);
+  const [x, y] = [first.value, second.value];
+  const compared = x && y ? attemptError(() => compareNetworks(x, y), CidrError) : null;
+  const cidr = (network: Network) => describeNetwork(network).cidr;
+  const sentence = x && y && compared?.value ? t(`compare.${compared.value}`, { a: cidr(x), b: cidr(y) }) : null;
+  const mixed = compared?.error ?? null;
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-2">

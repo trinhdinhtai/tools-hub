@@ -3,6 +3,7 @@
 // cannot hold becomes the nearest JSON value: Infinity and NaN become null, as JSON.stringify does. Valid JSON strings
 // and numbers keep the text they were written with. Like the strict parser, it uses an explicit stack.
 
+import { attemptError } from "@/lib/attempt";
 import { printJson, type JsonNode, type TransformOptions } from "./logic";
 
 type Punct = "{" | "}" | "[" | "]" | "(" | ")" | "," | ":";
@@ -317,10 +318,5 @@ function parse(text: string): JsonNode {
 
 /** Repairs JSON5, NDJSON or a Python, Ruby or JavaScript literal into JSON, or returns null if it cannot. */
 export function repairJson(text: string, options: TransformOptions): string | null {
-  try {
-    return printJson(parse(text), options);
-  } catch (error) {
-    if (error instanceof RepairError) return null;
-    throw error;
-  }
+  return attemptError(() => printJson(parse(text), options), RepairError).value;
 }

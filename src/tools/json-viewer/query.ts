@@ -2,6 +2,7 @@
 // an optional $ for the root, .name or ["name"] for a key, [0] for an index (negative counts from the end), and * or
 // [*] for every member. A path with a wildcard collects its matches into an array.
 
+import { attemptError } from "@/lib/attempt";
 import { decodedKey, type JsonNode } from "./logic";
 
 export type QueryError =
@@ -114,13 +115,8 @@ export function queryJson(root: JsonNode, path: string): QueryResult {
   while (start < end && SPACE.test(path[start]!)) start++;
   while (end > start && SPACE.test(path[end - 1]!)) end--;
 
-  let parsed: [Step, number][];
-  try {
-    parsed = steps(path, start, end);
-  } catch (error) {
-    if (error instanceof PathError) return { ok: false, error: { reason: "invalid-path", column: column(path, error.offset) } };
-    throw error;
-  }
+  const { value: parsed, error } = attemptError(() => steps(path, start, end), PathError);
+  if (error) return { ok: false, error: { reason: "invalid-path", column: column(path, error.offset) } };
 
   let nodes = [root];
   let wildcard = false;
