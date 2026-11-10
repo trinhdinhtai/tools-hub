@@ -101,7 +101,9 @@ const theme = EditorView.theme({
   ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--foreground)", borderLeftWidth: "1.5px" },
   ".cm-gutters": { backgroundColor: "transparent", color: "var(--muted-foreground)", border: "none" },
   ".cm-activeLineGutter": { backgroundColor: "transparent", color: "var(--foreground)" },
-  "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection": {
+  // CodeMirror's base theme paints a focused selection light lavender through this longer selector, which beats a
+  // shorter one and leaves light text on a light background in dark; the same selector takes it back.
+  "&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, ::selection": {
     backgroundColor: "color-mix(in srgb, var(--primary) 25%, transparent)",
   },
   ".cm-selectionMatch": { backgroundColor: "color-mix(in srgb, var(--primary) 12%, transparent)" },

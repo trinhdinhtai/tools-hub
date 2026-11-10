@@ -1,0 +1,4 @@
+{
+  "name": "Text Compare",
+  "description": "Compare two texts side by side by line, word or character, step through the changes and copy them as a unified diff"
+}

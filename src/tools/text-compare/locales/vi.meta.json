@@ -1,0 +1,4 @@
+{
+  "name": "So sánh văn bản",
+  "description": "So sánh hai văn bản song song theo dòng, từ hoặc ký tự, nhảy qua từng thay đổi và sao chép dưới dạng unified diff"
+}

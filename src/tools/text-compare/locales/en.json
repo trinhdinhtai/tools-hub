@@ -1,0 +1,29 @@
+{
+  "original": "Original",
+  "modified": "Modified",
+  "granularity": {
+    "label": "Mark changes by",
+    "line": "Line",
+    "word": "Word",
+    "char": "Character"
+  },
+  "ignoreWhitespace": "Ignore whitespace",
+  "ignoreCase": "Ignore case",
+  "differences": "Differences",
+  "summary": "{{added}} added, {{removed}} removed, {{changed}} changed",
+  "noChanges": "Both texts are the same",
+  "comparing": "Comparing…",
+  "previous": "Previous change",
+  "next": "Next change",
+  "position": "{{current}} / {{count}}",
+  "kinds": {
+    "added": "Added",
+    "removed": "Removed",
+    "changed": "Changed"
+  },
+  "copyDiff": "Copy unified diff",
+  "errors": {
+    "too-large": "{{side}} is too large to compare: at most {{lines}} lines and {{characters}} characters.",
+    "failed": "The texts could not be compared: {{message}}"
+  }
+}
