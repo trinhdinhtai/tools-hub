@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CodeEditor } from "@/components/code-editor";
 import { CopyButton } from "@/components/copy-button";
@@ -6,7 +6,7 @@ import { ErrorMessage } from "@/components/error-message";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { usePreference } from "@/lib/preferences";
-import { runInWorker } from "@/lib/worker";
+import { useWorkerRun } from "@/lib/worker";
 import type { FormatJob } from "./format-jobs";
 import { ACTIONS, detectLanguage, INDENTS, LANGUAGES, type Action, type FormatResult, type Indent, type Language } from "./logic";
 
@@ -22,33 +22,6 @@ const isAction = (value: unknown): value is Action => (ACTIONS as readonly unkno
 const isIndent = (value: unknown): value is Indent => (INDENTS as readonly unknown[]).includes(value);
 
 const spawn = () => new Worker(new URL("./format.worker.ts", import.meta.url), { type: "module" });
-
-type Run = { job: FormatJob } & ({ state: "done"; result: FormatResult } | { state: "failed"; message: string });
-
-/** Formats each job in a fresh worker once typing pauses, cancelling it when the job changes. */
-function useFormatRun(job: FormatJob | null): Run | null {
-  const [run, setRun] = useState<Run | null>(null);
-  useEffect(() => {
-    if (!job) return;
-    let cancel = () => {};
-    const timer = setTimeout(() => {
-      const task = runInWorker<FormatJob, FormatResult>(spawn, job);
-      cancel = task.cancel;
-      task.result.then(
-        (result) => setRun({ job, state: "done", result }),
-        (error: Error) => {
-          if (error.name !== "AbortError") setRun({ job, state: "failed", message: error.message });
-        },
-      );
-    }, DEBOUNCE_MS);
-    return () => {
-      clearTimeout(timer);
-      cancel();
-    };
-  }, [job]);
-  // A run of an older job stays shown until the new one ends, so the Output does not flicker while typing.
-  return job ? run : null;
-}
 
 export default function CodeFormatterTool() {
   const { t } = useTranslation("code-formatter");
@@ -67,7 +40,7 @@ export default function CodeFormatterTool() {
     () => (language && !empty ? { text: deferredInput, language, action, indent } : null),
     [deferredInput, language, action, indent, empty],
   );
-  const run = useFormatRun(job);
+  const run = useWorkerRun<FormatJob, FormatResult>(spawn, job, DEBOUNCE_MS);
   const fresh = run?.job === job ? run : null;
   const result = run?.state === "done" ? run.result : null;
   const output = result?.ok ? result.text : "";

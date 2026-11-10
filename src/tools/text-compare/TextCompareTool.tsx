@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useId, useMemo, useState } from "react";
+import { useDeferredValue, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CodeEditor } from "@/components/code-editor";
 import { ErrorMessage } from "@/components/error-message";
@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { usePreference } from "@/lib/preferences";
-import { runInWorker } from "@/lib/worker";
+import { useWorkerRun } from "@/lib/worker";
 import type { CompareJob } from "./compare-jobs";
 import { DiffResult } from "./DiffResult";
 import { MAX_LENGTH, MAX_LINES, unifiedDiff, type CompareResult, type Granularity, type Side } from "./logic";
@@ -18,33 +18,6 @@ const isGranularity = (value: unknown): value is Granularity => (GRANULARITIES a
 const DEBOUNCE_MS = 150;
 
 const spawn = () => new Worker(new URL("./compare.worker.ts", import.meta.url), { type: "module" });
-
-type Run = { job: CompareJob } & ({ state: "done"; result: CompareResult } | { state: "failed"; message: string });
-
-/** Compares each job in a fresh worker once typing pauses, cancelling it when the job changes. */
-function useCompareRun(job: CompareJob | null): Run | null {
-  const [run, setRun] = useState<Run | null>(null);
-  useEffect(() => {
-    if (!job) return;
-    let cancel = () => {};
-    const timer = setTimeout(() => {
-      const task = runInWorker<CompareJob, CompareResult>(spawn, job);
-      cancel = task.cancel;
-      task.result.then(
-        (result) => setRun({ job, state: "done", result }),
-        (error: Error) => {
-          if (error.name !== "AbortError") setRun({ job, state: "failed", message: error.message });
-        },
-      );
-    }, DEBOUNCE_MS);
-    return () => {
-      clearTimeout(timer);
-      cancel();
-    };
-  }, [job]);
-  // The run of an older job stays shown until the new one ends, so the result does not flicker while typing.
-  return job ? run : null;
-}
 
 export default function TextCompareTool() {
   const { t, i18n } = useTranslation("text-compare");
@@ -70,7 +43,7 @@ export default function TextCompareTool() {
         : null,
     [deferredOriginal, deferredModified, granularity, ignoreWhitespace, ignoreCase],
   );
-  const run = useCompareRun(job);
+  const run = useWorkerRun<CompareJob, CompareResult>(spawn, job, DEBOUNCE_MS);
   const fresh = run?.job === job ? run : null;
   const result = run?.state === "done" ? run.result : null;
 
