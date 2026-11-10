@@ -1,0 +1,29 @@
+{
+  "original": "Bản gốc",
+  "modified": "Bản sửa đổi",
+  "granularity": {
+    "label": "Đánh dấu thay đổi theo",
+    "line": "Dòng",
+    "word": "Từ",
+    "char": "Ký tự"
+  },
+  "ignoreWhitespace": "Bỏ qua khoảng trắng",
+  "ignoreCase": "Bỏ qua hoa/thường",
+  "differences": "Khác biệt",
+  "summary": "{{added}} thêm, {{removed}} xoá, {{changed}} sửa",
+  "noChanges": "Hai văn bản giống nhau",
+  "comparing": "Đang so sánh…",
+  "previous": "Thay đổi trước",
+  "next": "Thay đổi kế tiếp",
+  "position": "{{current}} / {{count}}",
+  "kinds": {
+    "added": "Thêm",
+    "removed": "Xoá",
+    "changed": "Sửa"
+  },
+  "copyDiff": "Sao chép unified diff",
+  "errors": {
+    "too-large": "{{side}} quá lớn để so sánh: tối đa {{lines}} dòng và {{characters}} ký tự.",
+    "failed": "Không so sánh được hai văn bản: {{message}}"
+  }
+}
