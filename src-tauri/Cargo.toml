@@ -1,6 +1,6 @@
 [package]
 name = "tools-hub"
-version = "0.1.0"
+version = "1.0.0"
 description = "Offline developer tools in one desktop app"
 authors = ["trinhdinhtai"]
 license = "MIT"
