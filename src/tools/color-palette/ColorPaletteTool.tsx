@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attempt } from "@/lib/attempt";
 import { usePaste } from "@/lib/paste";
 import { usePreference, useRecent } from "@/lib/preferences";
 import { VISION_KINDS, simulateVision } from "./color-vision";
@@ -37,12 +38,8 @@ type Parsed = { color: Color; error: null } | { color: null; error: string | nul
 /** The Input read as a color, or why it could not be; an empty Input is neither. */
 function parse(text: string): Parsed {
   if (text.trim() === "") return { color: null, error: null };
-  try {
-    return { color: parseColor(text), error: null };
-  } catch (error) {
-    if (error instanceof ColorError) return { color: null, error: error.reason };
-    throw error;
-  }
+  const { value, error } = attempt(() => parseColor(text), ColorError);
+  return error === null ? { color: value, error } : { color: null, error };
 }
 
 /** A color painted over a checkerboard, so its alpha shows. */

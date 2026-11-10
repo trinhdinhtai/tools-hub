@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attempt } from "@/lib/attempt";
 import { usePaste } from "@/lib/paste";
 import { usePreference } from "@/lib/preferences";
 import {
@@ -35,12 +36,8 @@ const DIRECTIONS: Direction[] = ["encode", "decode"];
 const SCOPES: Scope[] = ["full", "component"];
 
 function convert(text: string, direction: Direction, scope: Scope): { output: string; error: EncodeErrorReason | DecodeErrorReason | null } {
-  try {
-    return { output: direction === "encode" ? encodeText(text, scope) : decodeText(text, scope), error: null };
-  } catch (error) {
-    if (error instanceof EncodeError || error instanceof DecodeError) return { output: "", error: error.reason };
-    throw error;
-  }
+  const { value, error } = attempt(() => (direction === "encode" ? encodeText(text, scope) : decodeText(text, scope)), EncodeError, DecodeError);
+  return { output: value ?? "", error };
 }
 
 function ConvertMode({
@@ -157,12 +154,8 @@ function ParamRow({
 function parseUrl(text: string): { parts: UrlParts | null; reason: SplitErrorReason | null } {
   const trimmed = text.trim();
   if (trimmed === "") return { parts: null, reason: null };
-  try {
-    return { parts: splitUrl(trimmed), reason: null };
-  } catch (error) {
-    if (error instanceof SplitError) return { parts: null, reason: error.reason };
-    throw error;
-  }
+  const { value, error } = attempt(() => splitUrl(trimmed), SplitError);
+  return { parts: value, reason: error };
 }
 
 /** Split: a URL taken apart into editable parts, reassembled into the Output. Part edits keep the Input as written. */
