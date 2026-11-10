@@ -6,24 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { attempt } from "@/lib/attempt";
 import { QUANTITIES, UnitError, convert, quantityOf, unitsOf, type Converted, type Quantity, type UnitErrorReason, type UnitId } from "./logic";
 
 /** The unit a quantity starts in when the user picks it. */
 const DEFAULT_UNIT: Record<Quantity, UnitId> = { length: "m", mass: "kg", temperature: "c", data: "MB" };
 
-/** What converting the Input produced: every unit's value, or why it could not. An empty Input is neither. */
-interface Result {
-  values: Converted[] | null;
-  error: Exclude<UnitErrorReason, "empty"> | null;
-}
-
-function run(text: string, from: UnitId): Result {
-  try {
-    return { values: convert(text, from), error: null };
-  } catch (error) {
-    if (!(error instanceof UnitError)) throw error;
-    return { values: null, error: error.reason === "empty" ? null : error.reason };
-  }
+/** Every unit's value, or why the Input could not be converted. An empty Input is neither. */
+function run(text: string, from: UnitId): { value: Converted[] | null; error: Exclude<UnitErrorReason, "empty"> | null } {
+  const { value, error } = attempt(() => convert(text, from), UnitError);
+  return error === "empty" ? { value: null, error: null } : { value, error };
 }
 
 /** Unit Converter: a value in one unit shown in every other unit of its quantity as it is typed. Input stays in memory. */
@@ -89,9 +81,9 @@ export default function UnitConverterTool() {
         />
       </div>
       {result.error && <ErrorMessage>{t(`errors.${result.error}`)}</ErrorMessage>}
-      {result.values && (
+      {result.value && (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {result.values
+          {result.value
             .filter(({ unit }) => unit !== from)
             .map(({ unit, value }) => (
               <ResultRow key={unit} label={t(`units.${unit}`)} value={value} />
