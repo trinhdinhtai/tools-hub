@@ -34,13 +34,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" --draft --verify-tag --generate-notes --title "Tools Hub ${GITHUB_REF_NAME#v}"
-          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"$GITHUB_REF_NAME\") | .id" | head -n1)
-          echo "release-id=$id" >> "$GITHUB_OUTPUT"
+          # One call creates the draft and returns its id and notes. Looking the draft up again by tag right after
+          # creating it can miss it, as the list of releases is not always up to date yet.
+          release=$(gh api "repos/$GITHUB_REPOSITORY/releases" -f tag_name="$GITHUB_REF_NAME" -f name="Tools Hub ${GITHUB_REF_NAME#v}" -F draft=true -F generate_release_notes=true)
+          echo "release-id=$(jq -r .id <<<"$release")" >> "$GITHUB_OUTPUT"
           # The notes go into latest.json too: they are the changelog the app shows before installing.
           {
             echo "notes<<RELEASE_NOTES_EOF"
-            gh api "repos/$GITHUB_REPOSITORY/releases/$id" --jq .body
+            jq -r .body <<<"$release"
             echo "RELEASE_NOTES_EOF"
           } >> "$GITHUB_OUTPUT"
 
