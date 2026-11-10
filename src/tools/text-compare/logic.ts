@@ -239,6 +239,147 @@ function markParts(left: Cell, right: Cell, options: CompareOptions) {
   right.parts = joinParts(rightTokens, added);
 }
 
+/**
+ * How alike two lines must be, from 0 to 1, to show as one changed line rather than a removed and an added one: half
+ * their character pairs in common. Below it, two sentences on unrelated topics would pair on common letters alone.
+ */
+const PAIR_THRESHOLD = 0.5;
+
+/** Characters at the start of a line that tell how alike it is to another; enough to judge, and bounded. */
+const LIKENESS_PREFIX = 1_000;
+
+/** Line pairs scored in one block at most, which bounds the memory of the scoring table. */
+const BLOCK_PAIRS = 1_000_000;
+
+/**
+ * Work spent scoring line pairs in all, counted in character pairs looked up. Past it, the blocks left pair in order,
+ * still only where the two lines are alike, so long lines or big blocks cannot make a comparison slow.
+ */
+const PAIRING_WORK = 30_000_000;
+
+/** The scoring work left for a comparison, shared by its blocks. */
+interface PairingBudget {
+  work: number;
+}
+
+/**
+ * What a line is likened by: its neighbouring character pairs, counted, with its start and end marked so that a short
+ * line still has a few. Case and whitespace are left out: they never make two lines less alike.
+ */
+interface Likeness {
+  counts: Map<string, number>;
+  size: number;
+}
+
+function likeness(text: string): Likeness {
+  const folded = Array.from(text.replace(/\s+/g, "").toLowerCase().slice(0, LIKENESS_PREFIX));
+  const chars = ["\u0002", ...folded, "\u0003"];
+  const pieces = chars.slice(1).map((char, i) => chars[i] + char);
+  const counts = new Map<string, number>();
+  for (const piece of pieces) counts.set(piece, (counts.get(piece) ?? 0) + 1);
+  return { counts, size: pieces.length };
+}
+
+/** How alike two lines are, from 0 (nothing shared) to 1 (the same but for case and spacing): a Dice coefficient. */
+function similarity(a: Likeness, b: Likeness): number {
+  const [small, large] = a.counts.size <= b.counts.size ? [a, b] : [b, a];
+  let shared = 0;
+  for (const [piece, count] of small.counts) shared += Math.min(count, large.counts.get(piece) ?? 0);
+  return (2 * shared) / (a.size + b.size);
+}
+
+const pairs = (a: Likeness, b: Likeness) => similarity(a, b) >= PAIR_THRESHOLD;
+
+/** A row of a block of changes: the index of its removed line, of its added line, or of both when they pair. */
+type Pairing = [removed: number | undefined, added: number | undefined];
+
+/** The rows in order, with each run of lone lines between two pairs put removed first, then added. */
+function loneRemovedFirst(rows: Pairing[]): Pairing[] {
+  const ordered: Pairing[] = [];
+  let lone: Pairing[] = [];
+  const flush = () => {
+    ordered.push(...lone.filter(([removed]) => removed !== undefined), ...lone.filter(([removed]) => removed === undefined));
+    lone = [];
+  };
+  for (const row of rows) {
+    if (row[0] !== undefined && row[1] !== undefined) {
+      flush();
+      ordered.push(row);
+    } else lone.push(row);
+  }
+  flush();
+  return ordered;
+}
+
+/** Pairs the k-th removed line with the k-th added one, where the two are alike; the cheap way, for big blocks. */
+function pairInOrder(removed: Likeness[], added: Likeness[]): Pairing[] {
+  const rows: Pairing[] = [];
+  for (let k = 0; k < Math.max(removed.length, added.length); k++) {
+    const [r, a] = [removed[k], added[k]];
+    if (r && a && pairs(r, a)) rows.push([k, k]);
+    else {
+      if (r) rows.push([k, undefined]);
+      if (a) rows.push([undefined, k]);
+    }
+  }
+  return rows;
+}
+
+const SKIP_REMOVED = 0;
+const SKIP_ADDED = 1;
+const PAIR = 2;
+
+/**
+ * Pairs the removed lines of a block with its added lines so that the pairs are as alike as can be, keeping the order
+ * of each side; a line alike to none stays alone. Between two pairs, lone removed lines come before lone added ones.
+ */
+function pairBlock(removedLines: string[], addedLines: string[], budget: PairingBudget): Pairing[] {
+  const removed = removedLines.map(likeness);
+  const added = addedLines.map(likeness);
+  const distinct = (side: Likeness[]) => side.reduce((sum, line) => sum + line.counts.size, 0);
+  // Each score looks up the distinct pairs of the smaller line, so this bounds the work of scoring every pair.
+  const work = Math.min(distinct(removed) * added.length, distinct(added) * removed.length);
+  if (removed.length * added.length > BLOCK_PAIRS || work > budget.work) {
+    return loneRemovedFirst(pairInOrder(removed, added));
+  }
+  budget.work -= work;
+
+  const width = added.length + 1;
+  // score[i][j]: the most likeness the first i removed and j added lines can pair up; move: the step that got it.
+  const score = new Float64Array((removed.length + 1) * width);
+  const move = new Uint8Array((removed.length + 1) * width);
+  for (let j = 1; j < width; j++) move[j] = SKIP_ADDED;
+  for (let i = 1; i <= removed.length; i++) {
+    for (let j = 0; j < width; j++) {
+      const at = i * width + j;
+      let best = score[at - width]!;
+      let step = SKIP_REMOVED;
+      if (j > 0) {
+        if (score[at - 1]! > best) {
+          best = score[at - 1]!;
+          step = SKIP_ADDED;
+        }
+        const alike = similarity(removed[i - 1]!, added[j - 1]!);
+        if (alike >= PAIR_THRESHOLD && score[at - width - 1]! + alike >= best) {
+          best = score[at - width - 1]! + alike;
+          step = PAIR;
+        }
+      }
+      score[at] = best;
+      move[at] = step;
+    }
+  }
+
+  const backwards: Pairing[] = [];
+  for (let i = removed.length, j = added.length; i > 0 || j > 0; ) {
+    const step = move[i * width + j];
+    if (step === PAIR) backwards.push([--i, --j]);
+    else if (step === SKIP_ADDED) backwards.push([undefined, --j]);
+    else backwards.push([--i, undefined]);
+  }
+  return loneRemovedFirst(backwards.reverse());
+}
+
 export function compareTexts(original: string, modified: string, options: CompareOptions): CompareResult {
   const left = splitLines(original);
   const right = splitLines(modified);
@@ -250,6 +391,7 @@ export function compareTexts(original: string, modified: string, options: Compar
   const rows: Row[] = [];
   const hunks: Hunk[] = [];
   const stats: CompareStats = { added: 0, removed: 0, changed: 0 };
+  const budget: PairingBudget = { work: PAIRING_WORK };
   let i = 0;
   let j = 0;
   while (i < left.length || j < right.length) {
@@ -259,9 +401,11 @@ export function compareTexts(original: string, modified: string, options: Compar
       const rightStart = j;
       while (i < left.length && removed[i]) i++;
       while (j < right.length && added[j]) j++;
-      for (let k = 0; k < Math.max(i - leftStart, j - rightStart); k++) {
-        const leftCell: Cell | undefined = leftStart + k < i ? { line: leftStart + k + 1, text: left[leftStart + k]! } : undefined;
-        const rightCell: Cell | undefined = rightStart + k < j ? { line: rightStart + k + 1, text: right[rightStart + k]! } : undefined;
+      for (const [removedAt, addedAt] of pairBlock(left.slice(leftStart, i), right.slice(rightStart, j), budget)) {
+        const leftCell: Cell | undefined =
+          removedAt === undefined ? undefined : { line: leftStart + removedAt + 1, text: left[leftStart + removedAt]! };
+        const rightCell: Cell | undefined =
+          addedAt === undefined ? undefined : { line: rightStart + addedAt + 1, text: right[rightStart + addedAt]! };
         const kind = leftCell && rightCell ? "changed" : leftCell ? "removed" : "added";
         if (leftCell && rightCell) markParts(leftCell, rightCell, options);
         rows.push({ kind, left: leftCell, right: rightCell });

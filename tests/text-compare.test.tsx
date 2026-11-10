@@ -59,6 +59,26 @@ describe("Text Compare", () => {
     );
   });
 
+  it("lines up each changed line with its most alike counterpart, and a line with none against a blank row", async () => {
+    await openTextCompare();
+    paste("Original", "Fixes:\n- Faster startup\nContact: support@example.com\nThanks for using Tools Hub");
+    paste("Modified", "Fixes:\nContact: help@example.com\nThanks for using Tools Hub!");
+
+    expect(await screen.findByText("0 added, 1 removed, 2 changed")).toBeInTheDocument();
+    expect(shownRows("Original")).toEqual([
+      "1Fixes:",
+      "2Removed: - Faster startup",
+      "3Changed: Contact: support@example.com",
+      "4Changed: Thanks for using Tools Hub",
+    ]);
+    expect(shownRows("Modified")).toEqual([
+      "1Fixes:",
+      "",
+      "2Changed: Contact: help@example.com",
+      "3Changed: Thanks for using Tools Hub!",
+    ]);
+  });
+
   it("steps to the next and previous change, even far down a text of thousands of lines", async () => {
     const { user } = await openTextCompare();
     const lines = Array.from({ length: 3000 }, (_, i) => `line ${i + 1}`);

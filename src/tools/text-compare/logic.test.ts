@@ -19,6 +19,12 @@ function compare(original: string, modified: string, options: Partial<CompareOpt
 const rows = (original: string, modified: string, options: Partial<CompareOptions> = {}) =>
   compare(original, modified, options).rows.map(show);
 
+/** A text of `count` lines, line `i` (from 0) made by `make`. */
+const lines = (count: number, make: (i: number) => string) => Array.from({ length: count }, (_, i) => make(i)).join("\n");
+
+/** The line numbers 1 to `count`. */
+const numbers = (count: number) => Array.from({ length: count }, (_, i) => i + 1);
+
 describe("compareTexts by line", () => {
   it("finds no change between equal texts", () => {
     expect(compare("a\nb\nc", "a\nb\nc")).toMatchObject({ hunks: [], stats: { added: 0, removed: 0, changed: 0 } });
@@ -43,6 +49,99 @@ describe("compareTexts by line", () => {
       [2, 1],
       [undefined, 2],
     ]);
+  });
+});
+
+describe("compareTexts pairing within a block of changes", () => {
+  it("pairs each line with the most alike line of the other side, keeping the order of both", () => {
+    const original = [
+      "Sửa lỗi:",
+      "- Sửa lỗi khi dán   văn bản dài",
+      "- Cải thiện tốc độ khởi động",
+      "Liên hệ: support@example.com",
+      "Cảm ơn bạn đã dùng Tools Hub 👍🏽",
+    ].join("\n");
+    const modified = [
+      "Sửa lỗi:",
+      "- Sửa lỗi khi dán văn bản dài",
+      "Liên hệ: help@example.com",
+      "Cảm ơn bạn đã dùng Tools Hub 👍🏿",
+    ].join("\n");
+    expect(rows(original, modified)).toEqual([
+      "=Sửa lỗi:",
+      "-- Sửa lỗi khi dán   văn bản dài | +- Sửa lỗi khi dán văn bản dài",
+      "-- Cải thiện tốc độ khởi động | .",
+      "-Liên hệ: support@example.com | +Liên hệ: help@example.com",
+      "-Cảm ơn bạn đã dùng Tools Hub 👍🏽 | +Cảm ơn bạn đã dùng Tools Hub 👍🏿",
+    ]);
+    expect(compare(original, modified).stats).toEqual({ added: 0, removed: 1, changed: 3 });
+  });
+
+  it("does not pair lines that have little in common", () => {
+    expect(rows("keep\nalpha beta\nkeep", "keep\n12345\nkeep")).toEqual(["=keep", "-alpha beta | .", ". | +12345", "=keep"]);
+    expect(compare("alpha beta", "12345").stats).toEqual({ added: 1, removed: 1, changed: 0 });
+  });
+
+  it("pairs lines that differ only in whitespace or case, even when those differences count", () => {
+    expect(rows("x\nHello  World\ny", "x\nhello world\ny")).toEqual(["=x", "-Hello  World | +hello world", "=y"]);
+  });
+
+  it("lists an unpaired removed line before an unpaired added one between two pairs", () => {
+    expect(rows("one apple\ngone line\ntwo apples", "one apple!\nfresh text\ntwo apples!")).toEqual([
+      "-one apple | +one apple!",
+      "-gone line | .",
+      ". | +fresh text",
+      "-two apples | +two apples!",
+    ]);
+  });
+
+  it("does not pair sentences that only share common letters", () => {
+    const original = "The quarterly report shows that revenue increased across all regions this year.";
+    const modified = "Please remember to water the plants on the balcony before leaving tonight.";
+    expect(compare(original, modified).stats).toEqual({ added: 1, removed: 1, changed: 0 });
+  });
+
+  it("pairs lines in other scripts by likeness too", () => {
+    expect(rows("x\n日本語のテキストです\ny", "x\n日本語の文章です\ny")).toEqual([
+      "=x",
+      "-日本語のテキストです | +日本語の文章です",
+      "=y",
+    ]);
+  });
+
+  it("shows a block of only removed, or only added, lines one per row", () => {
+    expect(rows("a\nb\nc\nd", "a\nd")).toEqual(["=a", "-b | .", "-c | .", "=d"]);
+    expect(rows("a\nd", "a\nb\nc\nd")).toEqual(["=a", ". | +b", ". | +c", "=d"]);
+  });
+
+  it("pairs a block of hundreds of lines by likeness quickly", () => {
+    const started = performance.now();
+    const result = compare(lines(900, (i) => `old entry number ${i}`), lines(900, (i) => `new entry number ${i}`));
+    expect(performance.now() - started).toBeLessThan(3000);
+    expect(result.stats).toEqual({ added: 0, removed: 0, changed: 900 });
+    expect(result.rows.every((row) => row.left!.line === row.right!.line)).toBe(true);
+  });
+
+  it("stays quick on a block of long lines", () => {
+    // Varied lines of 800 letters, from a fixed seed so the test is repeatable.
+    let seed = 42;
+    const letter = () => String.fromCharCode(97 + ((seed = (seed * 1103515245 + 12345) % 2 ** 31) % 26));
+    const long = () => Array.from({ length: 800 }, letter).join("");
+    const started = performance.now();
+    const result = compare(lines(1000, long), lines(1000, long));
+    expect(performance.now() - started).toBeLessThan(3000);
+    expect(result.rows.filter((row) => row.left).length).toBe(1000);
+  });
+
+  it("still leaves unalike lines unpaired in a block too big to score, showing every line once", () => {
+    const original = lines(3000, (i) => `alpha ${i}`);
+    const modified = lines(3000, (i) => (i % 2 ? `alpha ${i} edited` : `${i * 7} zzz`));
+    const started = performance.now();
+    const result = compare(original, modified);
+    expect(performance.now() - started).toBeLessThan(3000);
+    expect(result.stats).toEqual({ added: 1500, removed: 1500, changed: 1500 });
+    expect(result.rows.filter((row) => row.left).map((row) => row.left!.line)).toEqual(numbers(3000));
+    expect(result.rows.filter((row) => row.right).map((row) => row.right!.line)).toEqual(numbers(3000));
   });
 });
 
@@ -107,18 +206,16 @@ describe("compareTexts within a changed line", () => {
   });
 
   it("marks nothing inside the line by line, or on a line too long to mark", () => {
-    expect(marked("a b", "a c", { granularity: "line" })).toEqual([undefined, undefined]);
+    expect(marked("alpha beta", "alpha gamma", { granularity: "line" })).toEqual([undefined, undefined]);
     const long = "x".repeat(20_000);
     expect(marked(long, long + "y", { granularity: "char" })).toEqual([undefined, undefined]);
   });
 });
 
 describe("compareTexts on large Input", () => {
-  const lines = (count: number, make: (i: number) => string) => Array.from({ length: count }, (_, i) => make(i)).join("\n");
-
   it("compares thousands of lines with scattered changes quickly", () => {
     const original = lines(5000, (i) => `line ${i}`);
-    const modified = lines(5000, (i) => (i % 100 === 0 ? `edited ${i}` : `line ${i}`));
+    const modified = lines(5000, (i) => (i % 100 === 0 ? `line ${i} edited` : `line ${i}`));
     const started = performance.now();
     const result = compare(original, modified, { granularity: "word" });
     expect(performance.now() - started).toBeLessThan(1000);
